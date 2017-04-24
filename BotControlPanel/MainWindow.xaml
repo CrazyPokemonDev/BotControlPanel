@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:BotControlPanel"
         xmlns:my="clr-namespace:BotControlPanel"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="350" Width="525"
+        Closing="Window_Closing">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="1*"/>

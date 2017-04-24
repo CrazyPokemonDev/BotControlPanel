@@ -187,6 +187,28 @@ namespace BotControlPanel
             setAchvToken(td.result);
         }
         #endregion
+
+        #endregion
+
+        #region Close Window
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (wwtb.isRunning || achBot.isRunning)
+            {
+                MessageBoxResult res = MessageBox.Show(
+                    "Bot(s) are still running. They will be stopped upon closing.",
+                    "Close?", MessageBoxButton.OKCancel);
+                if (res == MessageBoxResult.Cancel)
+                {
+                    e.Cancel = true;
+                }
+                else
+                {
+                    wwtb.stopBot();
+                    achBot.stopBot();
+                }
+            }
+        }
         #endregion
     }
 }

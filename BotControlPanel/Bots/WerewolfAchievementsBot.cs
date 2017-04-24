@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -17,6 +18,9 @@ namespace BotControlPanel.Bots
         private Dictionary<long, int> groupsMessageIdsDict = new Dictionary<long, int>();
         private Dictionary<long, string> groupsMessagesDict = new Dictionary<long, string>();
         private Dictionary<long, string> waitingFor = new Dictionary<long, string>();
+        #endregion
+        #region Constants
+        private const string botUsername = "werewolfwolfachievementbot";
         #endregion
         #region Constructor
         public WerewolfAchievementsBot(string token)
@@ -45,18 +49,18 @@ namespace BotControlPanel.Bots
                             && (e.Update.Message.Chat.Type == ChatType.Group ||
                             e.Update.Message.Chat.Type == ChatType.Supergroup))
                         {
-                            IReplyMarkup rm = InlineKeyboardTellRole.Get("werewolfwolfachievementbot",
+                            IReplyMarkup rm = InlineKeyboardTellRole.Get(botUsername,
                                 e.Update.Message.Chat.Id);
-                            Task t = client.SendTextMessageAsync(e.Update.Message.Chat.Id,
+                            Task<Message> t = client.SendTextMessageAsync(e.Update.Message.Chat.Id,
                                 "➡️*CURRENT GAME*⬅️\nNo roles given yet",
                                 parseMode: ParseMode.Markdown,
                                 replyMarkup: rm);
-                            t.Start();
+                            t.Wait();
                             if (groupsMessageIdsDict.ContainsKey(e.Update.Message.Chat.Id))
                             {
                                 groupsMessageIdsDict.Remove(e.Update.Message.Chat.Id);
                             }
-                            groupsMessageIdsDict.Add(e.Update.Message.Chat.Id, e.Update.Message.MessageId);
+                            groupsMessageIdsDict.Add(e.Update.Message.Chat.Id, t.Result.MessageId);
                             if (groupsMessagesDict.ContainsKey(e.Update.Message.Chat.Id))
                             {
                                 groupsMessagesDict.Remove(e.Update.Message.Chat.Id);
@@ -71,11 +75,11 @@ namespace BotControlPanel.Bots
                             && e.Update.Message.Chat.Type == ChatType.Private)
                         {
                             string arg = e.Update.Message.Text.Substring(7);
-                            if (arg.StartsWith("tellrole "))
+                            if (arg.StartsWith("tellrole_"))
                             {
                                 Task t = client.SendTextMessageAsync(e.Update.Message.Chat.Id,
                                     "Tell me your role, please:");
-                                t.Start();
+                                t.Wait();
                                 if (!waitingFor.ContainsKey(e.Update.Message.Chat.Id))
                                     waitingFor.Add(e.Update.Message.Chat.Id, arg);
                                 return;
@@ -87,15 +91,24 @@ namespace BotControlPanel.Bots
                         if (waitingFor.ContainsKey(e.Update.Message.Chat.Id))
                         {
                             string arg = waitingFor[e.Update.Message.Chat.Id];
-                            if (arg.StartsWith("tellrole "))
+                            if (arg.StartsWith("tellrole_"))
                             {
                                 long chatid = Convert.ToInt64(arg.Substring(9));
-                                string news = groupsMessagesDict[chatid] + "\n" + e.Update.Message.From.FirstName
-                                    + ": " + e.Update.Message.Text;
-                                groupsMessagesDict[chatid] = news;
+                                string news = groupsMessagesDict[chatid];
+                                string newnews = "";
+                                foreach (string s in news.Split('\n'))
+                                {
+                                    if (!s.StartsWith(e.Update.Message.From.FirstName + ": "))
+                                    {
+                                        newnews += s + "\n";
+                                    }
+                                }
+                                newnews += e.Update.Message.From.FirstName + ": " + e.Update.Message.Text;
+                                groupsMessagesDict[chatid] = newnews;
                                 Task t = client.EditMessageTextAsync(chatid, groupsMessageIdsDict[chatid],
-                                    news, parseMode: ParseMode.Markdown);
-                                t.Start();
+                                    newnews, parseMode: ParseMode.Markdown,
+                                    replyMarkup: InlineKeyboardTellRole.Get(botUsername, chatid));
+                                t.Wait();
                                 waitingFor.Remove(e.Update.Message.Chat.Id);
                             }
                         }
