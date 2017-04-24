@@ -16,6 +16,7 @@ namespace BotControlPanel.Bots
         private TelegramBotClient client;
         private Dictionary<long, int> groupsMessageIdsDict = new Dictionary<long, int>();
         private Dictionary<long, string> groupsMessagesDict = new Dictionary<long, string>();
+        private Dictionary<long, string> waitingFor = new Dictionary<long, string>();
         #endregion
         #region Constructor
         public WerewolfAchievementsBot(string token)
@@ -28,42 +29,83 @@ namespace BotControlPanel.Bots
         #region Update Handler
         private void Client_OnUpdate(object sender, Telegram.Bot.Args.UpdateEventArgs e)
         {
-            if (e.Update.Type == UpdateType.MessageUpdate)
+            try
             {
-                if (e.Update.Message.Type == MessageType.TextMessage)
+                if (e.Update.Type == UpdateType.MessageUpdate)
                 {
-                    #region Stargame recognized
-                    if((e.Update.Message.Text == "/startgame@werewolfbot" ||
-                        e.Update.Message.Text == "/startgame" ||
-                        e.Update.Message.Text == "/startgame@werewolfbetabot" ||
-                        e.Update.Message.Text == "/startchaos@werewolfbot" ||
-                        e.Update.Message.Text == "/startchaos" ||
-                        e.Update.Message.Text == "/startchaos@werewolfbetabot")
-                        && (e.Update.Message.Chat.Type == ChatType.Group ||
-                        e.Update.Message.Chat.Type == ChatType.Supergroup))
+                    if (e.Update.Message.Type == MessageType.TextMessage)
                     {
-                        IReplyMarkup rm = InlineKeyboardTellRole.Get("werewolfwolfachievementbot");
-                        Task t = client.SendTextMessageAsync(e.Update.Message.Chat.Id,
-                            "➡️*CURRENT GAME*⬅️\nNo roles given yet",
-                            parseMode: ParseMode.Markdown,
-                            replyMarkup: rm);
-                        if (groupsMessageIdsDict.ContainsKey(e.Update.Message.Chat.Id))
+                        #region Stargame recognized
+                        if ((e.Update.Message.Text == "/startgame@werewolfbot" ||
+                            e.Update.Message.Text == "/startgame" ||
+                            e.Update.Message.Text == "/startgame@werewolfbetabot" ||
+                            e.Update.Message.Text == "/startchaos@werewolfbot" ||
+                            e.Update.Message.Text == "/startchaos" ||
+                            e.Update.Message.Text == "/startchaos@werewolfbetabot")
+                            && (e.Update.Message.Chat.Type == ChatType.Group ||
+                            e.Update.Message.Chat.Type == ChatType.Supergroup))
                         {
-                            groupsMessageIdsDict.Remove(e.Update.Message.Chat.Id);
+                            IReplyMarkup rm = InlineKeyboardTellRole.Get("werewolfwolfachievementbot",
+                                e.Update.Message.Chat.Id);
+                            Task t = client.SendTextMessageAsync(e.Update.Message.Chat.Id,
+                                "➡️*CURRENT GAME*⬅️\nNo roles given yet",
+                                parseMode: ParseMode.Markdown,
+                                replyMarkup: rm);
+                            t.Start();
+                            if (groupsMessageIdsDict.ContainsKey(e.Update.Message.Chat.Id))
+                            {
+                                groupsMessageIdsDict.Remove(e.Update.Message.Chat.Id);
+                            }
+                            groupsMessageIdsDict.Add(e.Update.Message.Chat.Id, e.Update.Message.MessageId);
+                            if (groupsMessagesDict.ContainsKey(e.Update.Message.Chat.Id))
+                            {
+                                groupsMessagesDict.Remove(e.Update.Message.Chat.Id);
+                            }
+                            groupsMessagesDict.Add(e.Update.Message.Chat.Id, "➡️*CURRENT GAME*⬅️");
+                            return;
                         }
-                        groupsMessageIdsDict.Add(e.Update.Message.Chat.Id, e.Update.Message.MessageId);
-                        if (groupsMessagesDict.ContainsKey(e.Update.Message.Chat.Id))
+                        #endregion
+
+                        #region Custom start
+                        if (e.Update.Message.Text.StartsWith("/start ")
+                            && e.Update.Message.Chat.Type == ChatType.Private)
                         {
-                            groupsMessagesDict.Remove(e.Update.Message.Chat.Id);
+                            string arg = e.Update.Message.Text.Substring(7);
+                            if (arg.StartsWith("tellrole "))
+                            {
+                                Task t = client.SendTextMessageAsync(e.Update.Message.Chat.Id,
+                                    "Tell me your role, please:");
+                                t.Start();
+                                if (!waitingFor.ContainsKey(e.Update.Message.Chat.Id))
+                                    waitingFor.Add(e.Update.Message.Chat.Id, arg);
+                                return;
+                            }
                         }
-                        groupsMessagesDict.Add(e.Update.Message.Chat.Id, "➡️*CURRENT GAME*⬅️");
+                        #endregion
+
+                        #region Waiting for
+                        if (waitingFor.ContainsKey(e.Update.Message.Chat.Id))
+                        {
+                            string arg = waitingFor[e.Update.Message.Chat.Id];
+                            if (arg.StartsWith("tellrole "))
+                            {
+                                long chatid = Convert.ToInt64(arg.Substring(9));
+                                string news = groupsMessagesDict[chatid] + "\n" + e.Update.Message.From.FirstName
+                                    + ": " + e.Update.Message.Text;
+                                groupsMessagesDict[chatid] = news;
+                                Task t = client.EditMessageTextAsync(chatid, groupsMessageIdsDict[chatid],
+                                    news, parseMode: ParseMode.Markdown);
+                                t.Start();
+                                waitingFor.Remove(e.Update.Message.Chat.Id);
+                            }
+                        }
+                        #endregion
                     }
-                    #endregion
-
-                    #region Custom start
-
-                    #endregion
                 }
+            }
+            catch (Exception ex)
+            {
+                client.SendTextMessageAsync(267376056, "WWAchBot Error:" + ex.Message + ex.StackTrace);
             }
         }
         #endregion

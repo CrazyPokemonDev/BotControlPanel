@@ -10,10 +10,10 @@ namespace BotControlPanel.Bots.AchBotInlineKeyboards
 {
     public static class InlineKeyboardTellRole
     {
-        public static IReplyMarkup Get(string usernameWithoutAt)
+        public static IReplyMarkup Get(string usernameWithoutAt, long chatid)
         {
             InlineKeyboardButton b = new InlineKeyboardButton("Tell me your role");
-            b.Url = "t.me/" + usernameWithoutAt + "?start=tellrole";
+            b.Url = "t.me/" + usernameWithoutAt + "?start=tellrole chatid=" + chatid.ToString();
             InlineKeyboardButton[] bs = { b };
             IReplyMarkup Markup = new InlineKeyboardMarkup(bs);
             return Markup;
