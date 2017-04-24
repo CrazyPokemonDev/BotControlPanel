@@ -1,9 +1,12 @@
-﻿using System;
+﻿using BotControlPanel.Bots.AchBotInlineKeyboards;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace BotControlPanel.Bots
 {
@@ -11,17 +14,59 @@ namespace BotControlPanel.Bots
     {
         #region Variables
         private TelegramBotClient client;
+        private Dictionary<long, int> groupsMessageIdsDict = new Dictionary<long, int>();
+        private Dictionary<long, string> groupsMessagesDict = new Dictionary<long, string>();
         #endregion
+        #region Constructor
         public WerewolfAchievementsBot(string token)
         {
             client = new TelegramBotClient(token);
             client.OnUpdate += Client_OnUpdate;
         }
+        #endregion
 
+        #region Update Handler
         private void Client_OnUpdate(object sender, Telegram.Bot.Args.UpdateEventArgs e)
         {
-            
+            if (e.Update.Type == UpdateType.MessageUpdate)
+            {
+                if (e.Update.Message.Type == MessageType.TextMessage)
+                {
+                    #region Stargame recognized
+                    if((e.Update.Message.Text == "/startgame@werewolfbot" ||
+                        e.Update.Message.Text == "/startgame" ||
+                        e.Update.Message.Text == "/startgame@werewolfbetabot" ||
+                        e.Update.Message.Text == "/startchaos@werewolfbot" ||
+                        e.Update.Message.Text == "/startchaos" ||
+                        e.Update.Message.Text == "/startchaos@werewolfbetabot")
+                        && (e.Update.Message.Chat.Type == ChatType.Group ||
+                        e.Update.Message.Chat.Type == ChatType.Supergroup))
+                    {
+                        IReplyMarkup rm = InlineKeyboardTellRole.Get("werewolfwolfachievementbot");
+                        Task t = client.SendTextMessageAsync(e.Update.Message.Chat.Id,
+                            "➡️*CURRENT GAME*⬅️\nNo roles given yet",
+                            parseMode: ParseMode.Markdown,
+                            replyMarkup: rm);
+                        if (groupsMessageIdsDict.ContainsKey(e.Update.Message.Chat.Id))
+                        {
+                            groupsMessageIdsDict.Remove(e.Update.Message.Chat.Id);
+                        }
+                        groupsMessageIdsDict.Add(e.Update.Message.Chat.Id, e.Update.Message.MessageId);
+                        if (groupsMessagesDict.ContainsKey(e.Update.Message.Chat.Id))
+                        {
+                            groupsMessagesDict.Remove(e.Update.Message.Chat.Id);
+                        }
+                        groupsMessagesDict.Add(e.Update.Message.Chat.Id, "➡️*CURRENT GAME*⬅️");
+                    }
+                    #endregion
+
+                    #region Custom start
+
+                    #endregion
+                }
+            }
         }
+        #endregion
 
         #region Control Methods
         #region Is running
