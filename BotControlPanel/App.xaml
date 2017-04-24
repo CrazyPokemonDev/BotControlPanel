@@ -4,6 +4,8 @@
              xmlns:local="clr-namespace:BotControlPanel"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <SolidColorBrush x:Key="inactiveBackground" Color="Gray"/>
+        <SolidColorBrush x:Key="activeBackground" Color="Green"/>
+        <SolidColorBrush x:Key="erroredBackground" Color="Red"/>
     </Application.Resources>
 </Application>
