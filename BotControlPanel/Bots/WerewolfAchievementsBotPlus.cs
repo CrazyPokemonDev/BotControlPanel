@@ -13,6 +13,7 @@ namespace BotControlPanel.Bots
 {
     public class WerewolfAchievementsBotPlus
     {
+        #region Custom "Game" class
         class Game
         {
             public Message pinmessage { get; set; }
@@ -70,6 +71,7 @@ namespace BotControlPanel.Bots
                 client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, joinMessageText + "\n\n" + playerlist, parseMode: ParseMode.Markdown);
             }
         }
+        #endregion
 
         #region Variables
         private TelegramBotClient client;
