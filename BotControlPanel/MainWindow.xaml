@@ -8,26 +8,28 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525"
         Closing="Window_Closing">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="1*"/>
-            <RowDefinition Height="1*"/>
-            <RowDefinition Height="1*"/>
-        </Grid.RowDefinitions>
-        <TextBlock x:Name="textBlockWWTB" Margin="10" TextWrapping="Wrap" Text="Werewolf Translation Bot" HorizontalAlignment="Left" VerticalAlignment="Center" Background="{StaticResource inactiveBackground}">
-            <TextBlock.RenderTransform>
-                <TransformGroup>
-                    <ScaleTransform/>
-                    <SkewTransform/>
-                    <RotateTransform Angle="-0.061"/>
-                    <TranslateTransform/>
-                </TransformGroup>
-            </TextBlock.RenderTransform>
-        </TextBlock>
-        <Button x:Name="startButtonWWTB" Content="Starten" HorizontalAlignment="Center" Margin="10" VerticalAlignment="Center" Width="75" Click="startButtonWWTB_Click"/>
-        <Button x:Name="settingsButtonWWTB" Content="Einstellungen" HorizontalAlignment="Right" Margin="10" VerticalAlignment="Center" Width="75" Click="settingsButtonWWTB_Click"/>
-        <TextBlock x:Name="textBlockAchv" HorizontalAlignment="Left" Margin="10" Grid.Row="1" TextWrapping="Wrap" Text="Werewolf Achievements Bot" VerticalAlignment="Center" Background="{StaticResource inactiveBackground}"/>
-        <Button x:Name="buttonStartAchievements" Content="Starten" HorizontalAlignment="Center" Margin="10" Grid.Row="1" VerticalAlignment="Center" Width="75" Click="buttonStartAchievements_Click"/>
-        <Button x:Name="buttonSettingsAchievements" Content="Einstellungen" HorizontalAlignment="Right" Margin="10" Grid.Row="1" VerticalAlignment="Center" Width="75" Click="buttonSettingsAchievements_Click"/>
-    </Grid>
+    <ScrollViewer>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+            <TextBlock x:Name="textBlockWWTB" Margin="10" TextWrapping="Wrap" Text="Werewolf Translation Bot" HorizontalAlignment="Left" VerticalAlignment="Center" Background="{StaticResource inactiveBackground}">
+                <TextBlock.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform/>
+                        <SkewTransform/>
+                        <RotateTransform Angle="-0.061"/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </TextBlock.RenderTransform>
+            </TextBlock>
+            <Button x:Name="startButtonWWTB" Content="Starten" HorizontalAlignment="Center" Margin="10" VerticalAlignment="Center" Width="75" Click="startButtonWWTB_Click"/>
+            <Button x:Name="settingsButtonWWTB" Content="Einstellungen" HorizontalAlignment="Right" Margin="10" VerticalAlignment="Center" Width="75" Click="settingsButtonWWTB_Click"/>
+            <TextBlock x:Name="textBlockAchv" HorizontalAlignment="Left" Margin="10" Grid.Row="1" TextWrapping="Wrap" Text="Werewolf Achievements Bot" VerticalAlignment="Center" Background="{StaticResource inactiveBackground}"/>
+            <Button x:Name="buttonStartAchievements" Content="Starten" HorizontalAlignment="Center" Margin="10" Grid.Row="1" VerticalAlignment="Center" Width="75" Click="buttonStartAchievements_Click"/>
+            <Button x:Name="buttonSettingsAchievements" Content="Einstellungen" HorizontalAlignment="Right" Margin="10" Grid.Row="1" VerticalAlignment="Center" Width="75" Click="buttonSettingsAchievements_Click"/>
+        </Grid>
+    </ScrollViewer>
 </Window>
