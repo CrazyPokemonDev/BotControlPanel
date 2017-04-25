@@ -11,7 +11,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace BotControlPanel.Bots
 {
-    public class WerewolfAchievementsBot
+    public class WerewolfAchievementsBotPlus
     {
         class Game
         {
