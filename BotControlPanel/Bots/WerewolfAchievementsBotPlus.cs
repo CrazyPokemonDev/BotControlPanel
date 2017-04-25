@@ -324,14 +324,8 @@ namespace BotControlPanel.Bots
             if (!System.IO.Directory.Exists(basePath)) System.IO.Directory.CreateDirectory(basePath);
             System.IO.File.WriteAllText(aliasesPath, JsonConvert.SerializeObject(roleAliases));
         }
-        #endregion
 
-        #region Control Methods
-        #region Is running
-        public bool isRunning { get { return client.IsReceiving; } }
-        #endregion
-        #region Start Bot
-        public bool startBot()
+        private void getAliasesFromFile()
         {
             if (System.IO.File.Exists(aliasesPath))
             {
@@ -343,6 +337,18 @@ namespace BotControlPanel.Bots
                 if (!System.IO.Directory.Exists(basePath)) System.IO.Directory.CreateDirectory(basePath);
                 System.IO.File.Create(aliasesPath);
             }
+            if (roleAliases == null) roleAliases = new Dictionary<string, string>();
+        }
+        #endregion
+
+        #region Control Methods
+        #region Is running
+        public bool isRunning { get { return client.IsReceiving; } }
+        #endregion
+        #region Start Bot
+        public bool startBot()
+        {
+            getAliasesFromFile();
             if (!client.IsReceiving)
             {
                 client.StartReceiving();
