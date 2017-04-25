@@ -33,7 +33,7 @@ namespace BotControlPanel
         #endregion
         #region Variables
         private WWTB wwtb;
-        private WerewolfAchievementsBot achBot;
+        private WerewolfAchievementsBotPlus achBot;
         private string wwtbToken = "";
         private string achToken = "";
         #endregion
@@ -46,7 +46,7 @@ namespace BotControlPanel
 #pragma warning disable CS0168 // Variable ist deklariert, wird jedoch niemals verwendet
             catch (ArgumentException e) { textBlockWWTB.Background = erroredBackground; }
 #pragma warning restore CS0168 // Variable ist deklariert, wird jedoch niemals verwendet
-            try { achBot = new WerewolfAchievementsBot(achToken); }
+            try { achBot = new WerewolfAchievementsBotPlus(achToken); }
 #pragma warning disable CS0168 // Variable ist deklariert, wird jedoch niemals verwendet
             catch (ArgumentException e) { textBlockAchv.Background = erroredBackground; }
 #pragma warning restore CS0168 // Variable ist deklariert, wird jedoch niemals verwendet
@@ -98,7 +98,7 @@ namespace BotControlPanel
             File.WriteAllText(achvTokenPath, token);
             achToken = token;
             textBlockAchv.Background = inactiveBackground;
-            try { achBot = new WerewolfAchievementsBot(achToken); }
+            try { achBot = new WerewolfAchievementsBotPlus(achToken); }
 #pragma warning disable CS0168 // Variable ist deklariert, wird jedoch niemals verwendet
             catch (ArgumentException e) { textBlockAchv.Background = erroredBackground; }
 #pragma warning restore CS0168 // Variable ist deklariert, wird jedoch niemals verwendet

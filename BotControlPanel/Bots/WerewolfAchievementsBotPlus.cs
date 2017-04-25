@@ -20,7 +20,7 @@ namespace BotControlPanel.Bots
         {
             #region Pre-declared stuff, such as variables and constants
             public Message pinmessage { get; set; }
-            public List<User> players { get; set; }
+            public List<User> players { get; set; } = new List<User>();
             public state gamestate { get; set; }
             private TelegramBotClient client;
             public Dictionary<User, string> role = new Dictionary<User, string>();
@@ -32,11 +32,12 @@ namespace BotControlPanel.Bots
             private string playerlist;
             #endregion
 
-            public Game(TelegramBotClient cl, long groupid)
+            public Game(TelegramBotClient cl, long groupid, Message pin)
             {
                 client = cl;
-                UpdatePlayerlist();
                 GroupId = groupid;
+                pinmessage = pin;
+                UpdatePlayerlist();
             }
 
             public enum state
@@ -210,16 +211,8 @@ namespace BotControlPanel.Bots
                                 Task<Message> t = client.SendTextMessageAsync(msg.Chat.Id, "Initializing new game...");
                                 t.Wait();
                                 var gamemessage = t.Result;
-                                var gameplayers = new List<User>();
-                                var game = new Game(client, msg.Chat.Id)
-                                {
-                                    players = gameplayers,
-                                    gamestate = Game.state.Joining,
-                                    pinmessage = gamemessage
-                                };
-
+                                var game = new Game(client, msg.Chat.Id, gamemessage);
                                 games.Add(msg.Chat.Id, game);
-
                                 games[msg.Chat.Id].AddPlayer(msg.From);
                             }
                             return;
