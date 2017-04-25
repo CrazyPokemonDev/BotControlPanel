@@ -327,6 +327,12 @@ namespace BotControlPanel.Bots
                                             g.role.Add(msg.From.Id, kvp.Value);
                                             g.UpdatePlayerlist();
                                         }
+                                        else if(text.ToLower().Contains("now"))
+                                        {
+                                            g.role.Remove(msg.From.Id);
+                                            g.role.Add(msg.From.Id, kvp.Value + " 🆕");
+                                            g.UpdatePlayerlist();
+                                        }
                                         break;
                                     }
                                 }
