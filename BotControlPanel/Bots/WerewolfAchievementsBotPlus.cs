@@ -76,7 +76,7 @@ namespace BotControlPanel.Bots
         private Dictionary<long, Game> games = new Dictionary<long, Game>();
         #endregion
         #region Constructor
-        public WerewolfAchievementsBot(string token)
+        public WerewolfAchievementsBotPlus(string token)
         {
             client = new TelegramBotClient(token);
             client.OnUpdate += Client_OnUpdate;
