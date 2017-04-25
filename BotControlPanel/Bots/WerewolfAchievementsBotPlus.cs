@@ -85,6 +85,7 @@ namespace BotControlPanel.Bots
         #region Constants
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
+        private List<long> adminIds = new List<long>() { 267376056 };   //Ludwig, add your ID
         #endregion
         #region Constructor
         public WerewolfAchievementsBotPlus(string token)
@@ -183,13 +184,41 @@ namespace BotControlPanel.Bots
                     }
                     #endregion
 
+                    #region addalias
                     if (text.StartsWith("/addalias "))
                     {
-                        string args = text.Substring(10);
-                        
+                        if (adminIds.Contains(msg.From.Id))
+                            {
+                            string args = text.Substring(10);
+                            if (args.Split('-').Length != 2)
+                            {
+                                client.SendTextMessageAsync(msg.Chat.Id, "Wrong format. Use this:\nAlias - Role").Wait();
+                            }
+                            else
+                            {
+                                roleAliases.Add(args.Split('-')[0], args.Split('-')[1]);
+                                writeAliasesFile();
+                                client.SendTextMessageAsync(msg.Chat.Id, "Sucessfully added alias", 
+                                    replyToMessageId: msg.MessageId).Wait();
+                            }
+                        }
+                        else
+                        {
+                            client.SendTextMessageAsync(
+                                msg.Chat.Id, "You are not an admin of this bot!", replyToMessageId: msg.MessageId).Wait();
+                        }
                     }
+                    #endregion
                 }
             }
+        }
+        #endregion
+
+        #region File Methods
+        private void writeAliasesFile()
+        {
+            if (!System.IO.Directory.Exists(basePath)) System.IO.Directory.CreateDirectory(basePath);
+            System.IO.File.WriteAllText(aliasesPath, JsonConvert.SerializeObject(roleAliases));
         }
         #endregion
 
