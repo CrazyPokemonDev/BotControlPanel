@@ -116,14 +116,18 @@ namespace BotControlPanel
                 MessageBox.Show("Lege zuerst ein korrektes Token unter Einstellungen fest!");
                 return;
             }
+            bool started = true;
             if (!wwtb.isRunning)
             {
-                wwtb.startBot();
+                started = wwtb.startBot();
             }
-            textBlockWWTB.Background = activeBackground;
-            startButtonWWTB.Content = "Stoppen";
-            startButtonWWTB.Click -= startButtonWWTB_Click;
-            startButtonWWTB.Click += stopButtonWWTB_Click;
+            if (started)
+            {
+                textBlockWWTB.Background = activeBackground;
+                startButtonWWTB.Content = "Stoppen";
+                startButtonWWTB.Click -= startButtonWWTB_Click;
+                startButtonWWTB.Click += stopButtonWWTB_Click;
+            }
         }
         #endregion
         #region Stop WWTB

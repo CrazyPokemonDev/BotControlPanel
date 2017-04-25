@@ -1,4 +1,5 @@
 ﻿using BotControlPanel.Bots.AchBotInlineKeyboards;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,14 +17,17 @@ namespace BotControlPanel.Bots
         #region Custom "Game" class
         class Game
         {
+            #region Pre-declared stuff, such as variables and constants
             public Message pinmessage { get; set; }
             public List<User> players { get; set; }
             public state gamestate { get; set; }
             private TelegramBotClient client;
+            private Dictionary<User, string> role = new Dictionary<User, string>();
 
 
             private const string joinMessageText = "*Join this game!*\n\nPin this message and remember to press start as soon as the game starts.";
             private string playerlist;
+            #endregion
 
             public Game(TelegramBotClient cl)
             {
@@ -68,7 +72,7 @@ namespace BotControlPanel.Bots
                 {
                     playerlist += "\n" + p.FirstName;
                 }
-                client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, joinMessageText + "\n\n" + playerlist, parseMode: ParseMode.Markdown);
+                client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, joinMessageText + "\n\n" + playerlist, parseMode: ParseMode.Markdown).Wait();
             }
         }
         #endregion
@@ -76,6 +80,11 @@ namespace BotControlPanel.Bots
         #region Variables
         private TelegramBotClient client;
         private Dictionary<long, Game> games = new Dictionary<long, Game>();
+        private Dictionary<string, string> roleAliases = new Dictionary<string, string>();
+        #endregion
+        #region Constants
+        private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
+        private const string aliasesPath = basePath + "aliases.dict";
         #endregion
         #region Constructor
         public WerewolfAchievementsBotPlus(string token)
@@ -90,11 +99,14 @@ namespace BotControlPanel.Bots
         {
             if (e.Update.Type == UpdateType.MessageUpdate)
             {
-                if (e.Update.Message.Type == MessageType.TextMessage)
+                if (e.Update.Message.Type == MessageType.TextMessage && 
+                    (e.Update.Message.Chat.Type == ChatType.Group ||
+                    e.Update.Message.Chat.Type == ChatType.Supergroup))
                 {
                     var text = e.Update.Message.Text;
                     var msg = e.Update.Message;
 
+                    #region Commands only
                     switch(text.Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfachievementbot", ""))
                     {
                         case "/startgame":
@@ -105,7 +117,9 @@ namespace BotControlPanel.Bots
                             }
                             else
                             {
-                                var gamemessage = client.SendTextMessageAsync(msg.Chat.Id, "Initializing new game...").Result;
+                                Task<Message> t = client.SendTextMessageAsync(msg.Chat.Id, "Initializing new game...");
+                                t.Wait();
+                                var gamemessage = t.Result;
                                 var gameplayers = new List<User>();
                                 var game = new Game(client)
                                 {
@@ -125,12 +139,12 @@ namespace BotControlPanel.Bots
                             {
                                 if (!games[msg.Chat.Id].AddPlayer(msg.From))
                                 {
-                                    client.SendTextMessageAsync(msg.Chat.Id, "Failed to add " + msg.From.FirstName + " to the players!");
+                                    client.SendTextMessageAsync(msg.Chat.Id, "Failed to add " + msg.From.FirstName + " to the players!").Wait();
                                 }
                             }
                             else
                             {
-                                client.SendTextMessageAsync(msg.Chat.Id, "It seems there is no game running in your group, or it can't be joined at the moment.");
+                                client.SendTextMessageAsync(msg.Chat.Id, "It seems there is no game running in your group, or it can't be joined at the moment.").Wait();
                             }
                             break;
 
@@ -139,12 +153,12 @@ namespace BotControlPanel.Bots
                             {
                                 if(!games[msg.Chat.Id].RemovePlayer(msg.From))
                                 {
-                                    client.SendTextMessageAsync(msg.Chat.Id, "Failed to remove " + msg.From.FirstName + " from the players!");
+                                    client.SendTextMessageAsync(msg.Chat.Id, "Failed to remove " + msg.From.FirstName + " from the players!").Wait();
                                 }
                             }
                             else
                             {
-                                client.SendTextMessageAsync(msg.Chat.Id, "It seems there is no game running in your group, or it can't be joined at the moment.");
+                                client.SendTextMessageAsync(msg.Chat.Id, "It seems there is no game running in your group, or it can't be joined at the moment.").Wait();
                             }
                             break;
 
@@ -153,14 +167,25 @@ namespace BotControlPanel.Bots
                             {
                                 if(!games[msg.Chat.Id].RemovePlayer(msg.From))
                                 {
-                                    client.SendTextMessageAsync(msg.Chat.Id, "Failed to remove dead player " + msg.From.FirstName + "...");
+                                    client.SendTextMessageAsync(msg.Chat.Id, "Failed to remove dead player " + msg.From.FirstName + "...").Wait(); ;
                                 }
                             }
                             else
                             {
-                                client.SendTextMessageAsync(msg.Chat.Id, "It seems there is no running game at the moment, so no player can be dead!");
+                                client.SendTextMessageAsync(msg.Chat.Id, "It seems there is no running game at the moment, so no player can be dead!").Wait();
                             }
                             break;
+                        case "/addalias":
+                            client.SendTextMessageAsync(msg.Chat.Id,
+                                "You need to write an alias behind this in the following format:\n"
+                                + "Alias - Role").Wait();
+                            break;
+                    }
+                    #endregion
+
+                    if (text.StartsWith("/addalias "))
+                    {
+                        
                     }
                 }
             }
@@ -174,6 +199,16 @@ namespace BotControlPanel.Bots
         #region Start Bot
         public bool startBot()
         {
+            if (System.IO.File.Exists(aliasesPath))
+            {
+                roleAliases = JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                    System.IO.File.ReadAllText(aliasesPath));
+            }
+            else
+            {
+                if (!System.IO.Directory.Exists(basePath)) System.IO.Directory.CreateDirectory(basePath);
+                System.IO.File.Create(aliasesPath);
+            }
             if (!client.IsReceiving)
             {
                 client.StartReceiving();
