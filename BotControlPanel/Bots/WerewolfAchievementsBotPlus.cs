@@ -132,7 +132,7 @@ namespace BotControlPanel.Bots
 
                                 games[msg.Chat.Id].AddPlayer(msg.From);
                             }
-                            break;
+                            return;
 
                         case "/join":
                             if(games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Joining)
@@ -146,7 +146,7 @@ namespace BotControlPanel.Bots
                             {
                                 client.SendTextMessageAsync(msg.Chat.Id, "It seems there is no game running in your group, or it can't be joined at the moment.").Wait();
                             }
-                            break;
+                            return;
 
                         case "/flee":
                             if(games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Joining)
@@ -160,7 +160,7 @@ namespace BotControlPanel.Bots
                             {
                                 client.SendTextMessageAsync(msg.Chat.Id, "It seems there is no game running in your group, or it can't be joined at the moment.").Wait();
                             }
-                            break;
+                            return;
 
                         case "/dead":
                             if(games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Running)
@@ -174,17 +174,18 @@ namespace BotControlPanel.Bots
                             {
                                 client.SendTextMessageAsync(msg.Chat.Id, "It seems there is no running game at the moment, so no player can be dead!").Wait();
                             }
-                            break;
+                            return;
                         case "/addalias":
                             client.SendTextMessageAsync(msg.Chat.Id,
                                 "You need to write an alias behind this in the following format:\n"
                                 + "Alias - Role").Wait();
-                            break;
+                            return;
                     }
                     #endregion
 
                     if (text.StartsWith("/addalias "))
                     {
+                        string args = text.Substring(10);
                         
                     }
                 }
