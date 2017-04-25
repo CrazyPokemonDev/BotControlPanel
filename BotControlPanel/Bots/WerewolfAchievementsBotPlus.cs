@@ -305,7 +305,7 @@ namespace BotControlPanel.Bots
                             Game g = games[msg.Chat.Id];
                             foreach (var kvp in roleAliases)
                             {
-                                if ((" " + text + " ").Contains(" " + kvp.Key + " "))
+                                if ((" " + text + " ").ToLower().Contains((" " + kvp.Key + " ").ToLower()))
                                 {
                                     if (!g.role.ContainsKey(msg.From.Id))
                                     {
