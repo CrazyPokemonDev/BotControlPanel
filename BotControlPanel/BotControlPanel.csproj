@@ -116,6 +116,7 @@
     </Compile>
     <Compile Include="Bots\AchBotInlineKeyboards\InlineKeyboardTellRole.cs" />
     <Compile Include="Bots\WerewolfAchievementsBot.cs" />
+    <Compile Include="Bots\WerewolfAchievementsBotPlus.cs" />
     <Compile Include="Bots\WWTBCustomKeyboards\CancelKeyboard.cs" />
     <Compile Include="Bots\WWTBCustomKeyboards\ClosedlistKeyboard.cs" />
     <Compile Include="Bots\WWTBCustomKeyboards\StartKeyboard.cs" />
