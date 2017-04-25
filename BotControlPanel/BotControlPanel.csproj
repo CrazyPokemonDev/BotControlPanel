@@ -114,6 +114,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Bots\AchBotInlineKeyboards\InlineKeyboardStop.cs" />
+    <Compile Include="Bots\AchBotInlineKeyboards\InlineKeyboardStart.cs" />
     <Compile Include="Bots\AchBotInlineKeyboards\InlineKeyboardTellRole.cs" />
     <Compile Include="Bots\WerewolfAchievementsBot.cs" />
     <Compile Include="Bots\WerewolfAchievementsBotPlus.cs" />

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -22,23 +23,27 @@ namespace BotControlPanel.Bots
             public List<User> players { get; set; }
             public state gamestate { get; set; }
             private TelegramBotClient client;
-            private Dictionary<User, string> role = new Dictionary<User, string>();
+            public Dictionary<User, string> role = new Dictionary<User, string>();
+            public long GroupId { get; }
 
-
-            private const string joinMessageText = "*Join this game!*\n\nPin this message and remember to press start as soon as the game starts.";
+            private const string joinMessageText = "*Join this game!*\n\nPin this message and remember "
+                + "to press start as soon as the game starts.";
+            private const string stoppedMessageText = "*This game is finished!*";
             private string playerlist;
             #endregion
 
-            public Game(TelegramBotClient cl)
+            public Game(TelegramBotClient cl, long groupid)
             {
                 client = cl;
                 UpdatePlayerlist();
+                GroupId = groupid;
             }
 
             public enum state
             {
                 Joining,
-                Running
+                Running,
+                Stopped
             }
 
             public bool AddPlayer(User newplayer)
@@ -52,6 +57,16 @@ namespace BotControlPanel.Bots
                 return false;
             }
 
+            public void Start()
+            {
+                gamestate = state.Running;
+            }
+
+            public void Stop()
+            {
+                gamestate = state.Stopped;
+                UpdatePlayerlist();
+            }
 
             public bool RemovePlayer(User oldplayer)
             {
@@ -64,15 +79,30 @@ namespace BotControlPanel.Bots
                 return false;
             }
 
-            private void UpdatePlayerlist()
+            public void UpdatePlayerlist()
             {
                 playerlist = "*Players:*";
 
                 foreach(var p in players)
                 {
                     playerlist += "\n" + p.FirstName;
+                    if (gamestate == state.Running)
+                    {
+                        if (role.ContainsKey(p)) playerlist += ": " + role[p];
+                        else playerlist += ": No role detected yet";
+                    }
                 }
-                client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, joinMessageText + "\n\n" + playerlist, parseMode: ParseMode.Markdown).Wait();
+                if (gamestate == state.Running)
+                    client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, joinMessageText
+                        + "\n\n" + playerlist, parseMode: ParseMode.Markdown,
+                        replyMarkup: InlineKeyboardStop.Get(GroupId)).Wait();
+                else if (gamestate == state.Joining)
+                    client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, joinMessageText
+                        + "\n\n" + playerlist, parseMode: ParseMode.Markdown,
+                        replyMarkup: InlineKeyboardStart.Get(GroupId)).Wait();
+                else if (gamestate == state.Stopped)
+                    client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, stoppedMessageText,
+                        parseMode: ParseMode.Markdown).Wait();
             }
         }
         #endregion
@@ -81,6 +111,7 @@ namespace BotControlPanel.Bots
         private TelegramBotClient client;
         private Dictionary<long, Game> games = new Dictionary<long, Game>();
         private Dictionary<string, string> roleAliases = new Dictionary<string, string>();
+        List<User> justCalledStop = new List<User>();
         #endregion
         #region Constants
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
@@ -92,9 +123,67 @@ namespace BotControlPanel.Bots
         {
             client = new TelegramBotClient(token);
             client.OnUpdate += Client_OnUpdate;
+            client.OnCallbackQuery += Client_OnCallbackQuery;
         }
         #endregion
 
+        #region Callback Query Handler
+        private void Client_OnCallbackQuery(object sender, Telegram.Bot.Args.CallbackQueryEventArgs e)
+        {
+            string data = e.CallbackQuery.Data;
+            #region Callback Query Start
+            if (data.StartsWith("start_"))
+            {
+                long id = Convert.ToInt64(data.Substring(6));
+                if (games.ContainsKey(id))
+                {
+                    games[id].Start();
+                    games[id].UpdatePlayerlist();
+                    client.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Game is now considered running.").Wait();
+                }
+                else
+                {
+                    client.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Did not find that game.").Wait();
+                }
+            }
+            #endregion
+            #region Callback Query Stop
+            else if (data.StartsWith("stop_"))
+            {
+                long id = Convert.ToInt64(data.Substring(5));
+                if (games.ContainsKey(id))
+                {
+                    if (justCalledStop.Contains(e.CallbackQuery.From))
+                    {
+                        games[id].Stop();
+                        games[id].UpdatePlayerlist();
+                        games.Remove(id);
+                        client.AnswerCallbackQueryAsync(e.CallbackQuery.Id,
+                            "The game is now considered stopped.").Wait();
+                        justCalledStop.Remove(e.CallbackQuery.From);
+                    }
+                    else
+                    {
+                        justCalledStop.Add(e.CallbackQuery.From);
+                        client.AnswerCallbackQueryAsync(e.CallbackQuery.Id,
+                            "Press this button again if the game really has stopped already.").Wait();
+                        Timer t = new Timer(new TimerCallback
+                            (
+                                delegate
+                                {
+                                    justCalledStop.Remove(e.CallbackQuery.From);
+                                }
+                            ), null, 10*1000, Timeout.Infinite);
+                    }
+                }
+                else
+                {
+                    client.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Did not find that game.").Wait();
+                }
+            }
+            #endregion
+        }
+        #endregion
         #region Update Handler
         private void Client_OnUpdate(object sender, Telegram.Bot.Args.UpdateEventArgs e)
         {
@@ -122,7 +211,7 @@ namespace BotControlPanel.Bots
                                 t.Wait();
                                 var gamemessage = t.Result;
                                 var gameplayers = new List<User>();
-                                var game = new Game(client)
+                                var game = new Game(client, msg.Chat.Id)
                                 {
                                     players = gameplayers,
                                     gamestate = Game.state.Joining,
@@ -206,6 +295,28 @@ namespace BotControlPanel.Bots
                         {
                             client.SendTextMessageAsync(
                                 msg.Chat.Id, "You are not an admin of this bot!", replyToMessageId: msg.MessageId).Wait();
+                        }
+                    }
+                    #endregion
+
+                    #region The heavy part: checking for each and every alias
+                    if (games.ContainsKey(msg.Chat.Id))
+                    {
+                        if (games[msg.Chat.Id].gamestate == Game.state.Running)
+                        {
+                            Game g = games[msg.Chat.Id];
+                            foreach (var kvp in roleAliases)
+                            {
+                                if ((" " + text + " ").Contains(" " + kvp.Key + " "))
+                                {
+                                    if (!g.role.ContainsKey(msg.From))
+                                    {
+                                        g.role.Add(msg.From, kvp.Value);
+                                        g.UpdatePlayerlist();
+                                    }
+                                    break;
+                                }
+                            }
                         }
                     }
                     #endregion
