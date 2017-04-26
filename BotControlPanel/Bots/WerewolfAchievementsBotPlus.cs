@@ -116,7 +116,7 @@ namespace BotControlPanel.Bots
         #region Constants
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private List<long> adminIds = new List<long>() { 267376056 };   //Ludwig, add your ID
+        private List<long> adminIds = new List<long>() { 267376056, 295152997 };   //Ludwig, add your ID
         #endregion
         #region Constructor
         public WerewolfAchievementsBotPlus(string token)
@@ -130,58 +130,66 @@ namespace BotControlPanel.Bots
         #region Callback Query Handler
         private void Client_OnCallbackQuery(object sender, Telegram.Bot.Args.CallbackQueryEventArgs e)
         {
-            string data = e.CallbackQuery.Data;
-            #region Callback Query Start
-            if (data.StartsWith("start_"))
+            try
             {
-                long id = Convert.ToInt64(data.Substring(6));
-                if (games.ContainsKey(id))
+                string data = e.CallbackQuery.Data;
+                #region Callback Query Start
+                if (data.StartsWith("start_"))
                 {
-                    games[id].Start();
-                    games[id].UpdatePlayerlist();
-                    client.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Game is now considered running.").Wait();
-                }
-                else
-                {
-                    client.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Did not find that game.").Wait();
-                }
-            }
-            #endregion
-            #region Callback Query Stop
-            else if (data.StartsWith("stop_"))
-            {
-                long id = Convert.ToInt64(data.Substring(5));
-                if (games.ContainsKey(id))
-                {
-                    if (justCalledStop.Contains(e.CallbackQuery.From.Id))
+                    long id = Convert.ToInt64(data.Substring(6));
+                    if (games.ContainsKey(id))
                     {
-                        games[id].Stop();
+                        games[id].Start();
                         games[id].UpdatePlayerlist();
-                        games.Remove(id);
-                        client.AnswerCallbackQueryAsync(e.CallbackQuery.Id,
-                            "The game is now considered stopped.").Wait();
-                        justCalledStop.Remove(e.CallbackQuery.From.Id);
+                        client.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Game is now considered running.").Wait();
                     }
                     else
                     {
-                        justCalledStop.Add(e.CallbackQuery.From.Id);
-                        client.AnswerCallbackQueryAsync(e.CallbackQuery.Id,
-                            "Press this button again if the game really has stopped already.").Wait();
-                        Timer t = new Timer(new TimerCallback
-                            (
-                                delegate
-                                {
-                                    justCalledStop.Remove(e.CallbackQuery.From.Id);
-                                }
-                            ), null, 10*1000, Timeout.Infinite);
+                        client.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Did not find that game.").Wait();
                     }
                 }
-                else
+                #endregion
+                #region Callback Query Stop
+                else if (data.StartsWith("stop_"))
                 {
-                    client.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Did not find that game.").Wait();
+                    long id = Convert.ToInt64(data.Substring(5));
+                    if (games.ContainsKey(id))
+                    {
+                        if (justCalledStop.Contains(e.CallbackQuery.From.Id))
+                        {
+                            games[id].Stop();
+                            games[id].UpdatePlayerlist();
+                            games.Remove(id);
+                            client.AnswerCallbackQueryAsync(e.CallbackQuery.Id,
+                                "The game is now considered stopped.").Wait();
+                            justCalledStop.Remove(e.CallbackQuery.From.Id);
+                        }
+                        else
+                        {
+                            justCalledStop.Add(e.CallbackQuery.From.Id);
+                            client.AnswerCallbackQueryAsync(e.CallbackQuery.Id,
+                                "Press this button again if the game really has stopped already.").Wait();
+                            Timer t = new Timer(new TimerCallback
+                                (
+                                    delegate
+                                    {
+                                        justCalledStop.Remove(e.CallbackQuery.From.Id);
+                                    }
+                                ), null, 10 * 1000, Timeout.Infinite);
+                        }
+                    }
+                    else
+                    {
+                        client.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Did not find that game.").Wait();
+                    }
                 }
+                #endregion
             }
-            #endregion
+            catch (Exception ex)
+            {
+                client.SendTextMessageAsync(adminIds[0], "Error in achievements callback: " + ex.Message
+                    + "\n" + ex.StackTrace);
+            }
         }
         #endregion
         #region Update Handler
