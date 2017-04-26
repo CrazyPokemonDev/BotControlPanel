@@ -15,7 +15,6 @@ namespace BotControlPanel.Bots
 {
     public class WerewolfAchievementsBotPlus : FlomBot
     {
-        //So, verdammte Sch***e. Das hier verursacht einen Konflikt.
         //-----------------------------------
         //REMEMBER REFRESHING VERSION STRING!
         //-----------------------------------
