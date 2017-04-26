@@ -335,6 +335,16 @@ namespace BotControlPanel.Bots
                             if (games[msg.Chat.Id].gamestate == Game.state.Running)
                             {
                                 Game g = games[msg.Chat.Id];
+
+                                int player = msg.ReplyToMessage != null && g.players.Contains(msg.ReplyToMessage.From)
+                                        ? msg.ReplyToMessage.From.Id
+                                        : (
+                                            g.players.Contains(msg.From)
+                                                ? msg.From.Id
+                                                : 0
+                                          );
+                                if (player == 0) return;
+
                                 foreach (var kvp in roleAliases)
                                 {
                                     if ((" " + text + " ").ToLower()
