@@ -30,8 +30,7 @@ namespace BotControlPanel.Bots
         {
             #region Pre-declared stuff, such as variables and constants
             public Message pinmessage { get; set; }
-            public List<long> players { get; set; } = new List<long>();
-            public Dictionary<long, string> playernames = new Dictionary<long, string>();
+            public List<User> players { get; set; } = new List<User>();
             public state gamestate { get; set; }
             private TelegramBotClient client;
             public Dictionary<long, roles> role = new Dictionary<long, roles>();
@@ -134,7 +133,7 @@ namespace BotControlPanel.Bots
                 return dict;
             }
 
-            public bool AddPlayer(long newplayer)
+            public bool AddPlayer(User newplayer)
             {
                 if (!players.Contains(newplayer) && gamestate == state.Joining)
                 {
@@ -155,7 +154,7 @@ namespace BotControlPanel.Bots
                 gamestate = state.Stopped;
             }
 
-            public bool RemovePlayer(long oldplayer)
+            public bool RemovePlayer(User oldplayer)
             {
                 if(players.Contains(oldplayer))
                 {
@@ -172,15 +171,15 @@ namespace BotControlPanel.Bots
 
                 foreach(var p in players)
                 {
-                    if(gamestate == state.Joining) playerlist += playernames[p] + "\n";
+                    if(gamestate == state.Joining) playerlist += p.FirstName + "\n";
                     if (gamestate == state.Running)
                     {
-                        if (role.ContainsKey(p))
+                        if (role.ContainsKey(p.Id))
                         {
-                            if (role[p] == roles.Dead) playerlist += playernames[p] + ": " + rolestring[roles.Dead] + "\n";
-                            else playerlist += "*" + playernames[p] + "*: " + rolestring[role[p]] + "\n";
+                            if (role[p.Id] == roles.Dead) playerlist += p.FirstName + ": " + rolestring[roles.Dead] + "\n";
+                            else playerlist += "*" + p.FirstName + "*: " + rolestring[role[p.Id]] + "\n";
                         }
-                        else playerlist += "*" + playernames[p] + "*: " + rolestring[roles.Unknown] + "\n";
+                        else playerlist += "*" + p.FirstName + "*: " + rolestring[roles.Unknown] + "\n";
                     }
                 }
                 if (gamestate == state.Running)
@@ -323,14 +322,14 @@ namespace BotControlPanel.Bots
                                     var gamemessage = t.Result;
                                     var game = new Game(client, msg.Chat.Id, gamemessage);
                                     games.Add(msg.Chat.Id, game);
-                                    games[msg.Chat.Id].AddPlayer(msg.From.Id);
+                                    games[msg.Chat.Id].AddPlayer(msg.From);
                                 }
                                 return;
 
                             case "/join":
                                 if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Joining)
                                 {
-                                    if (!games[msg.Chat.Id].AddPlayer(msg.From.Id))
+                                    if (!games[msg.Chat.Id].AddPlayer(msg.From))
                                     {
                                         client.SendTextMessageAsync(msg.Chat.Id, "Failed to add " + msg.From.FirstName + " to the players!").Wait();
                                     }
@@ -347,10 +346,10 @@ namespace BotControlPanel.Bots
                                 {
                                     Game g = games[msg.Chat.Id];
 
-                                    User dead = msg.ReplyToMessage != null && g.players.Contains(msg.ReplyToMessage.From.Id)
+                                    User dead = msg.ReplyToMessage != null && g.players.Contains(msg.ReplyToMessage.From)
                                             ? msg.ReplyToMessage.From
                                             : (
-                                                g.players.Contains(msg.From.Id)
+                                                g.players.Contains(msg.From)
                                                     ? msg.From
                                                     : null
                                               );
@@ -359,7 +358,7 @@ namespace BotControlPanel.Bots
                                     switch (g.gamestate)
                                     {
                                         case Game.state.Joining:
-                                            if (!g.RemovePlayer(dead.Id))
+                                            if (!g.RemovePlayer(dead))
                                             {
                                                 client.SendTextMessageAsync(msg.Chat.Id, "Failed to remove player " + dead.FirstName + " from the game.").Wait();
                                             }
@@ -443,9 +442,9 @@ namespace BotControlPanel.Bots
                                 long player = 0;
                                 if(msg.ReplyToMessage != null)
                                 {
-                                    if (g.players.Contains(msg.ReplyToMessage.From.Id)) player = msg.ReplyToMessage.From.Id;
+                                    if (g.players.Contains(msg.ReplyToMessage.From)) player = msg.ReplyToMessage.From.Id;
                                 }
-                                else if(g.players.Contains(msg.From.Id))
+                                else if(g.players.Contains(msg.From))
                                 {
                                     player = msg.From.Id;
                                 }
