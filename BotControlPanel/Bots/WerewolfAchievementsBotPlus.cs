@@ -201,6 +201,11 @@ namespace BotControlPanel.Bots
         {
             try
             {
+                if (e.Update.Type == UpdateType.MessageUpdate && e.Update.Message.Chat.Type != ChatType.Private && allowedgroups.Contains(e.Update.Message.Chat.Id))
+                {
+                    client.LeaveChatAsync(e.Update.Message.Chat.Id).Wait();
+                    return;
+                }
                 if (e.Update.Type == UpdateType.MessageUpdate)
                 {
                     if (e.Update.Message.Type == MessageType.TextMessage &&
