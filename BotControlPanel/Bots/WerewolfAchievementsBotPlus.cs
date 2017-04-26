@@ -242,24 +242,41 @@ namespace BotControlPanel.Bots
 
                             case "/flee":
                             case "/dead":
-                                if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate != Game.state.Stopped)
+                                if (games.ContainsKey(msg.Chat.Id))
                                 {
                                     Game g = games[msg.Chat.Id];
-                                    int dead = msg.ReplyToMessage != null && g.players.Contains(msg.ReplyToMessage.From)
-                                        ? msg.ReplyToMessage.From.Id
-                                        : (
-                                            g.players.Contains(msg.From)
-                                                ? msg.From.Id
-                                                : 0
-                                          );
 
-                                    if (dead == 0) return;
+                                    User dead = msg.ReplyToMessage != null && g.players.Contains(msg.ReplyToMessage.From)
+                                            ? msg.ReplyToMessage.From
+                                            : (
+                                                g.players.Contains(msg.From)
+                                                    ? msg.From
+                                                    : null
+                                              );
+                                    if (dead == null) return;
 
-                                    g.role.Remove(dead);
-                                    g.role.Add(dead, "*DEAD*");
-                                    g.UpdatePlayerlist();
+                                    switch (g.gamestate)
+                                    {
+                                        case Game.state.Joining:
+                                            if(!g.RemovePlayer(dead))
+                                            {
+                                                client.SendTextMessageAsync(msg.Chat.Id, "Failed to remove player " + dead.FirstName + " from the game.").Wait();
+                                            }
+                                            break;
+
+                                        case Game.state.Running:
+                                        
+
+                                            g.role.Remove(dead.Id);
+                                            g.role.Add(dead.Id, "*DEAD*");
+                                            g.UpdatePlayerlist();
+                                            break;
+                                    }
+
                                 }
                                 return;
+                                   
+
                             case "/addalias":
                                 client.SendTextMessageAsync(msg.Chat.Id,
                                     "You need to write an alias behind this in the following format:\n"
