@@ -209,9 +209,44 @@ namespace BotControlPanel.Bots
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private const string version = "2.2";
+        private const string version = "2.3";
         private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 };
         private readonly List<long> adminIds = new List<long>() { 267376056, 295152997 };
+        #region Default Aliases
+        private readonly List<string> defaultAliases = new List<string>()
+        {
+            "alphawolf",
+            "apprenticeseer",
+            "beholder",
+            "blacksmith",
+            "clumsyguy",
+            "cultist",
+            "cultisthunter",
+            "cupid",
+            "cursed",
+            "detective",
+            "doppelgänger",
+            "drunk",
+            "fool",
+            "guardianAngel",
+            "gunner",
+            "harlot",
+            "hunter",
+            "mason",
+            "mayor",
+            "prince",
+            "seer",
+            "seerfool",
+            "serialkiller",
+            "sorcerer",
+            "tanner",
+            "traitor",
+            "villager",
+            "werewolf",
+            "wildchild",
+            "wolfcub"
+        };
+        #endregion
         #endregion
         #region Constructor
         public WerewolfAchievementsBotPlus(string token) : base(token)
@@ -455,8 +490,12 @@ namespace BotControlPanel.Bots
                                 if (player == 0) return;
 
                                 List<string> Keys = roleAliases.Keys.ToList();
+                                foreach (string s in defaultAliases)
+                                {
+                                    Keys.Add(s);
+                                }
 
-                                if (!g.role.ContainsKey(player))
+                                if (!g.role.ContainsKey(player) && Keys.Contains(text.ToLower()))
                                 {
                                     var role = GetRoleByAlias(text.ToLower());
                                     if (role != Game.roles.Unknown)
@@ -465,7 +504,7 @@ namespace BotControlPanel.Bots
                                         g.UpdatePlayerlist();
                                     }
                                 }
-                                else if(text.StartsWith("now "))
+                                else if(text.StartsWith("now ") && Keys.Contains(text.ToLower().Substring(4)))
                                 {
                                     var role = GetRoleByAlias(text.ToLower().Substring(4));
                                     if (role != Game.roles.Unknown)
