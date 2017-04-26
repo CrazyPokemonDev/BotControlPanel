@@ -241,7 +241,7 @@ namespace BotControlPanel.Bots
                                 return;
 
                             case "/flee":
-                                if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Joining)
+                                if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate != Game.state.Stopped)
                                 {
                                     if (!games[msg.Chat.Id].RemovePlayer(msg.From))
                                     {
@@ -257,14 +257,20 @@ namespace BotControlPanel.Bots
                             case "/dead":
                                 if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Running)
                                 {
-                                    if (!games[msg.Chat.Id].RemovePlayer(msg.From))
-                                    {
-                                        client.SendTextMessageAsync(msg.Chat.Id, "Failed to remove dead player " + msg.From.FirstName + "...").Wait(); ;
-                                    }
-                                }
-                                else
-                                {
-                                    client.SendTextMessageAsync(msg.Chat.Id, "It seems there is no running game at the moment, so no player can be dead!").Wait();
+                                    Game g = games[msg.Chat.Id];
+                                    int dead = msg.ReplyToMessage != null && g.players.Contains(msg.ReplyToMessage.From)
+                                        ? msg.ReplyToMessage.From.Id
+                                        : (
+                                            g.players.Contains(msg.From)
+                                                ? msg.From.Id
+                                                : 0
+                                          );
+
+                                    if (dead == 0) return;
+
+                                    g.role.Remove(dead);
+                                    g.role.Add(dead, "*DEAD*");
+                                    g.UpdatePlayerlist();
                                 }
                                 return;
                             case "/addalias":
@@ -324,21 +330,31 @@ namespace BotControlPanel.Bots
                             if (games[msg.Chat.Id].gamestate == Game.state.Running)
                             {
                                 Game g = games[msg.Chat.Id];
+
+                                int player = msg.ReplyToMessage != null && g.players.Contains(msg.ReplyToMessage.From)
+                                        ? msg.ReplyToMessage.From.Id
+                                        : (
+                                            g.players.Contains(msg.From)
+                                                ? msg.From.Id
+                                                : 0
+                                          );
+                                if (player == 0) return;
+
                                 foreach (var kvp in roleAliases)
                                 {
                                     if ((" " + text + " ").ToLower()
                                         .Replace('.', ' ').Replace('!', ' ')
                                         .Contains((" " + kvp.Key + " ").ToLower()))
                                     {
-                                        if (!g.role.ContainsKey(msg.From.Id))
+                                        if (!g.role.ContainsKey(player))
                                         {
-                                            g.role.Add(msg.From.Id, kvp.Value);
+                                            g.role.Add(player, kvp.Value);
                                             g.UpdatePlayerlist();
                                         }
                                         else if(text.ToLower().Contains("now"))
                                         {
-                                            g.role.Remove(msg.From.Id);
-                                            g.role.Add(msg.From.Id, kvp.Value + " 🆕");
+                                            g.role.Remove(player);
+                                            g.role.Add(player, kvp.Value + " 🆕");
                                             g.UpdatePlayerlist();
                                         }
                                         break;
