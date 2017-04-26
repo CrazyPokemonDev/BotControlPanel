@@ -39,7 +39,7 @@ namespace BotControlPanel
         #region Variables
         private WWTB wwtb;
         private WerewolfAchievementsBotPlus achBot;
-        private List<FlomBot> bots = new List<FlomBot>() { new WerewolfAchievementsBotPlus("") };
+        private List<FlomBot> bots = new List<FlomBot>();
         private string wwtbToken = "";
         private string achToken = "";
         #endregion
