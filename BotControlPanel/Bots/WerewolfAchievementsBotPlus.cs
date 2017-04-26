@@ -439,13 +439,16 @@ namespace BotControlPanel.Bots
                             {
                                 Game g = games[msg.Chat.Id];
 
-                                long player = msg.ReplyToMessage != null && g.players.Contains(msg.ReplyToMessage.From)
-                                        ? msg.ReplyToMessage.From.Id
-                                        : (
-                                            g.players.Contains(msg.From)
-                                                ? msg.From.Id
-                                                : 0
-                                          );
+                                long player = 0;
+                                if(msg.ReplyToMessage != null)
+                                {
+                                    if (g.players.Contains(msg.ReplyToMessage.From)) player = msg.ReplyToMessage.From.Id;
+                                }
+                                else if(g.players.Contains(msg.From))
+                                {
+                                    player = msg.From.Id;
+                                }
+
                                 if (player == 0) return;
 
                                 List<string> Keys = roleAliases.Keys.ToList();
