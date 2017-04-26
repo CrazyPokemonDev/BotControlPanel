@@ -244,31 +244,38 @@ namespace BotControlPanel.Bots
                                 return;
 
                             case "/flee":
-                                if (games.ContainsKey(msg.Chat.Id) && (games[msg.Chat.Id].gamestate == Game.state.Joining
-                                                                    || games[msg.Chat.Id].gamestate == Game.state.Running))
-                                {
-                                    if (!games[msg.Chat.Id].RemovePlayer(msg.From))
-                                    {
-                                        client.SendTextMessageAsync(msg.Chat.Id, "Failed to remove " + msg.From.FirstName + " from the players!").Wait();
-                                    }
-                                }
-                                else
-                                {
-                                    client.SendTextMessageAsync(msg.Chat.Id, "It seems there is no game running in your group, or it can't be joined at the moment.").Wait();
-                                }
-                                return;
-
                             case "/dead":
-                                if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Running)
+                                if (games.ContainsKey(msg.Chat.Id))
                                 {
-                                    if (!games[msg.Chat.Id].RemovePlayer(msg.From))
+                                    Game g = games[msg.Chat.Id];
+
+                                    User dead = msg.ReplyToMessage != null && g.players.Contains(msg.ReplyToMessage.From)
+                                            ? msg.ReplyToMessage.From
+                                            : (
+                                                g.players.Contains(msg.From)
+                                                    ? msg.From
+                                                    : null
+                                              );
+                                    if (dead == null) return;
+
+                                    switch (g.gamestate)
                                     {
-                                        client.SendTextMessageAsync(msg.Chat.Id, "Failed to remove dead player " + msg.From.FirstName + "...").Wait(); ;
+                                        case Game.state.Joining:
+                                            if (!g.RemovePlayer(dead))
+                                            {
+                                                client.SendTextMessageAsync(msg.Chat.Id, "Failed to remove player " + dead.FirstName + " from the game.").Wait();
+                                            }
+                                            break;
+
+                                        case Game.state.Running:
+
+
+                                            g.role.Remove(dead.Id);
+                                            g.role.Add(dead.Id, "*DEAD*");
+                                            g.UpdatePlayerlist();
+                                            break;
                                     }
-                                }
-                                else
-                                {
-                                    client.SendTextMessageAsync(msg.Chat.Id, "It seems there is no running game at the moment, so no player can be dead!").Wait();
+
                                 }
                                 return;
                             case "/addalias":
