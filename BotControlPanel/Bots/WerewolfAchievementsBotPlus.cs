@@ -13,6 +13,10 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace BotControlPanel.Bots
 {
+    //----------------------------------------------------------------------------------
+    //TO ADD:
+    //Set roles for other players
+    //----------------------------------------------------------------------------------
     public class WerewolfAchievementsBotPlus : FlomBot
     {
         #region Custom "Game" class
@@ -240,7 +244,8 @@ namespace BotControlPanel.Bots
                                 return;
 
                             case "/flee":
-                                if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Joining)
+                                if (games.ContainsKey(msg.Chat.Id) && (games[msg.Chat.Id].gamestate == Game.state.Joining
+                                                                    || games[msg.Chat.Id].gamestate == Game.state.Running))
                                 {
                                     if (!games[msg.Chat.Id].RemovePlayer(msg.From))
                                     {
