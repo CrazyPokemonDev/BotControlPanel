@@ -130,6 +130,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Panel\BotPanelPart.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

@@ -13,7 +13,6 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="1*"/>
                 <RowDefinition Height="1*"/>
-                <RowDefinition Height="1*"/>
             </Grid.RowDefinitions>
             <TextBlock x:Name="textBlockWWTB" Margin="10" TextWrapping="Wrap" Text="Werewolf Translation Bot" HorizontalAlignment="Left" VerticalAlignment="Center" Background="{StaticResource inactiveBackground}">
                 <TextBlock.RenderTransform>

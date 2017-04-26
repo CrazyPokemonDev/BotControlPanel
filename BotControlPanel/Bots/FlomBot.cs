@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
+using BotControlPanel.Panel;
 
 namespace BotControlPanel.Bots
 {
@@ -13,6 +14,7 @@ namespace BotControlPanel.Bots
     {
         #region Variables
         protected TelegramBotClient client;
+        public BotPanelPart Panel { get; set; }
         #endregion
 
         #region Control Methods
@@ -31,7 +33,7 @@ namespace BotControlPanel.Bots
         }
         #endregion
         #region Is Running
-        public virtual bool isRunning { get { return client.IsReceiving; } }
+        public virtual bool IsRunning { get { return client.IsReceiving; } }
         #endregion
         #endregion
 

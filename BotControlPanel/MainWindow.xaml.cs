@@ -30,6 +30,8 @@ namespace BotControlPanel
         private const string wwtbTokenPath = "C:\\Olfi01\\BotControlPanel\\.Tokens\\wwtb.token";
         private const string achvTokenPath = "C:\\Olfi01\\BotControlPanel\\.Tokens\\achvbot.token";
         private const string tokenBasePath = "C:\\Olfi01\\BotControlPanel\\.Tokens\\";
+        private const string erroredMessage = "Lege zuerst ein korrektes Token unter Einstellungen fest!\n" +
+                    "Falls du das bereits getan hast, ist ein anderer Fehler aufgetreten.";
         #endregion
         #region Variables
         private WWTB wwtb;
@@ -44,13 +46,9 @@ namespace BotControlPanel
             InitializeComponent();
             getTokens();
             try { wwtb = new WWTB(wwtbToken); }
-#pragma warning disable CS0168 // Variable ist deklariert, wird jedoch niemals verwendet
-            catch (ArgumentException e) { textBlockWWTB.Background = erroredBackground; }
-#pragma warning restore CS0168 // Variable ist deklariert, wird jedoch niemals verwendet
+            catch { textBlockWWTB.Background = erroredBackground; }
             try { achBot = new WerewolfAchievementsBotPlus(achToken); }
-#pragma warning disable CS0168 // Variable ist deklariert, wird jedoch niemals verwendet
-            catch (ArgumentException e) { textBlockAchv.Background = erroredBackground; }
-#pragma warning restore CS0168 // Variable ist deklariert, wird jedoch niemals verwendet
+            catch { textBlockAchv.Background = erroredBackground; }
         }
         #endregion
 
@@ -115,11 +113,11 @@ namespace BotControlPanel
         {
             if (textBlockWWTB.Background == erroredBackground)
             {
-                MessageBox.Show("Lege zuerst ein korrektes Token unter Einstellungen fest!");
+                MessageBox.Show(erroredMessage);
                 return;
             }
-            bool started = true;
-            if (!wwtb.isRunning)
+            bool started = wwtb.IsRunning;
+            if (!wwtb.IsRunning)
             {
                 started = wwtb.StartBot();
             }
@@ -135,7 +133,7 @@ namespace BotControlPanel
         #region Stop WWTB
         private void stopButtonWWTB_Click(object sender, RoutedEventArgs e)
         {
-            if (wwtb.isRunning)
+            if (wwtb.IsRunning)
             {
                 wwtb.StopBot();
             }
@@ -160,10 +158,10 @@ namespace BotControlPanel
         {
             if (textBlockAchv.Background == erroredBackground)
             {
-                MessageBox.Show("Lege zuerst ein korrektes Token unter Einstellungen fest!");
+                MessageBox.Show(erroredMessage);
                 return;
             }
-            if (!achBot.isRunning)
+            if (!achBot.IsRunning)
             {
                 achBot.StartBot();
             }
@@ -176,7 +174,7 @@ namespace BotControlPanel
         #region Stop AchBot
         private void buttonStopAchievements_Click(object sender, RoutedEventArgs e)
         {
-            if (achBot.isRunning)
+            if (achBot.IsRunning)
             {
                 achBot.StopBot();
             }
@@ -200,7 +198,13 @@ namespace BotControlPanel
         #region Close Window
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (wwtb.isRunning || achBot.isRunning)
+            bool botRunning = false;
+            if (wwtb.IsRunning || achBot.IsRunning) botRunning = true;
+            foreach (FlomBot b in bots)
+            {
+                if (b.IsRunning) botRunning = true;
+            }
+            if (botRunning)
             {
                 MessageBoxResult res = MessageBox.Show(
                     "Bot(s) are still running. They will be stopped upon closing.",
@@ -213,6 +217,10 @@ namespace BotControlPanel
                 {
                     wwtb.StopBot();
                     achBot.StopBot();
+                    foreach (FlomBot b in bots)
+                    {
+                        b.StopBot();
+                    }
                 }
             }
         }
