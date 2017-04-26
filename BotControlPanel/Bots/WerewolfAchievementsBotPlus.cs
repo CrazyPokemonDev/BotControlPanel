@@ -336,7 +336,7 @@ namespace BotControlPanel.Bots
                             {
                                 Game g = games[msg.Chat.Id];
 
-                                int player = msg.ReplyToMessage != null && g.players.Contains(msg.ReplyToMessage.From)
+                                long player = msg.ReplyToMessage != null && g.players.Contains(msg.ReplyToMessage.From)
                                         ? msg.ReplyToMessage.From.Id
                                         : (
                                             g.players.Contains(msg.From)
@@ -351,17 +351,17 @@ namespace BotControlPanel.Bots
                                         .Replace('.', ' ').Replace('!', ' ')
                                         .Contains((" " + kvp.Key + " ").ToLower()))
                                     {
-                                        if (!g.role.ContainsKey(msg.From.Id))
+                                        if (!g.role.ContainsKey(player))
                                         {
-                                            g.role.Add(msg.From.Id, kvp.Value);
+                                            g.role.Add(player, kvp.Value);
                                             g.UpdatePlayerlist();
                                         }
                                         else if ((" " + text + " ").ToLower()
                                         .Replace('.', ' ').Replace('!', ' ')
                                         .Contains((" now ").ToLower()))
                                         {
-                                            g.role.Remove(msg.From.Id);
-                                            g.role.Add(msg.From.Id, kvp.Value + " 🆕");
+                                            g.role.Remove(player);
+                                            g.role.Add(player, kvp.Value + " 🆕");
                                             g.UpdatePlayerlist();
                                         }
                                         break;
