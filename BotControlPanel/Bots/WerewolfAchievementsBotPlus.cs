@@ -119,6 +119,7 @@ namespace BotControlPanel.Bots
         #region Constants
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
+        private List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 };
         private List<long> adminIds = new List<long>() { 267376056, 295152997 };
         #endregion
         #region Constructor
