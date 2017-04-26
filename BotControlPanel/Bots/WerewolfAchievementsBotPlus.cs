@@ -393,7 +393,7 @@ namespace BotControlPanel.Bots
                         {
                             if (text.Split(' ').Count() == 3)
                             {
-                                string alias = text.Split(' ')[1];
+                                string alias = text.Split(' ')[1].ToLower();
                                 string roleS = text.Split(' ')[2];
                                 Game.roles role = GetRoleByAlias(roleS);
                                 if(role == Game.roles.Unknown)
@@ -415,7 +415,7 @@ namespace BotControlPanel.Bots
                         {
                             if (text.Split(' ').Count() == 2)
                             {
-                                string alias = text.Split(' ')[1];
+                                string alias = text.Split(' ')[1].ToLower();
 
                                 if (roleAliases.ContainsKey(alias))
                                 {
@@ -453,14 +453,14 @@ namespace BotControlPanel.Bots
 
                                 List<string> Keys = roleAliases.Keys.ToList();
 
-                                if (Keys.Contains(text) && !g.role.ContainsKey(player))
+                                if (Keys.Contains(text.ToLower()) && !g.role.ContainsKey(player))
                                 {
-                                    g.role.Add(player, GetRoleByAlias(text));
+                                    g.role.Add(player, GetRoleByAlias(text.ToLower()));
                                     g.UpdatePlayerlist();
                                 }
-                                else if(text.StartsWith("now ") && Keys.Contains(text.Substring(4)))
+                                else if(text.StartsWith("now ") && Keys.Contains(text.ToLower().Substring(4)))
                                 {
-                                    g.role[player] = GetRoleByAlias(text.Substring(4));
+                                    g.role[player] = GetRoleByAlias(text.ToLower().Substring(4));
                                     g.UpdatePlayerlist();
                                 }
                             }
