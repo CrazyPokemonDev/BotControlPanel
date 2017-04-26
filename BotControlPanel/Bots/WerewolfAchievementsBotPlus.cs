@@ -449,17 +449,15 @@ namespace BotControlPanel.Bots
                                 if (player == 0) return;
 
                                 List<string> Keys = roleAliases.Keys.ToList();
-                                
-                                var roletext = text.ToLower();
 
-                                if (Keys.Contains(roletext) && !g.role.ContainsKey(player))
+                                if (Keys.Contains(text) && !g.role.ContainsKey(player))
                                 {
-                                    g.role.Add(player, GetRoleByAlias(roletext));
+                                    g.role.Add(player, GetRoleByAlias(text));
                                     g.UpdatePlayerlist();
                                 }
-                                else if(roletext.StartsWith("now ") && Keys.Contains(roletext.Substring(4)))
+                                else if(text.StartsWith("now ") && Keys.Contains(text.Substring(4)))
                                 {
-                                    g.role[player] = GetRoleByAlias(roletext.Substring(4));
+                                    g.role[player] = GetRoleByAlias(text.Substring(4));
                                     g.UpdatePlayerlist();
                                 }
                             }
