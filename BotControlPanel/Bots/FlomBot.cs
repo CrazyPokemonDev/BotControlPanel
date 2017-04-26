@@ -15,12 +15,43 @@ namespace BotControlPanel.Bots
         #region Variables
         protected TelegramBotClient client;
         public BotPanelPart Panel { get; set; }
+        #region Token
+        protected string token = "";
+        public string Token
+        {
+            get
+            {
+                return token;
+            }
+            set
+            {
+                token = value;
+                try
+                {
+                    client = new TelegramBotClient(token);
+                    client.OnUpdate -= Client_OnUpdate;
+                    client.OnUpdate += Client_OnUpdate;
+                    BotState = State.Functionable;
+                }
+                catch
+                {
+                    client = null;
+                    BotState = State.Errored;
+                }
+            }
+        }
+        #endregion
+        public State BotState = State.Functionable;
+        #endregion
+        #region Constants
+        public abstract string Name { get; }
         #endregion
 
         #region Control Methods
         #region Start Bot
         public virtual bool StartBot()
         {
+            if (BotState == State.Errored) return false;
             if (!client.IsReceiving) client.StartReceiving();
             return true;
         }
@@ -33,15 +64,35 @@ namespace BotControlPanel.Bots
         }
         #endregion
         #region Is Running
-        public virtual bool IsRunning { get { return client.IsReceiving; } }
+        public virtual bool IsRunning { get { try { return client.IsReceiving; } catch { return false; } } }
         #endregion
         #endregion
 
         #region Constructor
+        /// <summary>
+        /// Creates Client using the token and assigns
+        /// <see cref="Client_OnUpdate(object, UpdateEventArgs)"/> to it.
+        /// </summary>
+        /// <param name="token">Token string of the bot to use</param>
         public FlomBot(string token)
         {
-            client = new TelegramBotClient(token);
-            client.OnUpdate += Client_OnUpdate;
+            Token = token;
+        }
+
+        /// <summary>
+        /// You still need to assign a token to this later.
+        /// </summary>
+        public FlomBot()
+        {
+            Token = "null";
+        }
+        #endregion
+
+        #region Enums
+        public enum State
+        {
+            Errored,
+            Functionable
         }
         #endregion
 

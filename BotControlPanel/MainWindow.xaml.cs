@@ -15,6 +15,8 @@ using System.Windows.Shapes;
 using BotControlPanel.Bots;
 using System.IO;
 using BotControlPanel.AlertWindows;
+using System.Security.AccessControl;
+using BotControlPanel.Panel;
 
 namespace BotControlPanel
 {
@@ -32,6 +34,7 @@ namespace BotControlPanel
         private const string tokenBasePath = "C:\\Olfi01\\BotControlPanel\\.Tokens\\";
         private const string erroredMessage = "Lege zuerst ein korrektes Token unter Einstellungen fest!\n" +
                     "Falls du das bereits getan hast, ist ein anderer Fehler aufgetreten.";
+        private const string tokenSuffix = ".token";
         #endregion
         #region Variables
         private WWTB wwtb;
@@ -49,6 +52,10 @@ namespace BotControlPanel
             catch { textBlockWWTB.Background = erroredBackground; }
             try { achBot = new WerewolfAchievementsBotPlus(achToken); }
             catch { textBlockAchv.Background = erroredBackground; }
+            foreach (FlomBot b in bots)
+            {
+                initializeFlomBot(b);
+            }
         }
         #endregion
 
@@ -76,15 +83,14 @@ namespace BotControlPanel
         {
             if (!Directory.Exists(tokenBasePath))
             {
-                Directory.CreateDirectory(tokenBasePath);
+                DirectoryInfo di = Directory.CreateDirectory(tokenBasePath);
+                di.Attributes = FileAttributes.Directory | FileAttributes.Hidden;
             }
             File.WriteAllText(wwtbTokenPath, token);
             wwtbToken = token;
             textBlockWWTB.Background = inactiveBackground;
             try { wwtb = new WWTB(wwtbToken); }
-#pragma warning disable CS0168 // Variable ist deklariert, wird jedoch niemals verwendet
-            catch (ArgumentException e) { textBlockWWTB.Background = erroredBackground; }
-#pragma warning restore CS0168 // Variable ist deklariert, wird jedoch niemals verwendet
+            catch { textBlockWWTB.Background = erroredBackground; }
         }
         #endregion
         #region AchBot Token
@@ -92,17 +98,119 @@ namespace BotControlPanel
         {
             if (!Directory.Exists(tokenBasePath))
             {
-                Directory.CreateDirectory(tokenBasePath);
+                DirectoryInfo di = Directory.CreateDirectory(tokenBasePath);
+                di.Attributes = FileAttributes.Directory | FileAttributes.Hidden;
             }
             File.WriteAllText(achvTokenPath, token);
             achToken = token;
             textBlockAchv.Background = inactiveBackground;
             try { achBot = new WerewolfAchievementsBotPlus(achToken); }
-#pragma warning disable CS0168 // Variable ist deklariert, wird jedoch niemals verwendet
-            catch (ArgumentException e) { textBlockAchv.Background = erroredBackground; }
-#pragma warning restore CS0168 // Variable ist deklariert, wird jedoch niemals verwendet
+            catch { textBlockAchv.Background = erroredBackground; }
         }
         #endregion
+        #endregion
+        #region Get Token By Name
+        private string getTokenByName(string name)
+        {
+            string path = tokenBasePath + name + tokenSuffix;
+            if (File.Exists(path))
+            {
+                return File.ReadAllText(path);
+            }
+            else
+            {
+                return "Failed";
+            }
+        }
+        #endregion
+        #region Initialize Flom Bot
+        private void initializeFlomBot(FlomBot b)
+        {
+            b.Token = getTokenByName(b.Name);
+            RowDefinition rd = new RowDefinition();
+            rd.Height = new GridLength(1, GridUnitType.Star);
+            grid.RowDefinitions.Add(rd);
+            TextBlock tb = new TextBlock();
+            tb.Text = b.Name;
+            tb.Background = inactiveBackground;
+            tb.VerticalAlignment = VerticalAlignment.Center;
+            tb.HorizontalAlignment = HorizontalAlignment.Left;
+            tb.Margin = new Thickness(10, 10, 10, 10);
+            Grid.SetRow(tb, grid.RowDefinitions.Count - 1);
+            Button b1 = new Button();
+            b1.Content = "Starten";
+            b1.VerticalAlignment = VerticalAlignment.Center;
+            b1.HorizontalAlignment = HorizontalAlignment.Center;
+            b1.Margin = new Thickness(10, 10, 10, 10);
+            b1.Width = 75;
+            Grid.SetRow(b1, grid.RowDefinitions.Count - 1);
+            Button b2 = new Button();
+            b2.Content = "Einstellungen";
+            b2.VerticalAlignment = VerticalAlignment.Center;
+            b2.HorizontalAlignment = HorizontalAlignment.Right;
+            b2.Margin = new Thickness(10, 10, 10, 10);
+            b2.Width = 75;
+            Grid.SetRow(b2, grid.RowDefinitions.Count - 1);
+            b.Panel = new BotPanelPart(tb, b1, b2);
+            #region FlomBot Start Button
+            b.Panel.StartButton.Click += delegate (object sender, RoutedEventArgs e)
+            {
+                if (b.Panel.TextBlock.Background == erroredBackground)
+                {
+                    MessageBox.Show(erroredMessage);
+                    return;
+                }
+                else if (b.Panel.TextBlock.Background == inactiveBackground)
+                {
+                    bool started = b.IsRunning;
+                    if (!started)
+                    {
+                        started = b.StartBot();
+                    }
+                    if (started)
+                    {
+                        b.Panel.TextBlock.Background = activeBackground;
+                        b.Panel.StartButton.Content = "Stoppen";
+                    }
+                    else if(b.BotState == FlomBot.State.Errored)
+                    {
+                        b.Panel.TextBlock.Background = erroredBackground;
+                    }
+                }
+                else if (b.Panel.TextBlock.Background == activeBackground)
+                {
+                    if (b.IsRunning)
+                    {
+                        b.StopBot();
+                    }
+                    b.Panel.TextBlock.Background = inactiveBackground;
+                    b.Panel.StartButton.Content = "Starten";
+                }
+            };
+            #endregion
+            #region FlomBot Settings Button
+            b.Panel.SettingsButton.Click += delegate (object sender, RoutedEventArgs e)
+            {
+                if (!b.IsRunning)
+                {
+                    TokenDialog td = new TokenDialog(b.Token);
+                    td.ShowDialog();
+                    setFlomBotToken(b, td.result);
+                }
+                else
+                {
+                    MessageBox.Show("Don't edit the token while the bot is running!");
+                }
+            };
+            #endregion
+            grid.Children.Add(tb);
+            grid.Children.Add(b1);
+            grid.Children.Add(b2);
+            if (b.BotState == FlomBot.State.Errored)
+            {
+                b.Panel.TextBlock.Background = erroredBackground;
+            }
+        }
         #endregion
         #endregion
 
@@ -146,9 +254,16 @@ namespace BotControlPanel
         #region Settings WWTB
         private void settingsButtonWWTB_Click(object sender, RoutedEventArgs e)
         {
-            TokenDialog td = new TokenDialog(wwtbToken);
-            td.ShowDialog();
-            setWWTBToken(td.result);
+            if (wwtb.IsRunning)
+            {
+                TokenDialog td = new TokenDialog(wwtbToken);
+                td.ShowDialog();
+                setWWTBToken(td.result);
+            }
+            else
+            {
+                MessageBox.Show("Don't edit the token while the bot is running!");
+            }
         }
         #endregion
         #endregion
@@ -187,9 +302,39 @@ namespace BotControlPanel
         #region Achievement Settings
         private void buttonSettingsAchievements_Click(object sender, RoutedEventArgs e)
         {
-            TokenDialog td = new TokenDialog(achToken);
-            td.ShowDialog();
-            setAchvToken(td.result);
+            if (!achBot.IsRunning)
+            {
+                TokenDialog td = new TokenDialog(achToken);
+                td.ShowDialog();
+                setAchvToken(td.result);
+            }
+            else
+            {
+                MessageBox.Show("Don't edit the token while the bot is running!");
+            }
+        }
+        #endregion
+        #endregion
+        #region FlomBot
+        #region FlomBot Settings
+        private void setFlomBotToken(FlomBot b, string token)
+        {
+            b.Token = token;
+            if (!Directory.Exists(tokenBasePath))
+            {
+                DirectoryInfo di = Directory.CreateDirectory(tokenBasePath);
+                di.Attributes = FileAttributes.Directory | FileAttributes.Hidden;
+            }
+            string path = tokenBasePath + b.Name + tokenSuffix;
+            File.WriteAllText(path, token);
+            if (b.BotState == FlomBot.State.Functionable)
+            {
+                b.Panel.TextBlock.Background = inactiveBackground;
+            }
+            else
+            {
+                b.Panel.TextBlock.Background = erroredBackground;
+            }
         }
         #endregion
         #endregion
@@ -199,7 +344,11 @@ namespace BotControlPanel
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             bool botRunning = false;
-            if (wwtb.IsRunning || achBot.IsRunning) botRunning = true;
+            try
+            {
+                if (wwtb.IsRunning || achBot.IsRunning) botRunning = true;
+            }
+            catch { }
             foreach (FlomBot b in bots)
             {
                 if (b.IsRunning) botRunning = true;

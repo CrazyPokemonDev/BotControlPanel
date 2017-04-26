@@ -17,6 +17,7 @@ namespace BotControlPanel.Bots
     public class WWTB : FlomBot
     {
         #region Constants
+        public override string Name { get; } = "Werewolf Translation Bot";
         private readonly string botApiToken;
         private const string botUsername = "@werewufftransbot";
         private const string startMessage = "You've just sucessfully started the WereWuff Tranlation Bot!\n" +

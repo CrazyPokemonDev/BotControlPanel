@@ -9,7 +9,7 @@
         Title="MainWindow" Height="350" Width="525"
         Closing="Window_Closing">
     <ScrollViewer>
-        <Grid>
+        <Grid x:Name="grid">
             <Grid.RowDefinitions>
                 <RowDefinition Height="1*"/>
                 <RowDefinition Height="1*"/>
