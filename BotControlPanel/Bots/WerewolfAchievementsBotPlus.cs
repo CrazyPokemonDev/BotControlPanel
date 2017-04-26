@@ -241,21 +241,8 @@ namespace BotControlPanel.Bots
                                 return;
 
                             case "/flee":
-                                if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate != Game.state.Stopped)
-                                {
-                                    if (!games[msg.Chat.Id].RemovePlayer(msg.From))
-                                    {
-                                        client.SendTextMessageAsync(msg.Chat.Id, "Failed to remove " + msg.From.FirstName + " from the players!").Wait();
-                                    }
-                                }
-                                else
-                                {
-                                    client.SendTextMessageAsync(msg.Chat.Id, "It seems there is no game running in your group, or it can't be joined at the moment.").Wait();
-                                }
-                                return;
-
                             case "/dead":
-                                if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Running)
+                                if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate != Game.state.Stopped)
                                 {
                                     Game g = games[msg.Chat.Id];
                                     int dead = msg.ReplyToMessage != null && g.players.Contains(msg.ReplyToMessage.From)
