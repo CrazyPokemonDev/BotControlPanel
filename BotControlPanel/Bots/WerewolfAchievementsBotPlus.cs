@@ -483,94 +483,94 @@ namespace BotControlPanel.Bots
             {
                 switch (alias)
                 {
-                    case "AlphaWolf":
+                    case "alphawolf":
                         return Game.roles.AlpaWolf;
 
-                    case "ApprenticeSeer":
+                    case "apprenticeseer":
                         return Game.roles.ApprenticeSeer;
 
-                    case "Beholder":
+                    case "beholder":
                         return Game.roles.Beholder;
 
-                    case "Blacksmith":
+                    case "blacksmith":
                         return Game.roles.Blacksmith;
 
-                    case "ClumsyGuy":
+                    case "clumsyguy":
                         return Game.roles.ClumsyGuy;
 
-                    case "Cultist":
+                    case "cultist":
                         return Game.roles.Cultist;
 
-                    case "CultistHunter":
+                    case "cultisthunter":
                         return Game.roles.CultistHunter;
 
-                    case "Cupid":
+                    case "cupid":
                         return Game.roles.Cupid;
 
-                    case "Cursed":
+                    case "cursed":
                         return Game.roles.Cursed;
 
-                    case "Detective":
+                    case "detective":
                         return Game.roles.Detective;
 
-                    case "Doppelgänger":
+                    case "doppelgänger":
                         return Game.roles.Doppelgänger;
 
-                    case "Drunk":
+                    case "drunk":
                         return Game.roles.Drunk;
 
-                    case "Fool":
+                    case "fool":
                         return Game.roles.Fool;
 
-                    case "GuardianAngel":
+                    case "guardianAngel":
                         return Game.roles.GuardianAngel;
 
-                    case "Gunner":
+                    case "gunner":
                         return Game.roles.Gunner;
 
-                    case "Harlot":
+                    case "harlot":
                         return Game.roles.Harlot;
 
-                    case "Hunter":
+                    case "hunter":
                         return Game.roles.Hunter;
 
-                    case "Mason":
+                    case "mason":
                         return Game.roles.Mason;
 
-                    case "Mayor":
+                    case "mayor":
                         return Game.roles.Mayor;
 
-                    case "Prince":
+                    case "prince":
                         return Game.roles.Prince;
 
-                    case "Seer":
+                    case "seer":
                         return Game.roles.Seer;
 
-                    case "SeerFool":
+                    case "seerfool":
                         return Game.roles.SeerFool;
 
-                    case "SerialKiller":
+                    case "serialkiller":
                         return Game.roles.SerialKiller;
 
-                    case "Sorcerer":
+                    case "sorcerer":
                         return Game.roles.Sorcerer;
 
-                    case "Tanner":
+                    case "tanner":
                         return Game.roles.Tanner;
 
-                    case "Traitor":
+                    case "traitor":
                         return Game.roles.Traitor;
 
-                    case "Villager":
+                    case "villager":
                         return Game.roles.Villager;
 
-                    case "Werewolf":
+                    case "werewolf":
                         return Game.roles.Werewolf;
 
-                    case "WildChild":
+                    case "wildchild":
                         return Game.roles.WildChild;
 
-                    case "WolfCub":
+                    case "wolfcub":
                         return Game.roles.WolfCub;
 
                     default:
