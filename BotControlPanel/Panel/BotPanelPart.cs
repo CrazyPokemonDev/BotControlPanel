@@ -11,13 +11,13 @@ namespace BotControlPanel.Panel
     {
         public TextBlock TextBlock { get; }
         public Button StartButton { get; }
-        public Button StopButton { get; }
+        public Button SettingsButton { get; }
 
-        public BotPanelPart(TextBlock textBlock, Button start, Button stop)
+        public BotPanelPart(TextBlock textBlock, Button start, Button settings)
         {
             TextBlock = textBlock;
             StartButton = start;
-            StopButton = stop;
+            SettingsButton = settings;
         }
     }
 }

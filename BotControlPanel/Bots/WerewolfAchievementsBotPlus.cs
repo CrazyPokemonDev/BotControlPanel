@@ -13,12 +13,11 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace BotControlPanel.Bots
 {
-    //----------------------------------------------------------------------------------
-    //TO ADD:
-    //Set roles for other players
-    //----------------------------------------------------------------------------------
     public class WerewolfAchievementsBotPlus : FlomBot
     {
+        //-----------------------------------
+        //REMEMBER REFRESHING VERSION STRING!
+        //-----------------------------------
         #region Custom "Game" class
         class Game
         {
@@ -117,16 +116,16 @@ namespace BotControlPanel.Bots
         List<long> justCalledStop = new List<long>();
         #endregion
         #region Constants
+        public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 };
-        private List<long> adminIds = new List<long>() { 267376056, 295152997 };
+        private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 };
+        private readonly List<long> adminIds = new List<long>() { 267376056, 295152997 };
+        private const string versionString = "Version 2.0";
         #endregion
         #region Constructor
         public WerewolfAchievementsBotPlus(string token) : base(token)
         {
-            client = new TelegramBotClient(token);
-            client.OnUpdate += Client_OnUpdate;
             client.OnCallbackQuery += Client_OnCallbackQuery;
         }
         #endregion
@@ -216,7 +215,7 @@ namespace BotControlPanel.Bots
                         var msg = e.Update.Message;
 
                         #region Commands only
-                        switch (text.Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfachievementbot", ""))
+                        switch (text.Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
                         {
                             case "/startgame":
                             case "/startchaos":
@@ -274,8 +273,6 @@ namespace BotControlPanel.Bots
                                             break;
 
                                         case Game.state.Running:
-
-
                                             g.role.Remove(dead.Id);
                                             g.role.Add(dead.Id, "*DEAD*");
                                             g.UpdatePlayerlist();
@@ -291,6 +288,9 @@ namespace BotControlPanel.Bots
                                 return;
                             case "/ping":
                                 client.SendTextMessageAsync(msg.Chat.Id, "PENG!").Wait();
+                                return;
+                            case "/version":
+                                client.SendTextMessageAsync(msg.Chat.Id, versionString).Wait();
                                 return;
                         }
                         #endregion
