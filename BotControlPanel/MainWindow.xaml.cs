@@ -34,6 +34,7 @@ namespace BotControlPanel
         private const string tokenBasePath = "C:\\Olfi01\\BotControlPanel\\.Tokens\\";
         private const string erroredMessage = "Lege zuerst ein korrektes Token unter Einstellungen fest!\n" +
                     "Falls du das bereits getan hast, ist ein anderer Fehler aufgetreten.";
+        private const string tokenSuffix = ".token";
         #endregion
         #region Variables
         private WWTB wwtb;
@@ -108,9 +109,24 @@ namespace BotControlPanel
         }
         #endregion
         #endregion
+        #region Get Token By Name
+        private string getTokenByName(string name)
+        {
+            string path = tokenBasePath + name + tokenSuffix;
+            if (File.Exists(path))
+            {
+                return File.ReadAllText(path);
+            }
+            else
+            {
+                return "Failed";
+            }
+        }
+        #endregion
         #region Initialize Flom Bot
         private void initializeFlomBot(FlomBot b)
         {
+            b.Token = getTokenByName(b.Name);
             RowDefinition rd = new RowDefinition();
             rd.Height = new GridLength(1, GridUnitType.Star);
             grid.RowDefinitions.Add(rd);
@@ -119,11 +135,25 @@ namespace BotControlPanel
             tb.Background = inactiveBackground;
             tb.VerticalAlignment = VerticalAlignment.Center;
             tb.HorizontalAlignment = HorizontalAlignment.Left;
+            tb.Margin = new Thickness(10, 10, 10, 10);
             Grid.SetRow(tb, grid.RowDefinitions.Count - 1);
             Button b1 = new Button();
             b1.Content = "Starten";
+            b1.VerticalAlignment = VerticalAlignment.Center;
+            b1.HorizontalAlignment = HorizontalAlignment.Center;
+            b1.Margin = new Thickness(10, 10, 10, 10);
+            b1.Width = 75;
+            Grid.SetRow(b1, grid.RowDefinitions.Count - 1);
+            Button b2 = new Button();
+            b2.Content = "Einstellungen";
+            b2.VerticalAlignment = VerticalAlignment.Center;
+            b2.HorizontalAlignment = HorizontalAlignment.Right;
+            b2.Margin = new Thickness(10, 10, 10, 10);
+            b2.Width = 75;
+            Grid.SetRow(b2, grid.RowDefinitions.Count - 1);
+            b.Panel = new BotPanelPart(tb, b1, b2);
             #region FlomBot Start Button
-            b1.Click += delegate (object sender, RoutedEventArgs e)
+            b.Panel.StartButton.Click += delegate (object sender, RoutedEventArgs e)
             {
                 if (b.Panel.TextBlock.Background == erroredBackground)
                 {
@@ -142,6 +172,10 @@ namespace BotControlPanel
                         b.Panel.TextBlock.Background = activeBackground;
                         b.Panel.StartButton.Content = "Stoppen";
                     }
+                    else if(b.BotState == FlomBot.State.Errored)
+                    {
+                        b.Panel.TextBlock.Background = erroredBackground;
+                    }
                 }
                 else if (b.Panel.TextBlock.Background == activeBackground)
                 {
@@ -154,13 +188,8 @@ namespace BotControlPanel
                 }
             };
             #endregion
-            b1.VerticalAlignment = VerticalAlignment.Center;
-            b1.HorizontalAlignment = HorizontalAlignment.Center;
-            Grid.SetRow(b1, grid.RowDefinitions.Count - 1);
-            Button b2 = new Button();
-            b2.Content = "Einstellungen";
             #region FlomBot Settings Button
-            b2.Click += delegate (object sender, RoutedEventArgs e)
+            b.Panel.SettingsButton.Click += delegate (object sender, RoutedEventArgs e)
             {
                 if (!b.IsRunning)
                 {
@@ -174,13 +203,13 @@ namespace BotControlPanel
                 }
             };
             #endregion
-            b2.VerticalAlignment = VerticalAlignment.Center;
-            b2.HorizontalAlignment = HorizontalAlignment.Right;
-            Grid.SetRow(b2, grid.RowDefinitions.Count - 1);
-            b.Panel = new BotPanelPart(tb, b1, b2);
             grid.Children.Add(tb);
             grid.Children.Add(b1);
             grid.Children.Add(b2);
+            if (b.BotState == FlomBot.State.Errored)
+            {
+                b.Panel.TextBlock.Background = erroredBackground;
+            }
         }
         #endregion
         #endregion
@@ -296,7 +325,7 @@ namespace BotControlPanel
                 DirectoryInfo di = Directory.CreateDirectory(tokenBasePath);
                 di.Attributes = FileAttributes.Directory | FileAttributes.Hidden;
             }
-            string path = tokenBasePath + b.Name + ".token";
+            string path = tokenBasePath + b.Name + tokenSuffix;
             File.WriteAllText(path, token);
             if (b.BotState == FlomBot.State.Functionable)
             {

@@ -29,6 +29,7 @@ namespace BotControlPanel.Bots
                 try
                 {
                     client = new TelegramBotClient(token);
+                    client.OnUpdate -= Client_OnUpdate;
                     client.OnUpdate += Client_OnUpdate;
                     BotState = State.Functionable;
                 }
@@ -75,18 +76,15 @@ namespace BotControlPanel.Bots
         /// <param name="token">Token string of the bot to use</param>
         public FlomBot(string token)
         {
-            try
-            {
-                client = new TelegramBotClient(token);
-                client.OnUpdate += Client_OnUpdate;
-                BotState = State.Functionable;
-            }
-            catch
-            {
-                client = null;
-                BotState = State.Errored;
-            }
             Token = token;
+        }
+
+        /// <summary>
+        /// You still need to assign a token to this later.
+        /// </summary>
+        public FlomBot()
+        {
+            Token = "null";
         }
         #endregion
 

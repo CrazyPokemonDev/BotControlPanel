@@ -126,7 +126,11 @@ namespace BotControlPanel.Bots
         #region Constructor
         public WerewolfAchievementsBotPlus(string token) : base(token)
         {
-            client.OnCallbackQuery += Client_OnCallbackQuery;
+            try
+            {
+                client.OnCallbackQuery += Client_OnCallbackQuery;
+            }
+            catch { }
         }
         #endregion
 
@@ -200,10 +204,14 @@ namespace BotControlPanel.Bots
         {
             try
             {
-                if (e.Update.Type == UpdateType.MessageUpdate && e.Update.Message.Chat.Type != ChatType.Private && allowedgroups.Contains(e.Update.Message.Chat.Id))
+                if ((e.Update.Type == UpdateType.MessageUpdate))
                 {
-                    client.LeaveChatAsync(e.Update.Message.Chat.Id).Wait();
-                    return;
+                    if ((e.Update.Message.Chat.Type != ChatType.Private)
+                    && (!allowedgroups.Contains(e.Update.Message.Chat.Id)))
+                    {
+                        client.LeaveChatAsync(e.Update.Message.Chat.Id).Wait();
+                        return;
+                    }
                 }
                 if (e.Update.Type == UpdateType.MessageUpdate)
                 {
@@ -382,7 +390,7 @@ namespace BotControlPanel.Bots
             catch (Exception ex)
             {
                 client.SendTextMessageAsync(adminIds[0], "Error in Achievements Bot: " +
-                    ex.Message + "\n" + ex.StackTrace).Wait();
+                    ex.InnerException + "\n" + ex.Message + "\n" + ex.StackTrace).Wait();
             }
         }
         #endregion
