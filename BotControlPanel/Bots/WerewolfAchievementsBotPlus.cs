@@ -13,7 +13,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace BotControlPanel.Bots
 {
-    public class WerewolfAchievementsBotPlus
+    public class WerewolfAchievementsBotPlus : FlomBot
     {
         #region Custom "Game" class
         class Game
@@ -108,7 +108,6 @@ namespace BotControlPanel.Bots
         #endregion
 
         #region Variables
-        private TelegramBotClient client;
         private Dictionary<long, Game> games = new Dictionary<long, Game>();
         private Dictionary<string, string> roleAliases = new Dictionary<string, string>();
         List<long> justCalledStop = new List<long>();
@@ -116,10 +115,10 @@ namespace BotControlPanel.Bots
         #region Constants
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private List<long> adminIds = new List<long>() { 267376056, 295152997 };   //Ludwig, add your ID
+        private List<long> adminIds = new List<long>() { 267376056, 295152997 };
         #endregion
         #region Constructor
-        public WerewolfAchievementsBotPlus(string token)
+        public WerewolfAchievementsBotPlus(string token) : base(token)
         {
             client = new TelegramBotClient(token);
             client.OnUpdate += Client_OnUpdate;
@@ -193,7 +192,7 @@ namespace BotControlPanel.Bots
         }
         #endregion
         #region Update Handler
-        private void Client_OnUpdate(object sender, Telegram.Bot.Args.UpdateEventArgs e)
+        protected override void Client_OnUpdate(object sender, Telegram.Bot.Args.UpdateEventArgs e)
         {
             try
             {
@@ -295,7 +294,7 @@ namespace BotControlPanel.Bots
                                     {
                                         roleAliases.Add(args.Split('-')[0].Trim(), args.Split('-')[1].Trim());
                                         writeAliasesFile();
-                                        client.SendTextMessageAsync(msg.Chat.Id, "Sucessfully added alias",
+                                        client.SendTextMessageAsync(msg.Chat.Id, "Successfully added alias",
                                             replyToMessageId: msg.MessageId).Wait();
                                     }
                                     else
@@ -303,7 +302,7 @@ namespace BotControlPanel.Bots
                                         roleAliases.Remove(args.Split('-')[0].Trim());
                                         roleAliases.Add(args.Split('-')[0].Trim(), args.Split('-')[1].Trim());
                                         writeAliasesFile();
-                                        client.SendTextMessageAsync(msg.Chat.Id, "Sucessfully edited alias",
+                                        client.SendTextMessageAsync(msg.Chat.Id, "Successfully edited alias",
                                             replyToMessageId: msg.MessageId).Wait();
                                     }
                                     return;
@@ -335,7 +334,9 @@ namespace BotControlPanel.Bots
                                             g.role.Add(msg.From.Id, kvp.Value);
                                             g.UpdatePlayerlist();
                                         }
-                                        else if(text.ToLower().Contains("now"))
+                                        else if ((" " + text + " ").ToLower()
+                                        .Replace('.', ' ').Replace('!', ' ')
+                                        .Contains((" now ").ToLower()))
                                         {
                                             g.role.Remove(msg.From.Id);
                                             g.role.Add(msg.From.Id, kvp.Value + " 🆕");
@@ -382,30 +383,11 @@ namespace BotControlPanel.Bots
         #endregion
 
         #region Control Methods
-        #region Is running
-        public bool isRunning { get { return client.IsReceiving; } }
-        #endregion
         #region Start Bot
-        public bool startBot()
+        public override bool StartBot()
         {
             getAliasesFromFile();
-            if (!client.IsReceiving)
-            {
-                client.StartReceiving();
-                return true;
-            }
-            return true;
-        }
-        #endregion
-        #region Stop Bot
-        public bool stopBot()
-        {
-            if (client.IsReceiving)
-            {
-                client.StopReceiving();
-                return true;
-            }
-            return true;
+            return base.StartBot();
         }
         #endregion
         #endregion

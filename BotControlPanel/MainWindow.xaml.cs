@@ -34,6 +34,7 @@ namespace BotControlPanel
         #region Variables
         private WWTB wwtb;
         private WerewolfAchievementsBotPlus achBot;
+        private List<FlomBot> bots = new List<FlomBot>();
         private string wwtbToken = "";
         private string achToken = "";
         #endregion
@@ -107,7 +108,8 @@ namespace BotControlPanel
         #endregion
         #endregion
 
-        #region Button 
+        #region Button
+        #region WWTB
         #region Start WWTB
         private void startButtonWWTB_Click(object sender, RoutedEventArgs e)
         {
@@ -119,7 +121,7 @@ namespace BotControlPanel
             bool started = true;
             if (!wwtb.isRunning)
             {
-                started = wwtb.startBot();
+                started = wwtb.StartBot();
             }
             if (started)
             {
@@ -135,7 +137,7 @@ namespace BotControlPanel
         {
             if (wwtb.isRunning)
             {
-                wwtb.stopBot();
+                wwtb.StopBot();
             }
             textBlockWWTB.Background = inactiveBackground;
             startButtonWWTB.Content = "Starten";
@@ -151,7 +153,8 @@ namespace BotControlPanel
             setWWTBToken(td.result);
         }
         #endregion
-
+        #endregion
+        #region AchBot
         #region Start AchBot
         private void buttonStartAchievements_Click(object sender, RoutedEventArgs e)
         {
@@ -162,7 +165,7 @@ namespace BotControlPanel
             }
             if (!achBot.isRunning)
             {
-                achBot.startBot();
+                achBot.StartBot();
             }
             textBlockAchv.Background = activeBackground;
             buttonStartAchievements.Content = "Stoppen";
@@ -175,7 +178,7 @@ namespace BotControlPanel
         {
             if (achBot.isRunning)
             {
-                achBot.stopBot();
+                achBot.StopBot();
             }
             textBlockAchv.Background = inactiveBackground;
             buttonStartAchievements.Content = "Starten";
@@ -191,7 +194,7 @@ namespace BotControlPanel
             setAchvToken(td.result);
         }
         #endregion
-
+        #endregion
         #endregion
 
         #region Close Window
@@ -208,8 +211,8 @@ namespace BotControlPanel
                 }
                 else
                 {
-                    wwtb.stopBot();
-                    achBot.stopBot();
+                    wwtb.StopBot();
+                    achBot.StopBot();
                 }
             }
         }

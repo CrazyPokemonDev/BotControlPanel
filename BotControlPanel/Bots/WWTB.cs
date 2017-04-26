@@ -14,7 +14,7 @@ using System.Windows;
 
 namespace BotControlPanel.Bots
 {
-    public class WWTB
+    public class WWTB : FlomBot
     {
         #region Constants
         private readonly string botApiToken;
@@ -49,13 +49,12 @@ namespace BotControlPanel.Bots
                                               "\n";
         #endregion
         #region Variables
-        private TelegramBotClient client;
         private User me;
         private Dictionary<long, string> waitingFor = new Dictionary<long, string>();
         private Dictionary<long, string> chosenElement = new Dictionary<long, string>();
         #endregion
 
-        public WWTB(string token)
+        public WWTB(string token) : base(token)
         {
             botApiToken = token;
             initialize();
@@ -66,7 +65,6 @@ namespace BotControlPanel.Bots
         private void initialize()
         {
             #region Initializing stuff
-            client = new TelegramBotClient(botApiToken);
             try
             {
                 Task<User> ut = client.GetMeAsync();
@@ -77,7 +75,6 @@ namespace BotControlPanel.Bots
             {
                 MessageBox.Show(e.ToString() + e.Message + e.StackTrace);
             }
-            client.OnUpdate += Client_OnUpdate;
             //MessageBox.Show("Nullifying offline updates (bug source)");
             Task<Update[]> t = client.GetUpdatesAsync();
             t.Wait();
@@ -85,39 +82,11 @@ namespace BotControlPanel.Bots
             #endregion
         }
         #endregion
-
-        #region Start Bot
-        public bool startBot()
-        {
-            if (!client.IsReceiving)
-            {
-                client.StartReceiving();
-                return true;
-            }
-            return true;
-        }
-        #endregion
-
-        #region Stop Bot
-        public bool stopBot()
-        {
-            if (client.IsReceiving)
-            {
-                client.StopReceiving();
-                return true;
-            }
-            return false;
-        }
-        #endregion
-
-        #region Test for running
-        public bool isRunning { get { return client.IsReceiving; } }
-        #endregion
         #endregion
 
         #region Handlers
         #region Update Handler
-        private  void Client_OnUpdate(object sender, Telegram.Bot.Args.UpdateEventArgs e)
+        protected override void Client_OnUpdate(object sender, Telegram.Bot.Args.UpdateEventArgs e)
         {
             try
             {
