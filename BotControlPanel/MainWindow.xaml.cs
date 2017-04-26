@@ -38,7 +38,7 @@ namespace BotControlPanel
         #region Variables
         private WWTB wwtb;
         private WerewolfAchievementsBotPlus achBot;
-        private List<FlomBot> bots = new List<FlomBot>();
+        private List<FlomBot> bots = new List<FlomBot>() { new WerewolfAchievementsBotPlus("") };
         private string wwtbToken = "";
         private string achToken = "";
         #endregion
@@ -122,7 +122,38 @@ namespace BotControlPanel
             Grid.SetRow(tb, grid.RowDefinitions.Count - 1);
             Button b1 = new Button();
             b1.Content = "Starten";
-            //add click listener
+            #region FlomBot Start Button
+            b1.Click += delegate (object sender, RoutedEventArgs e)
+            {
+                if (b.Panel.TextBlock.Background == erroredBackground)
+                {
+                    MessageBox.Show(erroredMessage);
+                    return;
+                }
+                else if (b.Panel.TextBlock.Background == inactiveBackground)
+                {
+                    bool started = b.IsRunning;
+                    if (!started)
+                    {
+                        started = b.StartBot();
+                    }
+                    if (started)
+                    {
+                        b.Panel.TextBlock.Background = activeBackground;
+                        b.Panel.StartButton.Content = "Stoppen";
+                    }
+                }
+                else if (b.Panel.TextBlock.Background == activeBackground)
+                {
+                    if (b.IsRunning)
+                    {
+                        b.StopBot();
+                    }
+                    b.Panel.TextBlock.Background = inactiveBackground;
+                    b.Panel.StartButton.Content = "Starten";
+                }
+            };
+            #endregion
             b1.VerticalAlignment = VerticalAlignment.Center;
             b1.HorizontalAlignment = HorizontalAlignment.Center;
             Grid.SetRow(b1, grid.RowDefinitions.Count - 1);
