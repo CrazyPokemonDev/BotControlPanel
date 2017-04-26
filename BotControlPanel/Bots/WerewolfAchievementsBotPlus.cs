@@ -177,9 +177,9 @@ namespace BotControlPanel.Bots
                         if (role.ContainsKey(p.Id))
                         {
                             if (role[p.Id] == roles.Dead) playerlist += p.FirstName + ": " + rolestring[roles.Dead] + "\n";
-                            else playerlist += "*" + p.FirstName + "*: " + rolestring[role[p.Id]];
+                            else playerlist += "*" + p.FirstName + "*: " + rolestring[role[p.Id]] + "\n";
                         }
-                        else playerlist += "*" + p.FirstName + "*: " + rolestring[roles.Unknown];
+                        else playerlist += "*" + p.FirstName + "*: " + rolestring[roles.Unknown] + "\n";
                     }
                 }
                 if (gamestate == state.Running)
