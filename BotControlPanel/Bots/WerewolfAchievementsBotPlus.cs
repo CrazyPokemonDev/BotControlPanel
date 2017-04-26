@@ -30,7 +30,8 @@ namespace BotControlPanel.Bots
         {
             #region Pre-declared stuff, such as variables and constants
             public Message pinmessage { get; set; }
-            public List<User> players { get; set; } = new List<User>();
+            public List<long> players { get; set; } = new List<long>();
+            public Dictionary<long, string> names = new Dictionary<long, string>();
             public state gamestate { get; set; }
             private TelegramBotClient client;
             public Dictionary<long, roles> role = new Dictionary<long, roles>();
@@ -135,9 +136,10 @@ namespace BotControlPanel.Bots
 
             public bool AddPlayer(User newplayer)
             {
-                if (!players.Contains(newplayer) && gamestate == state.Joining)
+                if (!players.Contains(newplayer.Id) && gamestate == state.Joining)
                 {
-                    players.Add(newplayer);
+                    players.Add(newplayer.Id);
+                    if (!names.ContainsKey(newplayer.Id)) names.Add(newplayer.Id, newplayer.FirstName);
                     UpdatePlayerlist();
                     return true;                    
                 }
@@ -156,9 +158,10 @@ namespace BotControlPanel.Bots
 
             public bool RemovePlayer(User oldplayer)
             {
-                if(players.Contains(oldplayer))
+                if(players.Contains(oldplayer.Id))
                 {
-                    players.Remove(oldplayer);
+                    players.Remove(oldplayer.Id);
+                    names.Remove(oldplayer.Id);
                     UpdatePlayerlist();
                     return true;
                 }
@@ -171,15 +174,15 @@ namespace BotControlPanel.Bots
 
                 foreach(var p in players)
                 {
-                    if(gamestate == state.Joining) playerlist += p.FirstName + "\n";
+                    if(gamestate == state.Joining) playerlist += names[p] + "\n";
                     if (gamestate == state.Running)
                     {
-                        if (role.ContainsKey(p.Id))
+                        if (role.ContainsKey(p))
                         {
-                            if (role[p.Id] == roles.Dead) playerlist += p.FirstName + ": " + rolestring[roles.Dead] + "\n";
-                            else playerlist += "*" + p.FirstName + "*: " + rolestring[role[p.Id]] + "\n";
+                            if (role[p] == roles.Dead) playerlist += names[p] + ": " + rolestring[roles.Dead] + "\n";
+                            else playerlist += "*" + names[p] + "*: " + rolestring[role[p]] + "\n";
                         }
-                        else playerlist += "*" + p.FirstName + "*: " + rolestring[roles.Unknown] + "\n";
+                        else playerlist += "*" + names[p] + "*: " + rolestring[roles.Unknown] + "\n";
                     }
                 }
                 if (gamestate == state.Running)
@@ -206,7 +209,7 @@ namespace BotControlPanel.Bots
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private const string version = "2.1";
+        private const string version = "2.2";
         private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 };
         private readonly List<long> adminIds = new List<long>() { 267376056, 295152997 };
         #endregion
@@ -346,10 +349,10 @@ namespace BotControlPanel.Bots
                                 {
                                     Game g = games[msg.Chat.Id];
 
-                                    User dead = msg.ReplyToMessage != null && g.players.Contains(msg.ReplyToMessage.From)
+                                    User dead = msg.ReplyToMessage != null && g.players.Contains(msg.ReplyToMessage.From.Id)
                                             ? msg.ReplyToMessage.From
                                             : (
-                                                g.players.Contains(msg.From)
+                                                g.players.Contains(msg.From.Id)
                                                     ? msg.From
                                                     : null
                                               );
@@ -442,9 +445,9 @@ namespace BotControlPanel.Bots
                                 long player = 0;
                                 if(msg.ReplyToMessage != null)
                                 {
-                                    if (g.players.Contains(msg.ReplyToMessage.From)) player = msg.ReplyToMessage.From.Id;
+                                    if (g.players.Contains(msg.ReplyToMessage.From.Id)) player = msg.ReplyToMessage.From.Id;
                                 }
-                                else if(g.players.Contains(msg.From))
+                                else if(g.players.Contains(msg.From.Id))
                                 {
                                     player = msg.From.Id;
                                 }
@@ -453,15 +456,27 @@ namespace BotControlPanel.Bots
 
                                 List<string> Keys = roleAliases.Keys.ToList();
 
-                                if (Keys.Contains(text.ToLower()) && !g.role.ContainsKey(player))
+                                if (!g.role.ContainsKey(player))
                                 {
-                                    g.role.Add(player, GetRoleByAlias(text.ToLower()));
-                                    g.UpdatePlayerlist();
+                                    var role = GetRoleByAlias(text.ToLower());
+                                    if (role != Game.roles.Unknown)
+                                    {
+                                        g.role.Add(player, GetRoleByAlias(text.ToLower()));
+                                        g.UpdatePlayerlist();
+                                    }
                                 }
-                                else if(text.StartsWith("now ") && Keys.Contains(text.ToLower().Substring(4)))
+                                else if(text.StartsWith("now "))
                                 {
-                                    g.role[player] = GetRoleByAlias(text.ToLower().Substring(4));
-                                    g.UpdatePlayerlist();
+                                    var role = GetRoleByAlias(text.ToLower().Substring(4));
+                                    if (role != Game.roles.Unknown)
+                                    {
+                                        var oldRole = g.role[player];
+                                        if (oldRole != role)
+                                        {
+                                            g.role[player] = role;
+                                            g.UpdatePlayerlist();
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -475,7 +490,9 @@ namespace BotControlPanel.Bots
                     ex.InnerException + "\n" + ex.Message + "\n" + ex.StackTrace).Wait();
             }
         }
+        #endregion
 
+        #region Get Role By Alias
         private Game.roles GetRoleByAlias(string alias)
         {
             if (roleAliases.ContainsKey(alias)) return roleAliases[alias];
