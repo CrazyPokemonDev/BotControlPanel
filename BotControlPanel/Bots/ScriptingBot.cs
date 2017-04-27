@@ -136,7 +136,11 @@ namespace BotControlPanel.Bots
                                     p.CloseMainWindow();
                                     p.Close();
                                 }
-                                try { Process.Start(execPath, scriptedBotToken); }
+                                try
+                                {
+                                    Process.Start(execPath, scriptedBotToken);
+                                    client.SendTextMessageAsync(msg.Chat.Id, "Bot (re)started.");
+                                }
                                 catch
                                 {
                                     client.SendTextMessageAsync(msg.Chat.Id,
