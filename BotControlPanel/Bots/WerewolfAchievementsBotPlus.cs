@@ -401,6 +401,33 @@ namespace BotControlPanel.Bots
                                 }
                                 return;
 
+                            case "/stopgame":
+                                if (games.ContainsKey(msg.Chat.Id))
+                                {
+                                    if (justCalledStop.Contains(msg.From.Id))
+                                    {
+                                        games[msg.Chat.Id].Stop();
+                                        games[msg.Chat.Id].UpdatePlayerlist();
+                                        games.Remove(msg.Chat.Id);
+                                        client.SendTextMessageAsync(msg.Chat.Id, $"<b>{msg.From.FirstName}</b> has considered the game stopped!", parseMode: ParseMode.Html);
+                                        justCalledStop.Remove(msg.From.Id);
+                                    }
+                                    else
+                                    {
+                                        justCalledStop.Add(msg.From.Id);
+                                        client.SendTextMessageAsync(msg.Chat.Id, 
+                                            "Use this command again if the game really has stopped already.").Wait();
+                                        Timer t = new Timer(new TimerCallback
+                                            (
+                                                delegate
+                                                {
+                                                    justCalledStop.Remove(msg.From.Id);
+                                                }
+                                            ), null, 10 * 1000, Timeout.Infinite);
+                                    }
+                                }
+                                return;
+
                             case "/flee":
                             case "/dead":
                                 if (games.ContainsKey(msg.Chat.Id))
