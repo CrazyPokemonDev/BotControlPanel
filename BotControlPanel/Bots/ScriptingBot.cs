@@ -48,7 +48,9 @@ namespace BotControlPanel.Bots
                     #region Commands
                     string cmd = text.Contains("@")
                         ? text.Remove(text.IndexOf('@')).ToLower()
-                        : text.Remove(text.IndexOf(' ')).ToLower();
+                        : (text.Contains(" ")
+                            ?text.Remove(text.IndexOf(' '))
+                            :text.ToLower());
                     switch (cmd)
                     {
                         #region newcommand
@@ -120,7 +122,8 @@ namespace BotControlPanel.Bots
                         #endregion
                         #region getscript
                         case "/getscript":
-                            client.SendTextMessageAsync(msg.Chat.Id, getScript());
+                            client.SendTextMessageAsync(msg.Chat.Id, "`" + getScript() + "`",
+                                parseMode: ParseMode.Markdown);
                             return;
                         #endregion
                         #region restart
