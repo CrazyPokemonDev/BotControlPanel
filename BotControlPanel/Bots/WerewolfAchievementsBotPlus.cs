@@ -346,7 +346,7 @@ namespace BotControlPanel.Bots
                         var msg = e.Update.Message;
 
                         #region Commands only
-                        switch (text.Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
+                        switch (text.ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
                         {
                             case "/startgame":
                             case "/startchaos":
@@ -505,7 +505,7 @@ namespace BotControlPanel.Bots
                                         g.UpdatePlayerlist();
                                     }
                                 }
-                                else if(text.StartsWith("now ") && Keys.Contains(text.ToLower().Substring(4)))
+                                else if(text.ToLower().StartsWith("now ") && Keys.Contains(text.ToLower().Substring(4)))
                                 {
                                     var role = GetRoleByAlias(text.ToLower().Substring(4));
                                     if (role != Game.roles.Unknown)
