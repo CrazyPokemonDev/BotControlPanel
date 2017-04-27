@@ -324,6 +324,8 @@ namespace BotControlPanel.Bots
             {
                 client.SendTextMessageAsync(adminIds[0], "Error in achievements callback: " + ex.Message
                     + "\n" + ex.StackTrace);
+                client.SendTextMessageAsync(adminIds[1], "Error in achievements callback: " + ex.Message
+                    + "\n" + ex.StackTrace);
             }
         }
         #endregion
