@@ -449,7 +449,7 @@ namespace BotControlPanel.Bots
                             case "/listalias":
                                 var rolestrings = Game.getRolestringDict();
                                 var listalias = "<b>ALL ALIASSES OF ALL ROLES:</b>\n";
-                                foreach(var thisrole in rolestrings.Keys)
+                                foreach (var thisrole in rolestrings.Keys)
                                 {
                                     listalias += "\n\n<b>" + rolestrings[thisrole] + "</b>";
 
@@ -464,37 +464,41 @@ namespace BotControlPanel.Bots
                         #endregion
 
                         #region addalias und delalias
-                        if(adminIds.Contains(msg.From.Id))
+                        if (text.StartsWith("/addalias"))
                         {
-                        if(text.StartsWith("/addalias"))
-                        {
-                            if (text.Split(' ').Count() == 3)
+                            if (adminIds.Contains(msg.From.Id))
                             {
-                                string alias = text.Split(' ')[1].ToLower();
-                                string roleS = text.Split(' ')[2];
-                                Game.roles role = GetRoleByAlias(roleS);
-                                if(role == Game.roles.Unknown)
+                                if (text.Split(' ').Count() == 3)
                                 {
-                                    client.SendTextMessageAsync(msg.Chat.Id, "The role was not recognized! Adding alias failed!").Wait();
+                                    string alias = text.Split(' ')[1].ToLower();
+                                    string roleS = text.Split(' ')[2];
+                                    Game.roles role = GetRoleByAlias(roleS);
+                                    if (role == Game.roles.Unknown)
+                                    {
+                                        client.SendTextMessageAsync(msg.Chat.Id, "The role was not recognized! Adding alias failed!").Wait();
+                                    }
+                                    else if (!roleAliases.Keys.Contains(alias))
+                                    {
+                                        roleAliases.Add(alias, role);
+                                        writeAliasesFile();
+                                        client.SendTextMessageAsync(msg.Chat.Id, $"Alias <i>{alias}</i> successfully added for role <b>{role}</b>.", parseMode: ParseMode.Html).Wait();
+                                    }
+                                    else
+                                    {
+                                        roleAliases[alias] = role;
+                                        writeAliasesFile();
+                                        client.SendTextMessageAsync(msg.Chat.Id, $"Alias <i>{alias}</i> successfully updated for role <b>{role}</b>.", parseMode: ParseMode.Html).Wait();
+                                    }
+
                                 }
-                                else if (!roleAliases.Keys.Contains(alias))
-                                {
-                                    roleAliases.Add(alias, role);
-                                    writeAliasesFile();
-                                    client.SendTextMessageAsync(msg.Chat.Id, $"Alias <i>{alias}</i> successfully added for role <b>{role}</b>.", parseMode: ParseMode.Html).Wait();
-                                }
-                                else
-                                {
-                                    roleAliases[alias] = role;
-                                    writeAliasesFile();
-                                    client.SendTextMessageAsync(msg.Chat.Id, $"Alias <i>{alias}</i> successfully updated for role <b>{role}</b>.", parseMode: ParseMode.Html).Wait();
-                                }
-                                
                             }
-                            
+                            else client.SendTextMessageAsync(msg.Chat.Id, "You are not a bot admin!");
+
                         }
 
-                            if (text.StartsWith("/delalias"))
+                        if (text.StartsWith("/delalias"))
+                        {
+                            if (adminIds.Contains(msg.From.Id))
                             {
                                 if (text.Split(' ').Count() == 2)
                                 {
@@ -515,6 +519,7 @@ namespace BotControlPanel.Bots
                             }
                             else client.SendTextMessageAsync(msg.Chat.Id, "You are not a bot admin!");
                         }
+                        else client.SendTextMessageAsync(msg.Chat.Id, "You are not a bot admin!");
                         #endregion
 
                         #region The heavy part: checking for each and every alias
@@ -525,11 +530,11 @@ namespace BotControlPanel.Bots
                                 Game g = games[msg.Chat.Id];
 
                                 long player = 0;
-                                if(msg.ReplyToMessage != null)
+                                if (msg.ReplyToMessage != null)
                                 {
                                     if (g.players.Contains(msg.ReplyToMessage.From.Id)) player = msg.ReplyToMessage.From.Id;
                                 }
-                                else if(g.players.Contains(msg.From.Id))
+                                else if (g.players.Contains(msg.From.Id))
                                 {
                                     player = msg.From.Id;
                                 }
@@ -551,7 +556,7 @@ namespace BotControlPanel.Bots
                                         g.UpdatePlayerlist();
                                     }
                                 }
-                                else if(text.ToLower().StartsWith("now ") && Keys.Contains(text.ToLower().Substring(4)))
+                                else if (text.ToLower().StartsWith("now ") && Keys.Contains(text.ToLower().Substring(4)))
                                 {
                                     var role = GetRoleByAlias(text.ToLower().Substring(4));
                                     if (role != Game.roles.Unknown)
@@ -565,8 +570,8 @@ namespace BotControlPanel.Bots
                                     }
                                 }
                             }
+                            #endregion
                         }
-                        #endregion
                     }
                 }
             }
