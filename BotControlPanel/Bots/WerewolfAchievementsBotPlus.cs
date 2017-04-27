@@ -610,7 +610,7 @@ namespace BotControlPanel.Bots
                     case "fool":
                         return Game.roles.Fool;
 
-                    case "guardianAngel":
+                    case "guardianangel":
                         return Game.roles.GuardianAngel;
 
                     case "gunner":
