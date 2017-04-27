@@ -272,7 +272,7 @@ namespace BotControlPanel.Bots
                     long id = Convert.ToInt64(data.Substring(6));
                     if (games.ContainsKey(id))
                     {
-                        if (games[id].players.Count >= 5 && id != allowedgroups[0]) // player limit disabled for test group
+                        if (games[id].players.Count >= 5 || id == allowedgroups[0]) // player limit disabled for test group
                         {
                             games[id].Start();
                             games[id].UpdatePlayerlist();
