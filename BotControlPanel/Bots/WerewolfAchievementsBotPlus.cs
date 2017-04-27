@@ -40,6 +40,7 @@ namespace BotControlPanel.Bots
 
             private const string joinMessageText = "*Join this game!*\n\nPin this message and remember "
                 + "to press start when the roles are assigned and the game begins. *DON'T PRESS START BEFORE THE ROLES ARE ASSIGNED!*";
+            private const string runMessageText = "*Game running!*\n\nPress stop *ONCE THE GAME STOPPED!*";
             private const string stoppedMessageText = "*This game is finished!*";
             private string playerlist;
             #endregion
@@ -186,7 +187,7 @@ namespace BotControlPanel.Bots
                     }
                 }
                 if (gamestate == state.Running)
-                    client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, joinMessageText
+                    client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, runMessageText
                         + "\n\n" + playerlist, parseMode: ParseMode.Markdown,
                         replyMarkup: InlineKeyboardStop.Get(GroupId)).Wait();
                 else if (gamestate == state.Joining)
