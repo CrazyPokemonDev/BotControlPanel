@@ -296,6 +296,7 @@ namespace BotControlPanel.Bots
                             games.Remove(id);
                             client.AnswerCallbackQueryAsync(e.CallbackQuery.Id,
                                 "The game is now considered stopped.").Wait();
+                            client.SendTextMessageAsync(id, $"<b>{e.CallbackQuery.From.FirstName}</b> has considered the game as stopped!", parseMode: ParseMode.Html);
                             justCalledStop.Remove(e.CallbackQuery.From.Id);
                         }
                         else
