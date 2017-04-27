@@ -99,6 +99,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <None Include="ScriptBot\compile.bat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="ScriptBot\Start.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Page Include="AlertWindows\TokenDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -118,6 +124,7 @@
     <Compile Include="Bots\AchBotInlineKeyboards\InlineKeyboardStart.cs" />
     <Compile Include="Bots\AchBotInlineKeyboards\InlineKeyboardTellRole.cs" />
     <Compile Include="Bots\FlomBot.cs" />
+    <Compile Include="Bots\ScriptingBot.cs" />
     <Compile Include="Bots\WerewolfAchievementsBotPlus.cs" />
     <Compile Include="Bots\WWTBCustomKeyboards\CancelKeyboard.cs" />
     <Compile Include="Bots\WWTBCustomKeyboards\ClosedlistKeyboard.cs" />
@@ -170,6 +177,11 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ScriptBot\Telegram.Bot.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
