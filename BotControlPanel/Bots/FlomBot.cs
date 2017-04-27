@@ -45,6 +45,7 @@ namespace BotControlPanel.Bots
         #endregion
         #region Constants
         public abstract string Name { get; }
+        protected const long Flom = 267376056;
         #endregion
 
         #region Control Methods

@@ -1,0 +1,1 @@
+C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\csc.exe /r:Telegram.Bot.dll /out:test.exe Start.cs
