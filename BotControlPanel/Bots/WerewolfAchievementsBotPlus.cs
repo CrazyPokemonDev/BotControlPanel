@@ -277,7 +277,7 @@ namespace BotControlPanel.Bots
                             games[id].Start();
                             games[id].UpdatePlayerlist();
                             client.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Game is now considered running.").Wait();
-                            client.SendTextMessageAsync(id, $"<b>{e.CallbackQuery.From.FirstName}</b> has considered the game as started!", parseMode: ParseMode.Html).Wait();
+                            client.SendTextMessageAsync(id, $"<b>{e.CallbackQuery.From.FirstName}</b> has considered the game started!", parseMode: ParseMode.Html).Wait();
                         }
                         else
                         {
@@ -304,7 +304,7 @@ namespace BotControlPanel.Bots
                             games.Remove(id);
                             client.AnswerCallbackQueryAsync(e.CallbackQuery.Id,
                                 "The game is now considered stopped.").Wait();
-                            client.SendTextMessageAsync(id, $"<b>{e.CallbackQuery.From.FirstName}</b> has considered the game as stopped!", parseMode: ParseMode.Html);
+                            client.SendTextMessageAsync(id, $"<b>{e.CallbackQuery.From.FirstName}</b> has considered the game stopped!", parseMode: ParseMode.Html);
                             justCalledStop.Remove(e.CallbackQuery.From.Id);
                         }
                         else
