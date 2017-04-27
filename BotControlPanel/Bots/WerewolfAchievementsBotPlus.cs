@@ -88,7 +88,7 @@ namespace BotControlPanel.Bots
                 Sorcerer,
                 ClumsyGuy,
                 Blacksmith,
-                AlpaWolf,
+                AlphaWolf,
                 WolfCub,
                 SeerFool, // Used if not sure whether seer or fool
                 Dead,
@@ -98,7 +98,7 @@ namespace BotControlPanel.Bots
             private static Dictionary<roles, string> setRolestringDict()
             {
                 Dictionary<roles, string> dict = new Dictionary<roles, string>();
-                dict.Add(roles.AlpaWolf, "Alpha Wolf 🐺⚡️");
+                dict.Add(roles.AlphaWolf, "Alpha Wolf 🐺⚡️");
                 dict.Add(roles.ApprenticeSeer, "App Seer 🙇");
                 dict.Add(roles.Beholder, "Beholder 👁");
                 dict.Add(roles.Blacksmith, "Blacksmith ⚒");
@@ -540,7 +540,7 @@ namespace BotControlPanel.Bots
                 switch (alias)
                 {
                     case "alphawolf":
-                        return Game.roles.AlpaWolf;
+                        return Game.roles.AlphaWolf;
 
                     case "apprenticeseer":
                         return Game.roles.ApprenticeSeer;
