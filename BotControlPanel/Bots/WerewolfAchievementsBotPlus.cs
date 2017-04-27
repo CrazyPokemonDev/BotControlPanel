@@ -520,7 +520,6 @@ namespace BotControlPanel.Bots
                             }
                             else client.SendTextMessageAsync(msg.Chat.Id, "You are not a bot admin!");
                         }
-                        else client.SendTextMessageAsync(msg.Chat.Id, "You are not a bot admin!");
                         #endregion
 
                         #region The heavy part: checking for each and every alias
