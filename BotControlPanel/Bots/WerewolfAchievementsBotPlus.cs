@@ -356,12 +356,22 @@ namespace BotControlPanel.Bots
                                 }
                                 else
                                 {
-                                    Task<Message> t = client.SendTextMessageAsync(msg.Chat.Id, "Initializing new game...");
-                                    t.Wait();
-                                    var gamemessage = t.Result;
-                                    var game = new Game(client, msg.Chat.Id, gamemessage);
-                                    games.Add(msg.Chat.Id, game);
-                                    games[msg.Chat.Id].AddPlayer(msg.From);
+                                    if (games[msg.Chat.Id].gamestate == Game.state.Joining)
+                                    {
+                                        if (!games[msg.Chat.Id].AddPlayer(msg.From))
+                                        {
+                                            client.SendTextMessageAsync(msg.Chat.Id, "Failed to add " + msg.From.FirstName + " to the players!").Wait();
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Task<Message> t = client.SendTextMessageAsync(msg.Chat.Id, "Initializing new game...");
+                                        t.Wait();
+                                        var gamemessage = t.Result;
+                                        var game = new Game(client, msg.Chat.Id, gamemessage);
+                                        games.Add(msg.Chat.Id, game);
+                                        games[msg.Chat.Id].AddPlayer(msg.From);
+                                    }
                                 }
                                 return;
 
