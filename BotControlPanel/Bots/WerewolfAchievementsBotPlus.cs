@@ -229,7 +229,7 @@ namespace BotControlPanel.Bots
             "doppelgänger",
             "drunk",
             "fool",
-            "guardianAngel",
+            "guardianangel",
             "gunner",
             "harlot",
             "hunter",
