@@ -454,11 +454,17 @@ namespace BotControlPanel.Bots
                                 {
                                     client.SendTextMessageAsync(msg.Chat.Id, "The role was not recognized! Adding alias failed!").Wait();
                                 }
-                                else
+                                else if (!roleAliases.Keys.Contains(alias))
                                 {
                                     roleAliases.Add(alias, role);
                                     writeAliasesFile();
                                     client.SendTextMessageAsync(msg.Chat.Id, $"Alias {alias} successfully added for role {role}.").Wait();
+                                }
+                                else
+                                {
+                                    roleAliases[alias] = role;
+                                    writeAliasesFile();
+                                    client.SendTextMessageAsync(msg.Chat.Id, $"Alias {alias} successfully updated for role {role}.").Wait();
                                 }
                                 
                             }
