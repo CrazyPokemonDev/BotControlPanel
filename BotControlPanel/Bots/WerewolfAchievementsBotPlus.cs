@@ -35,7 +35,7 @@ namespace BotControlPanel.Bots
             public state gamestate { get; set; }
             private TelegramBotClient client;
             public Dictionary<long, roles> role = new Dictionary<long, roles>();
-            public Dictionary<roles, string> rolestring = setRolestringDict();
+            public Dictionary<roles, string> rolestring = getRolestringDict();
             public long GroupId { get; }
 
             private const string joinMessageText = "*Join this game!*\n\nPin this message and remember "
@@ -96,7 +96,7 @@ namespace BotControlPanel.Bots
                 Unknown
             }
 
-            private static Dictionary<roles, string> setRolestringDict()
+            public static Dictionary<roles, string> getRolestringDict()
             {
                 Dictionary<roles, string> dict = new Dictionary<roles, string>();
                 dict.Add(roles.AlphaWolf, "Alpha Wolf 🐺⚡️");
@@ -422,7 +422,22 @@ namespace BotControlPanel.Bots
                                 return;
 
                             case "/version":
-                                client.SendTextMessageAsync(msg.Chat.Id, $"Werewolf Achievements Manager version {version}").Wait();
+                                client.SendTextMessageAsync(msg.Chat.Id, $"Werewolf Achievements Manager Version {version}").Wait();
+                                return;
+
+                            case "/listalias":
+                                var rolestrings = Game.getRolestringDict();
+                                var listalias = "*ALL ALIASSES OF ALL ROLES:*\n";
+                                foreach(var thisrole in rolestrings.Keys)
+                                {
+                                    listalias += "\n\n*" + rolestrings[thisrole] + "*";
+
+                                    foreach (var alias in roleAliases.Where(x => x.Value == thisrole))
+                                    {
+                                        listalias += "\n" + alias.Key;
+                                    }
+                                }
+                                client.SendTextMessageAsync(msg.Chat.Id, listalias).Wait();
                                 return;
                         }
                         #endregion
