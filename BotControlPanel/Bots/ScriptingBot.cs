@@ -40,7 +40,6 @@ namespace BotControlPanel.Bots
                 System.IO.File.Copy(startPath + "Start.cs", scriptPath);
             }
             System.IO.File.Copy(startPath + "compile.bat", compilePath);
-            System.IO.File.Copy(startPath + "Telegram.Bot.dll", dllPath);
         }
         #endregion
 

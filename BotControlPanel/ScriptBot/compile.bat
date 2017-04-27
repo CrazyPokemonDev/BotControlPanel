@@ -1,1 +1,1 @@
-C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\csc.exe /r:Telegram.Bot.dll /out:test.exe Start.cs
+C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\csc.exe /r:Telegram.Bot.dll /out:"C:\Olfi01\BotControlPanel\ScriptingBot\test.exe" "C:\Olfi01\BotControlPanel\ScriptingBot\Start.cs"
