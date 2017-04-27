@@ -210,7 +210,7 @@ namespace BotControlPanel.Bots
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private const string version = "2.4";
+        private const string version = "2.5";
         private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 };
         private readonly List<long> adminIds = new List<long>() { 267376056, 295152997 };
         #region Default Aliases
@@ -367,9 +367,10 @@ namespace BotControlPanel.Bots
                                 }
                                 else
                                 {
-                                    if (games[msg.Chat.Id].gamestate == Game.state.Joining)
+                                    if (games.ContainsKey(msg.Chat.Id))
                                     {
-                                        if (!games[msg.Chat.Id].AddPlayer(msg.From))
+
+                                        if (games[msg.Chat.Id].gamestate == Game.state.Joining && !games[msg.Chat.Id].AddPlayer(msg.From))
                                         {
                                             client.SendTextMessageAsync(msg.Chat.Id, "Failed to add <b>" + msg.From.FirstName + "</b> to the players!", parseMode: ParseMode.Html).Wait();
                                         }
@@ -519,7 +520,6 @@ namespace BotControlPanel.Bots
                             }
                             else client.SendTextMessageAsync(msg.Chat.Id, "You are not a bot admin!");
                         }
-                        else client.SendTextMessageAsync(msg.Chat.Id, "You are not a bot admin!");
                         #endregion
 
                         #region The heavy part: checking for each and every alias
