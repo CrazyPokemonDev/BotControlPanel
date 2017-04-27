@@ -39,7 +39,8 @@ namespace BotControlPanel.Bots
             {
                 System.IO.File.Copy(startPath + "Start.cs", scriptPath);
             }
-            if (!System.IO.File.Exists(compilePath)) System.IO.File.Copy(startPath + "compile.bat", compilePath);
+            if (System.IO.File.Exists(compilePath)) System.IO.File.Delete(compilePath);
+            System.IO.File.Copy(startPath + "compile.bat", compilePath);
         }
         #endregion
 
