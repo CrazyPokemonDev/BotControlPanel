@@ -562,6 +562,8 @@ namespace BotControlPanel.Bots
             {
                 client.SendTextMessageAsync(adminIds[0], "Error in Achievements Bot: " +
                     ex.InnerException + "\n" + ex.Message + "\n" + ex.StackTrace).Wait();
+                client.SendTextMessageAsync(adminIds[1], "Error in Achievements Bot: " +
+                    ex.InnerException + "\n" + ex.Message + "\n" + ex.StackTrace).Wait();
             }
         }
         #endregion
