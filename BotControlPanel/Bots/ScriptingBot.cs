@@ -34,13 +34,13 @@ namespace BotControlPanel.Bots
         public ScriptingBot() : base()
         {
             scriptedBotToken = getScriptedBotToken();
+            if (!Directory.Exists(basePath)) Directory.CreateDirectory(basePath);
             if (!System.IO.File.Exists(scriptPath))
             {
-                if (!Directory.Exists(basePath)) Directory.CreateDirectory(basePath);
                 System.IO.File.Copy(startPath + "Start.cs", scriptPath);
-                System.IO.File.Copy(startPath + "compile.bat", compilePath);
-                System.IO.File.Copy(startPath + "Telegram.Bot.dll", dllPath);
             }
+            System.IO.File.Copy(startPath + "compile.bat", compilePath);
+            System.IO.File.Copy(startPath + "Telegram.Bot.dll", dllPath);
         }
         #endregion
 
