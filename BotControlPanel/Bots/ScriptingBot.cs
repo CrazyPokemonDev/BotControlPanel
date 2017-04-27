@@ -16,11 +16,13 @@ namespace BotControlPanel.Bots
     {
         #region Constants
         public override string Name { get; } = "Scripting Bot";
-        private static readonly string basePath = Path.Combine(Environment.CurrentDirectory, "ScriptBot\\");
+        private static readonly string basePath = "C:\\Olfi01\\BotControlPanel\\ScriptingBot\\";
+        private static readonly string startPath = Path.Combine(Environment.CurrentDirectory, "ScriptBot\\");
         private static readonly string scriptPath = Path.Combine(basePath, "Start.cs");
         private static readonly string scriptSecondPath = Path.Combine(basePath, "StartCopy.cs");
         private static readonly string compilePath = Path.Combine(basePath, "compile.bat");
         private static readonly string execPath = Path.Combine(basePath, "test.exe");
+        private static readonly string dllPath = Path.Combine(basePath, "Telegram.Bot.dll");
         private const string tokenBasePath = "C:\\Olfi01\\BotControlPanel\\ScriptingBot\\";
         private const string tokenPath = tokenBasePath + "scriptedToken.token";
         #endregion
@@ -32,6 +34,13 @@ namespace BotControlPanel.Bots
         public ScriptingBot() : base()
         {
             scriptedBotToken = getScriptedBotToken();
+            if (!Directory.Exists(basePath)) Directory.CreateDirectory(basePath);
+            if (!System.IO.File.Exists(scriptPath))
+            {
+                System.IO.File.Copy(startPath + "Start.cs", scriptPath);
+            }
+            System.IO.File.Copy(startPath + "compile.bat", compilePath);
+            System.IO.File.Copy(startPath + "Telegram.Bot.dll", dllPath);
         }
         #endregion
 
@@ -136,7 +145,11 @@ namespace BotControlPanel.Bots
                                     p.CloseMainWindow();
                                     p.Close();
                                 }
-                                try { Process.Start(execPath, scriptedBotToken); }
+                                try
+                                {
+                                    Process.Start(execPath, scriptedBotToken);
+                                    client.SendTextMessageAsync(msg.Chat.Id, "Bot (re)started.");
+                                }
                                 catch
                                 {
                                     client.SendTextMessageAsync(msg.Chat.Id,
