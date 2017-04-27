@@ -24,7 +24,7 @@ namespace BotControlPanel.ScriptBot
             client.StartReceiving();
             while (running)
             {
-
+                //Beep beep i'm a sheep
             }
         }
 
