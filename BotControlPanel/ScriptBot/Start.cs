@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Windows.Forms;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
@@ -7,7 +6,7 @@ using Telegram.Bot.Types.Enums;
 using System.Threading;
 //addusing
 
-namespace BotControlPanel.ScriptBot
+namespace ScriptedBot
 {
     class Program
     {
@@ -17,15 +16,21 @@ namespace BotControlPanel.ScriptBot
         private static bool running = true;
         //adddefinition
 
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             client = new TelegramBotClient(args[0]);
             client.OnUpdate += Client_OnUpdate;
             client.StartReceiving();
-            while (running)
+            /*while (running)
             {
                 //Beep beep i'm a sheep
-            }
+            }*/
+        }
+
+        public static void Stop()
+        {
+            running = false;
+            client.StopReceiving();
         }
 
         private static void Client_OnUpdate(object sender, UpdateEventArgs e)
@@ -35,7 +40,7 @@ namespace BotControlPanel.ScriptBot
                 if (e.Update.Type == UpdateType.MessageUpdate &&
                     e.Update.Message.Type == MessageType.TextMessage)
                 {
-                    Telegram.Bot.Types.Message msg = e.Update.Message;
+                    Message msg = e.Update.Message;
                     string text = e.Update.Message.Text;
                     string cmd = text.Contains("@")
                         ? text.Remove(text.IndexOf('@')).ToLower()
@@ -47,6 +52,7 @@ namespace BotControlPanel.ScriptBot
                             {
                                 running = false;
                                 client.StopReceiving();
+                                client.GetUpdatesAsync(e.Update.Id + 1);
                                 client.SendTextMessageAsync(msg.Chat.Id, "*dies*");
                             }
                             break;

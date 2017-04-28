@@ -47,21 +47,21 @@ namespace BotControlPanel
         public MainWindow()
         {
             InitializeComponent();
-            getTokens();
+            GetTokens();
             try { wwtb = new WWTB(wwtbToken); }
             catch { textBlockWWTB.Background = erroredBackground; }
             try { achBot = new WerewolfAchievementsBotPlus(achToken); }
             catch { textBlockAchv.Background = erroredBackground; }
             foreach (FlomBot b in bots)
             {
-                initializeFlomBot(b);
+                InitializeFlomBot(b);
             }
         }
         #endregion
 
         #region Random Methods
         #region Get Tokens
-        private void getTokens()
+        private void GetTokens()
         {
             #region WWTB Token
             if (File.Exists(wwtbTokenPath))
@@ -79,7 +79,7 @@ namespace BotControlPanel
         #endregion
         #region Set Tokens
         #region WWTB Token
-        private void setWWTBToken(string token)
+        private void SetWWTBToken(string token)
         {
             if (!Directory.Exists(tokenBasePath))
             {
@@ -94,7 +94,7 @@ namespace BotControlPanel
         }
         #endregion
         #region AchBot Token
-        private void setAchvToken(string token)
+        private void SetAchvToken(string token)
         {
             if (!Directory.Exists(tokenBasePath))
             {
@@ -110,7 +110,7 @@ namespace BotControlPanel
         #endregion
         #endregion
         #region Get Token By Name
-        private string getTokenByName(string name)
+        private string GetTokenByName(string name)
         {
             string path = tokenBasePath + name + tokenSuffix;
             if (File.Exists(path))
@@ -124,9 +124,9 @@ namespace BotControlPanel
         }
         #endregion
         #region Initialize Flom Bot
-        private void initializeFlomBot(FlomBot b)
+        private void InitializeFlomBot(FlomBot b)
         {
-            b.Token = getTokenByName(b.Name);
+            b.Token = GetTokenByName(b.Name);
             RowDefinition rd = new RowDefinition();
             rd.Height = new GridLength(1, GridUnitType.Star);
             grid.RowDefinitions.Add(rd);
@@ -258,7 +258,7 @@ namespace BotControlPanel
             {
                 TokenDialog td = new TokenDialog(wwtbToken);
                 td.ShowDialog();
-                setWWTBToken(td.result);
+                SetWWTBToken(td.result);
             }
             else
             {
@@ -306,7 +306,7 @@ namespace BotControlPanel
             {
                 TokenDialog td = new TokenDialog(achToken);
                 td.ShowDialog();
-                setAchvToken(td.result);
+                SetAchvToken(td.result);
             }
             else
             {
