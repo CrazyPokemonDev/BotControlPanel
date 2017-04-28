@@ -90,7 +90,7 @@ namespace BotControlPanel.Bots
                         case "/addusing":
                             if (msg.From.Id == Flom)
                             {
-                                if (!text.Contains(" ")) return;
+                                if (!text.Contains(" ") && msg.ReplyToMessage == null) return;
                                 string code = msg.ReplyToMessage == null
                                     ? text.Substring(text.IndexOf(' ') + 1)
                                     : msg.ReplyToMessage.Text;
@@ -112,7 +112,7 @@ namespace BotControlPanel.Bots
                         case "/adddefinition":
                             if (msg.From.Id == Flom)
                             {
-                                if (!text.Contains(" ")) return;
+                                if (!text.Contains(" ") && msg.ReplyToMessage == null) return;
                                 string code = msg.ReplyToMessage == null
                                     ? text.Substring(text.IndexOf(' ') + 1)
                                     : msg.ReplyToMessage.Text;
@@ -125,6 +125,26 @@ namespace BotControlPanel.Bots
                                 {
                                     client.SendTextMessageAsync(msg.Chat.Id,
                                         "Failed to add definition.\n"
+                                        + error);
+                                }
+                            }
+                            return;
+                        #endregion
+                        #region addmethod
+                        case "/addmethod":
+                            if (msg.From.Id == Flom)
+                            {
+                                if (!text.Contains(" ") && msg.ReplyToMessage == null) return;
+                                string code = msg.ReplyToMessage == null
+                                    ? text.Substring(text.IndexOf(' ') + 1)
+                                    : msg.ReplyToMessage.Text;
+                                if (AddMethod(code, out string error))
+                                {
+                                    client.SendTextMessageAsync(msg.Chat.Id, "Method successfully added");
+                                }
+                                else
+                                {
+                                    client.SendTextMessageAsync(msg.Chat.Id, "Failed to add method.\n"
                                         + error);
                                 }
                             }
@@ -289,6 +309,42 @@ namespace BotControlPanel.Bots
             if (!Directory.Exists(basePath)) Directory.CreateDirectory(basePath);
             string oldFile = System.IO.File.ReadAllText(scriptPath);
             string newFile = oldFile.Replace("//adddefinition", code + "\n//adddefinition");
+            CSharpCodeProvider provider = new CSharpCodeProvider();
+            CompilerParameters parameters = new CompilerParameters();
+            parameters.ReferencedAssemblies.Add(dllPath1);
+            parameters.ReferencedAssemblies.Add(dllPath2);
+            parameters.GenerateInMemory = true;
+            parameters.GenerateExecutable = true;
+            CompilerResults results = provider.CompileAssemblyFromSource(parameters, newFile);
+            error = "";
+            if (results.Errors.HasErrors)
+            {
+                foreach (CompilerError e in results.Errors)
+                {
+                    error += e.ErrorNumber + " " + e.ErrorText + "\n";
+                }
+                CompileBot();
+                botMainMethod.Invoke(null, new object[] { new String[] { scriptedBotToken } });
+                return false;
+            }
+            Assembly assembly = results.CompiledAssembly;
+            Type program = assembly.GetType("ScriptedBot.Program");
+            botMainMethod = program.GetMethod("Main");
+            botStopMethod = program.GetMethod("Stop");
+            System.IO.File.WriteAllText(scriptPath, newFile);
+            System.IO.File.WriteAllText(scriptSecondPath, newFile);
+            error = "Success";
+            botMainMethod.Invoke(null, new object[] { new String[] { scriptedBotToken } });
+            return true;
+        }
+        #endregion
+        #region Add method
+        private bool AddMethod(string code, out string error)
+        {
+            if (botStopMethod != null) botStopMethod.Invoke(null, null);
+            if (!Directory.Exists(basePath)) Directory.CreateDirectory(basePath);
+            string oldFile = System.IO.File.ReadAllText(scriptPath);
+            string newFile = oldFile.Replace("//addmethod", code + "\n//addmethod");
             CSharpCodeProvider provider = new CSharpCodeProvider();
             CompilerParameters parameters = new CompilerParameters();
             parameters.ReferencedAssemblies.Add(dllPath1);
