@@ -70,7 +70,7 @@ namespace BotControlPanel.Bots
                         case "/newcommand":
                             if (msg.From.Id == Flom)
                             {
-                                if (!text.Contains(" ")) return;
+                                if (!text.Contains(" ") && msg.ReplyToMessage == null) return;
                                 string code = msg.ReplyToMessage == null
                                     ? text.Substring(text.IndexOf(' ') + 1)
                                     : msg.ReplyToMessage.Text;
