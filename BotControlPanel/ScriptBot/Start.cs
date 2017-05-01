@@ -44,7 +44,9 @@ namespace ScriptedBot
                     string text = e.Update.Message.Text;
                     string cmd = text.Contains("@")
                         ? text.Remove(text.IndexOf('@')).ToLower()
-                        : text.ToLower();
+                        : (text.Contains(" ")
+                            ? text.Remove(text.IndexOf(' ')).ToLower()
+                            : text.ToLower());
                     switch (cmd)
                     {
                         case "/stopbot":
