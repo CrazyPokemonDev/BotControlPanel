@@ -269,7 +269,7 @@ namespace BotControlPanel.Bots
                     long id = Convert.ToInt64(data.Substring(6));
                     if (games.ContainsKey(id))
                     {
-                        if (games[id].players.Count >= 5 || id == allowedgroups[0]) // player limit disabled for test group
+                        if (games[id].names.Count >= 5 || id == allowedgroups[0]) // player limit disabled for test group
                         {
                             games[id].Start();
                             games[id].UpdatePlayerlist();
@@ -431,10 +431,10 @@ namespace BotControlPanel.Bots
                                 {
                                     Game g = games[msg.Chat.Id];
 
-                                    User dead = msg.ReplyToMessage != null && g.players.Contains(msg.ReplyToMessage.From.Id)
+                                    User dead = msg.ReplyToMessage != null && g.names.Keys.Contains(msg.ReplyToMessage.From.Id)
                                             ? msg.ReplyToMessage.From
                                             : (
-                                                g.players.Contains(msg.From.Id)
+                                                g.names.Keys.Contains(msg.From.Id)
                                                     ? msg.From
                                                     : null
                                               );
@@ -556,9 +556,9 @@ namespace BotControlPanel.Bots
                                 long player = 0;
                                 if (msg.ReplyToMessage != null)
                                 {
-                                    if (g.players.Contains(msg.ReplyToMessage.From.Id)) player = msg.ReplyToMessage.From.Id;
+                                    if (g.names.Keys.Contains(msg.ReplyToMessage.From.Id)) player = msg.ReplyToMessage.From.Id;
                                 }
-                                else if (g.players.Contains(msg.From.Id))
+                                else if (g.names.Keys.Contains(msg.From.Id))
                                 {
                                     player = msg.From.Id;
                                 }
