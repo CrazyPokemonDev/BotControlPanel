@@ -138,7 +138,7 @@ namespace BotControlPanel.Bots
             {
                 if (!names.ContainsKey(newplayer.Id) && gamestate == state.Joining)
                 {
-                    names.Add(newplayer.Id, newplayer.FirstName);
+                    names.Add(newplayer.Id, newplayer.FirstName.Remove(15));
                     UpdatePlayerlist();
                     return true;                    
                 }
