@@ -168,7 +168,7 @@ namespace BotControlPanel.Bots
 
             public void UpdatePlayerlist()
             {
-                playerlist = "<b>Players:</b>\n";
+                playerlist = "<b>LYNCHORDER:</b>\n";
 
                 foreach(var p in names.Keys)
                 {
@@ -177,12 +177,19 @@ namespace BotControlPanel.Bots
                     {
                         if (role.ContainsKey(p))
                         {
-                            if (role[p] == roles.Dead) playerlist += names[p] + ": " + rolestring[roles.Dead] + "\n";
-                            else playerlist += "<b>" + names[p] + "</b>: " + rolestring[role[p]] + "\n";
+                            if(role[p] != roles.Dead) playerlist += "<b>" + names[p] + "</b>: " + rolestring[role[p]] + "\n";
                         }
                         else playerlist += "<b>" + names[p] + "</b>: " + rolestring[roles.Unknown] + "\n";
                     }
                 }
+
+                playerlist += "\n\nDEAD PLAYERS 💀:";
+
+                if (gamestate == state.Running) foreach (var p in names.Keys.Where(x => role.ContainsKey(x) && role[x] == roles.Dead))
+                {
+                        playerlist += "\n" + names[p];
+                }
+
                 if (gamestate == state.Running)
                     client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, runMessageText
                         + "\n\n" + playerlist, parseMode: ParseMode.Html,
