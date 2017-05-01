@@ -292,6 +292,7 @@ namespace BotControlPanel.Bots
             toRemove = toRemove.Remove(toRemove.IndexOf("//end") + 5);
             script = script.Remove(script.IndexOf(toRemove), toRemove.Length);
             System.IO.File.WriteAllText(scriptPath, script);
+            if (botStopMethod != null) botStopMethod.Invoke(null, null);
             CompileBot();
             botMainMethod.Invoke(null, new object[] { new String[] { scriptedBotToken } });
         }
