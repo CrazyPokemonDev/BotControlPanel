@@ -152,8 +152,17 @@ namespace BotControlPanel.Bots
                         #endregion
                         #region getscript
                         case "/getscript":
-                            client.SendTextMessageAsync(msg.Chat.Id, "`" + GetScript() + "`",
-                                parseMode: ParseMode.Markdown);
+                            string script = GetScript();
+                            List<string> list = new List<string>();
+                            while (script.Length > 2000)
+                            {
+                                list.Add(script.Remove(2000));
+                                script = script.Substring(2000);
+                            }
+                            list.Add(script);
+                            foreach (string s in list)
+                                client.SendTextMessageAsync(msg.Chat.Id, "`" + s + "`",
+                                    parseMode: ParseMode.Markdown).Wait();
                             return;
                         #endregion
                         #region restart
