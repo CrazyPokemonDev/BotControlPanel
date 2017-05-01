@@ -86,6 +86,13 @@ namespace BotControlPanel.Bots
                             }
                             return;
                         #endregion
+                        #region delcommand
+                        case "/delcommand":
+                            if (!text.Contains(" ")) return;
+                            DeleteCommand(text.Substring(text.IndexOf(' ') + 1));
+                            client.SendTextMessageAsync(msg.Chat.Id, "Command deleted.");
+                            return;
+                        #endregion
                         #region addusing
                         case "/addusing":
                             if (msg.From.Id == Flom)
@@ -234,12 +241,13 @@ namespace BotControlPanel.Bots
         #region New Command
         private bool NewCommand(string args, out string error)
         {
+            args = AutoCodeCompletion(args);
             if (botStopMethod != null) botStopMethod.Invoke(null, null);
             if (!Directory.Exists(basePath)) Directory.CreateDirectory(basePath);
             if (args.Trim().StartsWith("case"))
             {
                 string oldFile = System.IO.File.ReadAllText(scriptPath);
-                string newFile = oldFile.Replace("//newcommand", args + "\n//newcommand");
+                string newFile = oldFile.Replace("//newcommand", args + "\n//end\n//newcommand");
                 CSharpCodeProvider provider = new CSharpCodeProvider();
                 CompilerParameters parameters = new CompilerParameters();
                 parameters.ReferencedAssemblies.Add(dllPath1);
@@ -273,6 +281,19 @@ namespace BotControlPanel.Bots
                 error = "String needs to start with case";
                 return false;
             }
+        }
+        #endregion
+        #region Delete Command
+        private void DeleteCommand(string name)
+        {
+            string script = GetScript();
+            string toRemove = script.Substring(script.IndexOf("private static void Client_OnUpdate(object sender, UpdateEventArgs e)"));
+            toRemove = toRemove.Substring(toRemove.IndexOf($"case \"" + name + "\""));
+            toRemove = toRemove.Remove(toRemove.IndexOf("//end") + 5);
+            script = script.Remove(script.IndexOf(toRemove), toRemove.Length);
+            System.IO.File.WriteAllText(scriptPath, script);
+            CompileBot();
+            botMainMethod.Invoke(null, new object[] { new String[] { scriptedBotToken } });
         }
         #endregion
         #region Add Using
@@ -314,10 +335,12 @@ namespace BotControlPanel.Bots
         #region Add Definition
         private bool AddDefinition(string code, out string error)
         {
+            code = AutoCodeCompletion(code);
             if (botStopMethod != null) botStopMethod.Invoke(null, null);
             if (!Directory.Exists(basePath)) Directory.CreateDirectory(basePath);
             string oldFile = System.IO.File.ReadAllText(scriptPath);
             string newFile = oldFile.Replace("//adddefinition", code + "\n//adddefinition");
+            newFile = AutoCodeCompletion(newFile);
             CSharpCodeProvider provider = new CSharpCodeProvider();
             CompilerParameters parameters = new CompilerParameters();
             parameters.ReferencedAssemblies.Add(dllPath1);
@@ -350,10 +373,12 @@ namespace BotControlPanel.Bots
         #region Add method
         private bool AddMethod(string code, out string error)
         {
+            code = AutoCodeCompletion(code);
             if (botStopMethod != null) botStopMethod.Invoke(null, null);
             if (!Directory.Exists(basePath)) Directory.CreateDirectory(basePath);
             string oldFile = System.IO.File.ReadAllText(scriptPath);
             string newFile = oldFile.Replace("//addmethod", code + "\n//addmethod");
+            newFile = AutoCodeCompletion(newFile);
             CSharpCodeProvider provider = new CSharpCodeProvider();
             CompilerParameters parameters = new CompilerParameters();
             parameters.ReferencedAssemblies.Add(dllPath1);
@@ -405,6 +430,147 @@ namespace BotControlPanel.Bots
             scriptedBotToken = token;
             if (!Directory.Exists(tokenBasePath)) Directory.CreateDirectory(tokenBasePath);
             System.IO.File.WriteAllText(tokenPath, token);
+        }
+        #endregion
+        #region Intuitive code sequences
+        private string AutoCodeCompletion(string codeToComplete)
+        {
+            List<string> lines = codeToComplete.Split('\n').ToList();
+            List<string> newLines = new List<string>();
+            foreach (string l in lines)
+            {
+                string newLine = l;
+                string last = "";
+                if (l.StartsWith("\\"))
+                {
+                    bool objBool = false;
+                    string obj = "";
+                    string baseName = "";
+                    string baseAction = "No action recognized";
+                    Dictionary<string, string> args = new Dictionary<string, string>();
+                    Dictionary<string, string> defaultArgs = new Dictionary<string, string>();
+                    foreach (string word in (l.Trim() + " $top").Substring(1).Split(' '))
+                    {
+                        #region Keyword handling
+                        if (!objBool)
+                        {
+                            string nowword = word;
+                            if (word.EndsWith(":"))
+                            {
+                                objBool = true;
+                                nowword = word.Remove(word.Length - 1);
+                            }
+                            switch (last.ToLower())
+                            {
+                                #region Keyword Send
+                                case "send":
+                                    if (baseName != "") break;
+                                    switch (nowword.ToLower())
+                                    {
+                                        case "message":
+                                            baseAction = "client.SendTextMessageAsync({0}, \"{obj}\", parseMode: {1});";
+                                            baseName = "message";
+                                            defaultArgs.Add("{0}", "msg.Chat.Id");
+                                            defaultArgs.Add("{1}", "ParseMode.Default");
+                                            break;
+                                    }
+                                    break;
+                                #endregion
+                                #region Keyword Reply
+                                case "reply":
+                                    baseAction = "client.SendTextMessageAsync({0}, \"{obj}\", parseMode: {1}, " 
+                                        + "replyToMessageId: msg.MessageId);";
+                                    baseName = "message";
+                                    defaultArgs.Add("{0}", "msg.Chat.Id");
+                                    defaultArgs.Add("{1}", "ParseMode.Default");
+                                    break;
+                                #endregion
+                                #region Keyword To
+                                case "to":
+                                    if (baseName != "message") break;
+                                    if (args.ContainsKey("{0}")) break;
+                                    switch (nowword.ToLower())
+                                    {
+                                        case "sender":
+                                            args.Add("{0}", "msg.From.Id");
+                                            break;
+                                        case "chat":
+                                            args.Add("{0}", "msg.Chat.Id");
+                                            break;
+                                        case "flom":
+                                            args.Add("{0}", "flomsId");
+                                            break;
+                                        default:
+                                            args.Add("{0}", nowword);
+                                            break;
+                                    }
+                                    break;
+                                #endregion
+                                #region Keyword Parsemode
+                                case "parsemode":
+                                    if (args.ContainsKey("{1}")) break;
+                                    if (baseName != "message") break;
+                                    switch (nowword.ToLower())
+                                    {
+                                        case "markdown":
+                                            args.Add("{1}", "ParseMode.Markdown");
+                                            break;
+                                        case "html":
+                                            args.Add("{1}", "ParseMode.Html");
+                                            break;
+                                        case "default":
+                                            args.Add("{1}", "ParseMode.Default");
+                                            break;
+                                        default:
+                                            args.Add("{0}", nowword);
+                                            break;
+                                    }
+                                    break;
+                                #endregion
+                                #region Keyword Leave
+                                case "leave":
+                                    if (baseName != "") break;
+                                    baseName = "leave";
+                                    baseAction = "client.LeaveChatAsync({0});";
+                                    defaultArgs.Add("{0}", "msg.Chat.Id");
+                                    if (nowword != "$top") args.Add("{0}", nowword);
+                                    break;
+                                #endregion
+                            }
+                        }
+                        else
+                        {
+                            if (word != "$top")
+                                obj += word + " ";
+                        }
+                        last = word;
+                        #endregion
+                    }
+                    newLine = baseAction;
+                    if (newLine.Contains("{obj}"))
+                    {
+                        newLine = newLine.Replace("{obj}", obj.Trim());
+                    }
+                    foreach (var kvp in defaultArgs)
+                    {
+                        if (!args.ContainsKey(kvp.Key)) args.Add(kvp.Key, kvp.Value);
+                    }
+                    foreach (var kvp in args)
+                    {
+                        if (newLine.Contains(kvp.Key))
+                        {
+                            newLine = newLine.Replace(kvp.Key, kvp.Value);
+                        }
+                    }
+                }
+                newLines.Add(newLine);
+            }
+            string r = "";
+            foreach(string line in newLines)
+            {
+                r += line + "\n";
+            }
+            return r;
         }
         #endregion
         #endregion
