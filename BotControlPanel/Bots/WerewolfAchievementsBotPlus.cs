@@ -168,7 +168,9 @@ namespace BotControlPanel.Bots
 
             public void UpdatePlayerlist()
             {
-                playerlist = "<b>LYNCHORDER:</b>\n";
+                playerlist = gamestate == state.Running
+                    ? $"<b>LYNCHORDER ({names.Keys.Count(x => role.ContainsKey(x) && role[x] != roles.Dead)} of {names.Keys.Count}):</b>\n"
+                    : $"<b>Players ({names.Keys.Count}):</b>\n";
 
                 foreach(var p in names.Keys)
                 {
