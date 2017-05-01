@@ -30,7 +30,6 @@ namespace BotControlPanel.Bots
         {
             #region Pre-declared stuff, such as variables and constants
             public Message pinmessage { get; set; }
-            public List<long> players { get; set; } = new List<long>();
             public Dictionary<long, string> names = new Dictionary<long, string>();
             public state gamestate { get; set; }
             private TelegramBotClient client;
@@ -137,10 +136,9 @@ namespace BotControlPanel.Bots
 
             public bool AddPlayer(User newplayer)
             {
-                if (!players.Contains(newplayer.Id) && gamestate == state.Joining)
+                if (!names.ContainsKey(newplayer.Id) && gamestate == state.Joining)
                 {
-                    players.Add(newplayer.Id);
-                    if (!names.ContainsKey(newplayer.Id)) names.Add(newplayer.Id, newplayer.FirstName);
+                    names.Add(newplayer.Id, newplayer.FirstName);
                     UpdatePlayerlist();
                     return true;                    
                 }
@@ -159,9 +157,8 @@ namespace BotControlPanel.Bots
 
             public bool RemovePlayer(User oldplayer)
             {
-                if(players.Contains(oldplayer.Id))
+                if(names.ContainsKey(oldplayer.Id))
                 {
-                    players.Remove(oldplayer.Id);
                     names.Remove(oldplayer.Id);
                     UpdatePlayerlist();
                     return true;
@@ -173,10 +170,10 @@ namespace BotControlPanel.Bots
             {
                 playerlist = "<b>Players:</b>\n";
 
-                foreach(var p in players)
+                foreach(var p in names.Keys)
                 {
                     if(gamestate == state.Joining) playerlist += names[p] + "\n";
-                    if (gamestate == state.Running)
+                    else if (gamestate == state.Running)
                     {
                         if (role.ContainsKey(p))
                         {
