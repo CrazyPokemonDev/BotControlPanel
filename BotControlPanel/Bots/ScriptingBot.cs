@@ -1,9 +1,13 @@
-﻿using System;
+﻿using Microsoft.CSharp;
+using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using Telegram.Bot.Args;
@@ -20,27 +24,27 @@ namespace BotControlPanel.Bots
         private static readonly string startPath = Path.Combine(Environment.CurrentDirectory, "ScriptBot\\");
         private static readonly string scriptPath = Path.Combine(basePath, "Start.cs");
         private static readonly string scriptSecondPath = Path.Combine(basePath, "StartCopy.cs");
-        private static readonly string compilePath = Path.Combine(basePath, "compile.bat");
-        private static readonly string execPath = Path.Combine(basePath, "test.exe");
-        private static readonly string dllPath = Path.Combine(basePath, "Telegram.Bot.dll");
+        private static readonly string execPath = Path.Combine(basePath, "Start.exe");
+        private static readonly string dllPath1 = Path.Combine(startPath, "Telegram.Bot.dll");
+        private static readonly string dllPath2 = Path.Combine(startPath, "Newtonsoft.Json.dll");
         private const string tokenBasePath = "C:\\Olfi01\\BotControlPanel\\ScriptingBot\\";
         private const string tokenPath = tokenBasePath + "scriptedToken.token";
         #endregion
         #region Variables
         private string scriptedBotToken;
+        private MethodInfo botMainMethod;
+        private MethodInfo botStopMethod;
         #endregion
 
         #region Constructor
         public ScriptingBot() : base()
         {
-            scriptedBotToken = getScriptedBotToken();
+            scriptedBotToken = GetScriptedBotToken();
             if (!Directory.Exists(basePath)) Directory.CreateDirectory(basePath);
             if (!System.IO.File.Exists(scriptPath))
             {
                 System.IO.File.Copy(startPath + "Start.cs", scriptPath);
             }
-            System.IO.File.Copy(startPath + "compile.bat", compilePath);
-            System.IO.File.Copy(startPath + "Telegram.Bot.dll", dllPath);
         }
         #endregion
 
@@ -66,12 +70,11 @@ namespace BotControlPanel.Bots
                         case "/newcommand":
                             if (msg.From.Id == Flom)
                             {
-                                string error = "";
-                                if (!text.Contains(" ")) return;
+                                if (!text.Contains(" ") && msg.ReplyToMessage == null) return;
                                 string code = msg.ReplyToMessage == null
                                     ? text.Substring(text.IndexOf(' ') + 1)
                                     : msg.ReplyToMessage.Text;
-                                if (newCommand(code, out error))
+                                if (NewCommand(code, out string error))
                                 {
                                     client.SendTextMessageAsync(msg.Chat.Id, "Command successfully added");
                                 }
@@ -83,16 +86,22 @@ namespace BotControlPanel.Bots
                             }
                             return;
                         #endregion
+                        #region delcommand
+                        case "/delcommand":
+                            if (!text.Contains(" ")) return;
+                            DeleteCommand(text.Substring(text.IndexOf(' ') + 1));
+                            client.SendTextMessageAsync(msg.Chat.Id, "Command deleted.");
+                            return;
+                        #endregion
                         #region addusing
                         case "/addusing":
                             if (msg.From.Id == Flom)
                             {
-                                string error = "";
-                                if (!text.Contains(" ")) return;
+                                if (!text.Contains(" ") && msg.ReplyToMessage == null) return;
                                 string code = msg.ReplyToMessage == null
                                     ? text.Substring(text.IndexOf(' ') + 1)
                                     : msg.ReplyToMessage.Text;
-                                if (addUsing(code, out error))
+                                if (AddUsing(code, out string error))
                                 {
                                     client.SendTextMessageAsync(msg.Chat.Id,
                                         "Using-directive successfully added");
@@ -110,12 +119,11 @@ namespace BotControlPanel.Bots
                         case "/adddefinition":
                             if (msg.From.Id == Flom)
                             {
-                                string error = "";
-                                if (!text.Contains(" ")) return;
+                                if (!text.Contains(" ") && msg.ReplyToMessage == null) return;
                                 string code = msg.ReplyToMessage == null
                                     ? text.Substring(text.IndexOf(' ') + 1)
                                     : msg.ReplyToMessage.Text;
-                                if (addDefinition(code, out error))
+                                if (AddDefinition(code, out string error))
                                 {
                                     client.SendTextMessageAsync(msg.Chat.Id,
                                         "Definition successfully added");
@@ -129,33 +137,56 @@ namespace BotControlPanel.Bots
                             }
                             return;
                         #endregion
+                        #region addmethod
+                        case "/addmethod":
+                            if (msg.From.Id == Flom)
+                            {
+                                if (!text.Contains(" ") && msg.ReplyToMessage == null) return;
+                                string code = msg.ReplyToMessage == null
+                                    ? text.Substring(text.IndexOf(' ') + 1)
+                                    : msg.ReplyToMessage.Text;
+                                if (AddMethod(code, out string error))
+                                {
+                                    client.SendTextMessageAsync(msg.Chat.Id, "Method successfully added");
+                                }
+                                else
+                                {
+                                    client.SendTextMessageAsync(msg.Chat.Id, "Failed to add method.\n"
+                                        + error);
+                                }
+                            }
+                            return;
+                        #endregion
                         #region getscript
                         case "/getscript":
-                            client.SendTextMessageAsync(msg.Chat.Id, "`" + getScript() + "`",
-                                parseMode: ParseMode.Markdown);
+                            string script = GetScript();
+                            List<string> list = new List<string>();
+                            while (script.Length > 2000)
+                            {
+                                list.Add(script.Remove(2000));
+                                script = script.Substring(2000);
+                            }
+                            list.Add(script);
+                            foreach (string s in list)
+                                client.SendTextMessageAsync(msg.Chat.Id, "`" + s + "`",
+                                    parseMode: ParseMode.Markdown).Wait();
                             return;
                         #endregion
                         #region restart
                         case "/restart":
-                            if (msg.From.Id == Flom)
+                            if (botStopMethod != null) botStopMethod.Invoke(null, null);
+                            bool errored = false;
+                            CompileBot();
+                            try
                             {
-                                Process[] pname = Process.GetProcessesByName("test.exe");
-                                foreach (Process p in pname)
-                                {
-                                    p.CloseMainWindow();
-                                    p.Close();
-                                }
-                                try
-                                {
-                                    Process.Start(execPath, scriptedBotToken);
-                                    client.SendTextMessageAsync(msg.Chat.Id, "Bot (re)started.");
-                                }
-                                catch
-                                {
-                                    client.SendTextMessageAsync(msg.Chat.Id,
-                                        "Could not start bot. Maybe the token is wrong.");
-                                }
+                                botMainMethod.Invoke(null, new object[] { new String[] { scriptedBotToken } });
                             }
+                            catch
+                            {
+                                client.SendTextMessageAsync(msg.Chat.Id, "Failed to start. Maybe the token is missing.");
+                                errored = true;
+                            }
+                            if (!errored) client.SendTextMessageAsync(msg.Chat.Id, "Bot (re)started.");
                             return;
                         #endregion
                         #region settoken
@@ -163,7 +194,7 @@ namespace BotControlPanel.Bots
                             if (!text.Contains(" ")) return;
                             if (msg.From.Id == Flom)
                             {
-                                setScriptedBotToken(text.Substring(text.IndexOf(' ') + 1));
+                                SetScriptedBotToken(text.Substring(text.IndexOf(' ') + 1));
                                 client.SendTextMessageAsync(msg.Chat.Id, "Token set.");
                             }
                             return;
@@ -181,33 +212,68 @@ namespace BotControlPanel.Bots
         #endregion
 
         #region Scripting stuff
-        #region New Command
-        private bool newCommand(string args, out string error)
+        #region Compile bot
+        private void CompileBot()
         {
+            CSharpCodeProvider provider = new CSharpCodeProvider();
+            CompilerParameters parameters = new CompilerParameters();
+            parameters.ReferencedAssemblies.Add(dllPath1);
+            parameters.ReferencedAssemblies.Add(dllPath2);
+            parameters.GenerateInMemory = true;
+            parameters.GenerateExecutable = true;
+            CompilerResults results = provider.CompileAssemblyFromSource(parameters, GetScript());
+            string error = "";
+            if (results.Errors.HasErrors)
+            {
+                foreach (CompilerError e in results.Errors)
+                {
+                    error += e.ErrorNumber + " " + e.ErrorText + "\n";
+                }
+                throw new Exception(error);
+            }
+            Assembly assembly = results.CompiledAssembly;
+            Type program = assembly.GetType("ScriptedBot.Program");
+            string[] dummy = new string[1];
+            botMainMethod = program.GetMethod("Main");
+            botStopMethod = program.GetMethod("Stop");
+        }
+        #endregion
+        #region New Command
+        private bool NewCommand(string args, out string error)
+        {
+            args = AutoCodeCompletion(args);
+            if (botStopMethod != null) botStopMethod.Invoke(null, null);
             if (!Directory.Exists(basePath)) Directory.CreateDirectory(basePath);
             if (args.Trim().StartsWith("case"))
             {
                 string oldFile = System.IO.File.ReadAllText(scriptPath);
-                string newFile = oldFile.Replace("//newcommand", args + "\n//newcommand");
-                System.IO.File.WriteAllText(scriptPath, newFile);
-                Process proc = new Process();
-                ProcessStartInfo startinfo = new ProcessStartInfo("cmd.exe", "/C " + compilePath);
-                startinfo.RedirectStandardOutput = true;
-                startinfo.UseShellExecute = false;
-                proc.StartInfo = startinfo;
-                string output = "";
-                proc.OutputDataReceived += (sender, text) => output += text.Data;
-                proc.Start();
-                proc.BeginOutputReadLine();
-                proc.WaitForExit();
-                if (output.ToLower().Contains("error"))
+                string newFile = oldFile.Replace("//newcommand", args + "\n//end\n//newcommand");
+                CSharpCodeProvider provider = new CSharpCodeProvider();
+                CompilerParameters parameters = new CompilerParameters();
+                parameters.ReferencedAssemblies.Add(dllPath1);
+                parameters.ReferencedAssemblies.Add(dllPath2);
+                parameters.GenerateInMemory = true;
+                parameters.GenerateExecutable = true;
+                CompilerResults results = provider.CompileAssemblyFromSource(parameters, newFile);
+                error = "";
+                if (results.Errors.HasErrors)
                 {
-                    System.IO.File.WriteAllText(scriptPath, oldFile);
-                    error = output;
+                    foreach (CompilerError e in results.Errors)
+                    {
+                        error += e.ErrorNumber + " " + e.ErrorText + "\n";
+                    }
+                    CompileBot();
+                    botMainMethod.Invoke(null, new object[] { new String[] { scriptedBotToken } });
                     return false;
                 }
+                Assembly assembly = results.CompiledAssembly;
+                Type program = assembly.GetType("ScriptedBot.Program");
+                botMainMethod = program.GetMethod("Main");
+                botStopMethod = program.GetMethod("Stop");
+                System.IO.File.WriteAllText(scriptPath, newFile);
                 System.IO.File.WriteAllText(scriptSecondPath, newFile);
                 error = "Success";
+                botMainMethod.Invoke(null, new object[] { new String[] { scriptedBotToken } });
                 return true;
             }
             else
@@ -217,70 +283,140 @@ namespace BotControlPanel.Bots
             }
         }
         #endregion
-        #region Add Using
-        private bool addUsing(string code, out string error)
+        #region Delete Command
+        private void DeleteCommand(string name)
         {
+            string script = GetScript();
+            string toRemove = script.Substring(script.IndexOf("private static void Client_OnUpdate(object sender, UpdateEventArgs e)"));
+            toRemove = toRemove.Substring(toRemove.IndexOf($"case \"" + name + "\""));
+            toRemove = toRemove.Remove(toRemove.IndexOf("//end") + 5);
+            script = script.Remove(script.IndexOf(toRemove), toRemove.Length);
+            System.IO.File.WriteAllText(scriptPath, script);
+            if (botStopMethod != null) botStopMethod.Invoke(null, null);
+            CompileBot();
+            botMainMethod.Invoke(null, new object[] { new String[] { scriptedBotToken } });
+        }
+        #endregion
+        #region Add Using
+        private bool AddUsing(string code, out string error)
+        {
+            if (botStopMethod != null) botStopMethod.Invoke(null, null);
             if (!Directory.Exists(basePath)) Directory.CreateDirectory(basePath);
             string oldFile = System.IO.File.ReadAllText(scriptPath);
             string newFile = oldFile.Replace("//addusing", code + "\n//addusing");
-            System.IO.File.WriteAllText(scriptPath, newFile);
-            Process proc = new Process();
-            ProcessStartInfo startinfo = new ProcessStartInfo("cmd.exe", "/C " + compilePath);
-            startinfo.RedirectStandardOutput = true;
-            startinfo.UseShellExecute = false;
-            proc.StartInfo = startinfo;
-            string output = "";
-            proc.OutputDataReceived += (sender, text) => output += text.Data;
-            proc.Start();
-            proc.BeginOutputReadLine();
-            proc.WaitForExit();
-            if (output.ToLower().Contains("error"))
+            CSharpCodeProvider provider = new CSharpCodeProvider();
+            CompilerParameters parameters = new CompilerParameters();
+            parameters.ReferencedAssemblies.Add(dllPath1);
+            parameters.ReferencedAssemblies.Add(dllPath2);
+            parameters.GenerateInMemory = true;
+            parameters.GenerateExecutable = true;
+            CompilerResults results = provider.CompileAssemblyFromSource(parameters, newFile);
+            error = "";
+            if (results.Errors.HasErrors)
             {
-                System.IO.File.WriteAllText(scriptPath, oldFile);
-                error = output;
+                foreach (CompilerError e in results.Errors)
+                {
+                    error += e.ErrorNumber + " " + e.ErrorText + "\n";
+                }
+                CompileBot();
+                botMainMethod.Invoke(null, new object[] { new String[] { scriptedBotToken } });
                 return false;
             }
+            Assembly assembly = results.CompiledAssembly;
+            Type program = assembly.GetType("ScriptedBot.Program");
+            botMainMethod = program.GetMethod("Main");
+            botStopMethod = program.GetMethod("Stop");
+            System.IO.File.WriteAllText(scriptPath, newFile);
             System.IO.File.WriteAllText(scriptSecondPath, newFile);
             error = "Success";
+            botMainMethod.Invoke(null, new object[] { new String[] { scriptedBotToken } });
             return true;
         }
         #endregion
         #region Add Definition
-        private bool addDefinition(string code, out string error)
+        private bool AddDefinition(string code, out string error)
         {
+            code = AutoCodeCompletion(code);
+            if (botStopMethod != null) botStopMethod.Invoke(null, null);
             if (!Directory.Exists(basePath)) Directory.CreateDirectory(basePath);
             string oldFile = System.IO.File.ReadAllText(scriptPath);
             string newFile = oldFile.Replace("//adddefinition", code + "\n//adddefinition");
-            System.IO.File.WriteAllText(scriptPath, newFile);
-            Process proc = new Process();
-            ProcessStartInfo startinfo = new ProcessStartInfo("cmd.exe", "/C " + compilePath);
-            startinfo.RedirectStandardOutput = true;
-            startinfo.UseShellExecute = false;
-            proc.StartInfo = startinfo;
-            string output = "";
-            proc.OutputDataReceived += (sender, text) => output += text.Data;
-            proc.Start();
-            proc.BeginOutputReadLine();
-            proc.WaitForExit();
-            if (output.ToLower().Contains("error"))
+            newFile = AutoCodeCompletion(newFile);
+            CSharpCodeProvider provider = new CSharpCodeProvider();
+            CompilerParameters parameters = new CompilerParameters();
+            parameters.ReferencedAssemblies.Add(dllPath1);
+            parameters.ReferencedAssemblies.Add(dllPath2);
+            parameters.GenerateInMemory = true;
+            parameters.GenerateExecutable = true;
+            CompilerResults results = provider.CompileAssemblyFromSource(parameters, newFile);
+            error = "";
+            if (results.Errors.HasErrors)
             {
-                System.IO.File.WriteAllText(scriptPath, oldFile);
-                error = output;
+                foreach (CompilerError e in results.Errors)
+                {
+                    error += e.ErrorNumber + " " + e.ErrorText + "\n";
+                }
+                CompileBot();
+                botMainMethod.Invoke(null, new object[] { new String[] { scriptedBotToken } });
                 return false;
             }
+            Assembly assembly = results.CompiledAssembly;
+            Type program = assembly.GetType("ScriptedBot.Program");
+            botMainMethod = program.GetMethod("Main");
+            botStopMethod = program.GetMethod("Stop");
+            System.IO.File.WriteAllText(scriptPath, newFile);
             System.IO.File.WriteAllText(scriptSecondPath, newFile);
             error = "Success";
+            botMainMethod.Invoke(null, new object[] { new String[] { scriptedBotToken } });
+            return true;
+        }
+        #endregion
+        #region Add method
+        private bool AddMethod(string code, out string error)
+        {
+            code = AutoCodeCompletion(code);
+            if (botStopMethod != null) botStopMethod.Invoke(null, null);
+            if (!Directory.Exists(basePath)) Directory.CreateDirectory(basePath);
+            string oldFile = System.IO.File.ReadAllText(scriptPath);
+            string newFile = oldFile.Replace("//addmethod", code + "\n//addmethod");
+            newFile = AutoCodeCompletion(newFile);
+            CSharpCodeProvider provider = new CSharpCodeProvider();
+            CompilerParameters parameters = new CompilerParameters();
+            parameters.ReferencedAssemblies.Add(dllPath1);
+            parameters.ReferencedAssemblies.Add(dllPath2);
+            parameters.GenerateInMemory = true;
+            parameters.GenerateExecutable = true;
+            CompilerResults results = provider.CompileAssemblyFromSource(parameters, newFile);
+            error = "";
+            if (results.Errors.HasErrors)
+            {
+                foreach (CompilerError e in results.Errors)
+                {
+                    error += e.ErrorNumber + " " + e.ErrorText + "\n";
+                }
+                CompileBot();
+                botMainMethod.Invoke(null, new object[] { new String[] { scriptedBotToken } });
+                return false;
+            }
+            Assembly assembly = results.CompiledAssembly;
+            Type program = assembly.GetType("ScriptedBot.Program");
+            botMainMethod = program.GetMethod("Main");
+            botStopMethod = program.GetMethod("Stop");
+            System.IO.File.WriteAllText(scriptPath, newFile);
+            System.IO.File.WriteAllText(scriptSecondPath, newFile);
+            error = "Success";
+            botMainMethod.Invoke(null, new object[] { new String[] { scriptedBotToken } });
             return true;
         }
         #endregion
         #region Get Script
-        private string getScript()
+        private string GetScript()
         {
             return System.IO.File.ReadAllText(scriptPath);
         }
         #endregion
         #region Get scripted bot token
-        private string getScriptedBotToken()
+        private string GetScriptedBotToken()
         {
             if (System.IO.File.Exists(tokenPath))
             {
@@ -290,11 +426,152 @@ namespace BotControlPanel.Bots
         }
         #endregion
         #region Set scripted Bot Token
-        private void setScriptedBotToken(string token)
+        private void SetScriptedBotToken(string token)
         {
             scriptedBotToken = token;
             if (!Directory.Exists(tokenBasePath)) Directory.CreateDirectory(tokenBasePath);
             System.IO.File.WriteAllText(tokenPath, token);
+        }
+        #endregion
+        #region Intuitive code sequences
+        private string AutoCodeCompletion(string codeToComplete)
+        {
+            List<string> lines = codeToComplete.Split('\n').ToList();
+            List<string> newLines = new List<string>();
+            foreach (string l in lines)
+            {
+                string newLine = l;
+                string last = "";
+                if (l.StartsWith("\\"))
+                {
+                    bool objBool = false;
+                    string obj = "";
+                    string baseName = "";
+                    string baseAction = "No action recognized";
+                    Dictionary<string, string> args = new Dictionary<string, string>();
+                    Dictionary<string, string> defaultArgs = new Dictionary<string, string>();
+                    foreach (string word in (l.Trim() + " $top").Substring(1).Split(' '))
+                    {
+                        #region Keyword handling
+                        if (!objBool)
+                        {
+                            string nowword = word;
+                            if (word.EndsWith(":"))
+                            {
+                                objBool = true;
+                                nowword = word.Remove(word.Length - 1);
+                            }
+                            switch (last.ToLower())
+                            {
+                                #region Keyword Send
+                                case "send":
+                                    if (baseName != "") break;
+                                    switch (nowword.ToLower())
+                                    {
+                                        case "message":
+                                            baseAction = "client.SendTextMessageAsync({0}, \"{obj}\", parseMode: {1});";
+                                            baseName = "message";
+                                            defaultArgs.Add("{0}", "msg.Chat.Id");
+                                            defaultArgs.Add("{1}", "ParseMode.Default");
+                                            break;
+                                    }
+                                    break;
+                                #endregion
+                                #region Keyword Reply
+                                case "reply":
+                                    baseAction = "client.SendTextMessageAsync({0}, \"{obj}\", parseMode: {1}, " 
+                                        + "replyToMessageId: msg.MessageId);";
+                                    baseName = "message";
+                                    defaultArgs.Add("{0}", "msg.Chat.Id");
+                                    defaultArgs.Add("{1}", "ParseMode.Default");
+                                    break;
+                                #endregion
+                                #region Keyword To
+                                case "to":
+                                    if (baseName != "message") break;
+                                    if (args.ContainsKey("{0}")) break;
+                                    switch (nowword.ToLower())
+                                    {
+                                        case "sender":
+                                            args.Add("{0}", "msg.From.Id");
+                                            break;
+                                        case "chat":
+                                            args.Add("{0}", "msg.Chat.Id");
+                                            break;
+                                        case "flom":
+                                            args.Add("{0}", "flomsId");
+                                            break;
+                                        default:
+                                            args.Add("{0}", nowword);
+                                            break;
+                                    }
+                                    break;
+                                #endregion
+                                #region Keyword Parsemode
+                                case "parsemode":
+                                    if (args.ContainsKey("{1}")) break;
+                                    if (baseName != "message") break;
+                                    switch (nowword.ToLower())
+                                    {
+                                        case "markdown":
+                                            args.Add("{1}", "ParseMode.Markdown");
+                                            break;
+                                        case "html":
+                                            args.Add("{1}", "ParseMode.Html");
+                                            break;
+                                        case "default":
+                                            args.Add("{1}", "ParseMode.Default");
+                                            break;
+                                        default:
+                                            args.Add("{0}", nowword);
+                                            break;
+                                    }
+                                    break;
+                                #endregion
+                                #region Keyword Leave
+                                case "leave":
+                                    if (baseName != "") break;
+                                    baseName = "leave";
+                                    baseAction = "client.LeaveChatAsync({0});";
+                                    defaultArgs.Add("{0}", "msg.Chat.Id");
+                                    if (nowword != "$top") args.Add("{0}", nowword);
+                                    break;
+                                #endregion
+                            }
+                        }
+                        else
+                        {
+                            if (word != "$top")
+                                obj += word + " ";
+                        }
+                        last = word;
+                        #endregion
+                    }
+                    newLine = baseAction;
+                    if (newLine.Contains("{obj}"))
+                    {
+                        newLine = newLine.Replace("{obj}", obj.Trim());
+                    }
+                    foreach (var kvp in defaultArgs)
+                    {
+                        if (!args.ContainsKey(kvp.Key)) args.Add(kvp.Key, kvp.Value);
+                    }
+                    foreach (var kvp in args)
+                    {
+                        if (newLine.Contains(kvp.Key))
+                        {
+                            newLine = newLine.Replace(kvp.Key, kvp.Value);
+                        }
+                    }
+                }
+                newLines.Add(newLine);
+            }
+            string r = "";
+            foreach(string line in newLines)
+            {
+                r += line + "\n";
+            }
+            return r;
         }
         #endregion
         #endregion
