@@ -59,6 +59,204 @@ namespace BotControlPanel.Bots
                 Stopped
             }
 
+            public enum achievements
+            {
+                //These achievements are attainable:
+                WelcomeToHell,
+                WelcomeToTheAsylum,
+                AlzheimersPatient,
+                OHAIDER,
+                SpyVsSpy,
+                IHaveNoIdeaWhatImDoing,
+                Enochlophobia,
+                Introvert,
+                Naughty,
+                Dedicated,
+                Obsessed,
+                Masochist,
+                WobbleWobble,
+                Inconspicuous,
+                Survivalist,
+                Promiscuous,
+                MasonBrother,
+                DoubleShifter,
+                HeyManNiceShot,
+                ThatsWhyYouDontStayHome,
+                DoubleKill,
+                ShouldHaveKnown,
+                ISeeALackOfTrust,
+                SundayBloodySunday,
+                ChangeSidesWorks,
+                ForbiddenLove,
+                TheFirstStone,
+                SmartGunner,
+                SpeedDating,
+                EvenAStoppedClockIsRightTwiceADay,
+                SoClose,
+                CultistConvention,
+                SelfLoving,
+                ShouldveSaidSomething,
+                TannerOverkill,
+                CultistFodder,
+                LoneWolf,
+                PackHunter,
+                SavedByTheBullet,
+                InForTheLongHaul,
+                OHSHI,
+                Veteran,
+                DoubleVision,
+                Streetwise,
+                SerialSamaritan,
+
+                //Following achievements are unattainable:
+                HeresJohnny,
+                IveGotYourBack,
+                BlackSheep,
+                Explorer,
+                Linguist,
+                Developer
+            }
+
+            public bool isAchievable(achievements achv)
+            {
+                var gameroles = role.Values;
+
+                int wolves = 0;
+                wolves += gameroles.Count(x => x == roles.AlphaWolf);
+                wolves += gameroles.Count(x => x == roles.Werewolf);
+                wolves += gameroles.Count(x => x == roles.WolfCub);
+
+                int spawnableWolves = wolves;                
+                spawnableWolves += gameroles.Count(x => x == roles.WildChild);
+                spawnableWolves += spawnableWolves > 0 ? gameroles.Count(x => x == roles.Cursed) : 0;
+                spawnableWolves += spawnableWolves > 0 ? gameroles.Count(x => x == roles.Doppelgänger) : 0;
+                spawnableWolves += gameroles.Count(x => x == roles.Traitor);
+                
+
+
+                switch (achv)
+                {
+                    case achievements.ChangeSidesWorks:
+                        return gameroles.Contains(roles.Doppelgänger) || gameroles.Contains(roles.WildChild) || gameroles.Contains(roles.Traitor) || gameroles.Contains(roles.AlphaWolf) || gameroles.Contains(roles.ApprenticeSeer) || gameroles.Contains(roles.Cursed);
+
+                    case achievements.CultistConvention:
+                        return gameroles.Count(x => x != roles.AlphaWolf && x != roles.WolfCub && x != roles.Werewolf && x != roles.SerialKiller && x != roles.CultistHunter) >= 10 && gameroles.Contains(roles.Cultist);
+
+                    case achievements.CultistFodder:
+                        return gameroles.Contains(roles.Cultist) && gameroles.Contains(roles.CultistHunter);
+
+                    case achievements.DoubleKill:
+                        return gameroles.Contains(roles.SerialKiller) && gameroles.Contains(roles.Hunter);
+
+                    case achievements.DoubleShifter:
+                        return false; // TOO HARD YET, GOTTA BE FIXED!
+
+                    case achievements.DoubleVision:
+                        return gameroles.Contains(roles.ApprenticeSeer) && gameroles.Contains(roles.Doppelgänger) && (gameroles.Contains(roles.Seer) || gameroles.Contains(roles.SeerFool));
+
+                    case achievements.Enochlophobia:
+                        return names.Count == 35;
+
+                    case achievements.EvenAStoppedClockIsRightTwiceADay:
+                        return gameroles.Contains(roles.Fool) || gameroles.Contains(roles.SeerFool);
+
+                    case achievements.ForbiddenLove:
+                        return gameroles.Contains(roles.Villager) && gameroles.Contains(roles.Cupid) && spawnableWolves >= 1;
+
+                    case achievements.HeyManNiceShot:
+                        return gameroles.Contains(roles.Hunter);
+
+                    case achievements.Inconspicuous:
+                        return names.Count >= 20;
+
+                    case achievements.Introvert:
+                        return names.Count == 5;
+
+                    case achievements.ISeeALackOfTrust:
+                        return gameroles.Contains(roles.Seer) || gameroles.Contains(roles.SeerFool) || gameroles.Contains(roles.ApprenticeSeer);
+
+                    case achievements.LoneWolf:
+                        return wolves == 1 && !gameroles.Contains(roles.Traitor) && names.Count >= 10;
+
+                    case achievements.Masochist:
+                        return gameroles.Contains(roles.Tanner);
+
+                    case achievements.MasonBrother:
+                        return gameroles.Count(x => x == roles.Mason) >= 2;
+
+                    case achievements.OHSHI:
+                        return wolves >= 1 || gameroles.Contains(roles.SerialKiller) && gameroles.Contains(roles.Cupid);
+
+                    case achievements.PackHunter:
+                        return spawnableWolves >= 7;
+
+                    case achievements.Promiscuous:
+                        return gameroles.Contains(roles.Harlot) && gameroles.Count(x => x != roles.Werewolf && x != roles.WolfCub && x != roles.AlphaWolf && x != roles.SerialKiller && x != roles.Harlot) >= 5;
+
+                    case achievements.SavedByTheBullet:
+                        return gameroles.Contains(roles.Gunner) && spawnableWolves >= 1;
+
+                    case achievements.SelfLoving:
+                        return gameroles.Contains(roles.Cupid);
+
+                    case achievements.SerialSamaritan:
+                        return gameroles.Contains(roles.SerialKiller) && spawnableWolves >= 3;
+
+                    case achievements.ShouldHaveKnown:
+                        return gameroles.Contains(roles.Beholder) && (gameroles.Contains(roles.Seer) || gameroles.Contains(roles.SeerFool));
+
+                    case achievements.ShouldveSaidSomething:
+                        return spawnableWolves >= 1 && gameroles.Contains(roles.Cupid);
+
+                    case achievements.SmartGunner:
+                        return gameroles.Contains(roles.Gunner) && (spawnableWolves >= 2 || (spawnableWolves == 1 && gameroles.Contains(roles.SerialKiller)) || gameroles.Contains(roles.Cultist));
+
+                    case achievements.SoClose:
+                        return gameroles.Contains(roles.Tanner);
+
+                    case achievements.SpeedDating:
+                        return gameroles.Contains(roles.Cupid);
+
+                    case achievements.Streetwise:
+                        return gameroles.Contains(roles.Detective) && (spawnableWolves + gameroles.Count(x => x == roles.SerialKiller || x == roles.Cultist) >= 3);
+
+                    case achievements.SundayBloodySunday:
+                        return false; // TOO HARD YET, GOTTA BE FIXED!
+
+                    case achievements.TannerOverkill:
+                        return gameroles.Contains(roles.Tanner);
+
+                    case achievements.ThatsWhyYouDontStayHome:
+                        return gameroles.Contains(roles.Harlot) && (spawnableWolves >= 1 || gameroles.Contains(roles.Cultist));
+
+                    case achievements.WobbleWobble:
+                        return gameroles.Contains(roles.Drunk);
+
+                    default:
+                        // UNATTAINABLE ONES AND ONES BOT CAN'T KNOW:
+                        // AlzheimersPatient
+                        // BlackSheep
+                        // Dedicated
+                        // Developer
+                        // Explorer
+                        // HeresJohnny
+                        // IHaveNoIdeaWhatImDoing
+                        // InForTheLongHaul
+                        // IveGotYourBack
+                        // Linguist
+                        // Naughty
+                        // Obsessed
+                        // OHAIDER
+                        // SpyVsSpy
+                        // Survivalist
+                        // TheFirstStone
+                        // Veteran
+                        // WelcomeToHell
+                        // WelcomeToTheAsylum
+                        return false;
+                }
+            }
+
             public enum roles
             {
                 Villager,
@@ -131,6 +329,63 @@ namespace BotControlPanel.Bots
 
                 dict.Add(roles.Dead, "DEAD 💀");
                 dict.Add(roles.Unknown, "No role detected yet");
+                return dict;
+            }
+
+            public static Dictionary<achievements, string> getAchvDict()
+            {
+                var dict = new Dictionary<achievements, string>();
+                dict.Add(achievements.AlzheimersPatient, "Alzheimer's Patient");
+                dict.Add(achievements.BlackSheep, "Black Sheep");
+                dict.Add(achievements.ChangeSidesWorks, "Change Sides Works");
+                dict.Add(achievements.CultistConvention, "Cultist Convention");
+                dict.Add(achievements.CultistFodder, "Cultist Fodder");
+                dict.Add(achievements.Dedicated, "Dedicated");
+                dict.Add(achievements.Developer, "Developer");
+                dict.Add(achievements.DoubleKill, "Double Kill");
+                dict.Add(achievements.DoubleShifter, "Double Shifter");
+                dict.Add(achievements.DoubleVision, "Double Vision");
+                dict.Add(achievements.Enochlophobia, "Enochlophobia");
+                dict.Add(achievements.EvenAStoppedClockIsRightTwiceADay, "Even A Stopped Clock Is Right Twice A Day");
+                dict.Add(achievements.Explorer, "Explorer");
+                dict.Add(achievements.ForbiddenLove, "Forbidden Love");
+                dict.Add(achievements.HeresJohnny, "Here's Johnny");
+                dict.Add(achievements.HeyManNiceShot, "Hey Man, Nice Shot!");
+                dict.Add(achievements.IHaveNoIdeaWhatImDoing, "I Have No Idea What I'm Doing");
+                dict.Add(achievements.Inconspicuous, "Inconspicuous");
+                dict.Add(achievements.InForTheLongHaul, "In For The Long Haul");
+                dict.Add(achievements.Introvert, "Introvert");
+                dict.Add(achievements.ISeeALackOfTrust, "I See A Lack Of Trust");
+                dict.Add(achievements.IveGotYourBack, "I've Got Your Back");
+                dict.Add(achievements.Linguist, "Linguist");
+                dict.Add(achievements.LoneWolf, "Lone Wolf");
+                dict.Add(achievements.Masochist, "Masochist");
+                dict.Add(achievements.MasonBrother, "Mason Brother");
+                dict.Add(achievements.Naughty, "Naughty");
+                dict.Add(achievements.Obsessed, "Obsessed");
+                dict.Add(achievements.OHAIDER, "O HAI DER");
+                dict.Add(achievements.OHSHI, "OH SHI-");
+                dict.Add(achievements.PackHunter, "Pack Hunter");
+                dict.Add(achievements.Promiscuous, "Promiscuous");
+                dict.Add(achievements.SavedByTheBullet, "Saved By The Bullet");
+                dict.Add(achievements.SelfLoving, "Self Loving");
+                dict.Add(achievements.SerialSamaritan, "Serial Samaritan");
+                dict.Add(achievements.ShouldHaveKnown, "Should Have Known");
+                dict.Add(achievements.ShouldveSaidSomething, "Should've Said Something");
+                dict.Add(achievements.SmartGunner, "Smart Gunner");
+                dict.Add(achievements.SoClose, "So Close");
+                dict.Add(achievements.SpeedDating, "Speed Dating");
+                dict.Add(achievements.SpyVsSpy, "Spy Vs Spy");
+                dict.Add(achievements.Streetwise, "Streetwise");
+                dict.Add(achievements.SundayBloodySunday, "Sunday Bloody Sunday");
+                dict.Add(achievements.Survivalist, "Survivalist");
+                dict.Add(achievements.TannerOverkill, "Tanner Overkill");
+                dict.Add(achievements.ThatsWhyYouDontStayHome, "That's Why You Don't Stay Home");
+                dict.Add(achievements.TheFirstStone, "The First Stone");
+                dict.Add(achievements.Veteran, "Veteran");
+                dict.Add(achievements.WelcomeToHell, "Welcome To Hell");
+                dict.Add(achievements.WelcomeToTheAsylum, "Welcome To The Asylum");
+                dict.Add(achievements.WobbleWobble, "Wobble Wobble");
                 return dict;
             }
 
@@ -216,7 +471,7 @@ namespace BotControlPanel.Bots
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private const string version = "2.5";
+        private const string version = "3.0";
         private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 };
         private readonly List<long> adminIds = new List<long>() { 267376056, 295152997 };
         #region Default Aliases
@@ -493,6 +748,22 @@ namespace BotControlPanel.Bots
                                     }
                                 }
                                 client.SendTextMessageAsync(msg.Chat.Id, listalias, parseMode: ParseMode.Html).Wait();
+                                return;
+
+                            case "/achv":
+                                if(games.ContainsKey(msg.Chat.Id))
+                                {
+                                    Game g = games[msg.Chat.Id];
+                                    string possible = "<b>POSSIBLE ACHIEVEMENTS:</b>\n";
+
+                                    foreach(var achv in Game.getAchvDict().Keys)
+                                    {
+                                        possible += g.isAchievable(achv)
+                                            ? Game.getAchvDict()[achv] + "\n"
+                                            : "";
+                                    }
+                                    client.SendTextMessageAsync(msg.Chat.Id, possible, parseMode: ParseMode.Html);
+                                }
                                 return;
                         }
                         #endregion
