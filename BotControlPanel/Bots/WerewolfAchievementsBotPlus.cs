@@ -394,6 +394,7 @@ namespace BotControlPanel.Bots
                 if (!names.ContainsKey(newplayer.Id) && gamestate == state.Joining)
                 {
                     names.Add(newplayer.Id, newplayer.FirstName.Length > 15 ? newplayer.FirstName.Remove(15) : newplayer.FirstName);
+                    role.Add(newplayer.Id, roles.Unknown);
                     UpdatePlayerlist();
                     return true;                    
                 }
@@ -415,6 +416,7 @@ namespace BotControlPanel.Bots
                 if(names.ContainsKey(oldplayer.Id))
                 {
                     names.Remove(oldplayer.Id);
+                    role.Remove(oldplayer.Id);
                     UpdatePlayerlist();
                     return true;
                 }
@@ -424,25 +426,22 @@ namespace BotControlPanel.Bots
             public void UpdatePlayerlist()
             {
                 playerlist = gamestate == state.Running
-                    ? $"<b>LYNCHORDER ({names.Keys.Count(x => role.ContainsKey(x) && role[x] != roles.Dead)} of {names.Keys.Count}):</b>\n"
+                    ? $"<b>LYNCHORDER ({names.Keys.Count(x => role[x] != roles.Dead)} of {names.Keys.Count}):</b>\n"
                     : $"<b>Players ({names.Keys.Count}):</b>\n";
 
-                foreach(var p in names.Keys)
+                foreach(var p in names.Keys.Where(x => role[x] != roles.Dead))
                 {
                     if(gamestate == state.Joining) playerlist += names[p] + "\n";
                     else if (gamestate == state.Running)
                     {
-                        if (role.ContainsKey(p))
-                        {
-                            if(role[p] != roles.Dead) playerlist += "<b>" + names[p] + "</b>: " + rolestring[role[p]] + "\n";
-                        }
+                        if (role[p] != roles.Unknown) playerlist += "<b>" + names[p] + "</b>: " + rolestring[role[p]] + "\n";
                         else playerlist += "<b>" + names[p] + "</b>: " + rolestring[roles.Unknown] + "\n";
                     }
                 }
 
                 playerlist += "\n\n<b>DEAD PLAYERS 💀:</b>";
 
-                if (gamestate == state.Running) foreach (var p in names.Keys.Where(x => role.ContainsKey(x) && role[x] == roles.Dead))
+                if (gamestate == state.Running) foreach (var p in names.Keys.Where(x => role[x] == roles.Dead))
                 {
                         playerlist += "\n" + names[p];
                 }
@@ -873,7 +872,7 @@ namespace BotControlPanel.Bots
                                         Keys.Add(s);
                                     }
 
-                                    if (!g.role.ContainsKey(player) && Keys.Contains(text.ToLower()))
+                                    if (g.role[player] == Game.roles.Unknown && Keys.Contains(text.ToLower()))
                                     {
                                         var role = GetRoleByAlias(text.ToLower());
                                         if (role != Game.roles.Unknown)
@@ -882,7 +881,7 @@ namespace BotControlPanel.Bots
                                             g.UpdatePlayerlist();
                                         }
                                     }
-                                    else if (text.ToLower().StartsWith("now ") && Keys.Contains(text.ToLower().Substring(4)))
+                                    if (text.ToLower().StartsWith("now ") && Keys.Contains(text.ToLower().Substring(4)))
                                     {
                                         var role = GetRoleByAlias(text.ToLower().Substring(4));
                                         if (role != Game.roles.Unknown)
