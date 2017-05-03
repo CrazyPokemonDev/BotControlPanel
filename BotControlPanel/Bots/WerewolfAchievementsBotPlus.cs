@@ -440,7 +440,7 @@ namespace BotControlPanel.Bots
                     }
                 }
 
-                playerlist += "\n\nDEAD PLAYERS 💀:";
+                playerlist += "\n\n<b>DEAD PLAYERS 💀:</b>";
 
                 if (gamestate == state.Running) foreach (var p in names.Keys.Where(x => role.ContainsKey(x) && role[x] == roles.Dead))
                 {
