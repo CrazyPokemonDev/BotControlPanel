@@ -723,7 +723,7 @@ namespace BotControlPanel.Bots
                                                         ? msg.From
                                                         : null
                                                   );
-                                        if (dead == null) return;
+                                        if (dead == null || !g.names.ContainsKey(dead.Id)) return;
 
                                         switch (g.gamestate)
                                         {
