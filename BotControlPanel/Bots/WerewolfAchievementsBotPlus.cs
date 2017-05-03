@@ -633,7 +633,7 @@ namespace BotControlPanel.Bots
                                 disaledgroups.Add(msg.From.Id);
                                 word = "disabled";
                             }
-                            client.SendTextMessageAsync(msg.Chat.Id, "<b>The bot is now " + word + " for this group!", parseMode: ParseMode.Html);
+                            client.SendTextMessageAsync(msg.Chat.Id, "<b>The bot is now " + word + " for this group!</b>", parseMode: ParseMode.Html);
                         }
                         #endregion
 
