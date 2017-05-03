@@ -670,7 +670,7 @@ namespace BotControlPanel.Bots
                             }
                             else
                             {
-                                disaledgroups.Add(msg.From.Id);
+                                disaledgroups.Add(msg.Chat.Id);
                                 word = "disabled";
                             }
                             ReplyToMessage("<b>The bot is now " + word + " for this group!</b>", u);
@@ -943,6 +943,7 @@ namespace BotControlPanel.Bots
                                         var role = GetRoleByAlias(text.ToLower());
                                         if (role != Game.roles.Unknown)
                                         {
+                                            g.role.Remove(player);
                                             g.role.Add(player, GetRoleByAlias(text.ToLower()));
                                             g.UpdatePlayerlist();
                                         }
