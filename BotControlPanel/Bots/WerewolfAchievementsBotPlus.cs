@@ -185,7 +185,7 @@ namespace BotControlPanel.Bots
                         return gameroles.Count(x => x == roles.Mason) >= 2;
 
                     case achievements.OHSHI:
-                        return wolves >= 1 || gameroles.Contains(roles.SerialKiller) && gameroles.Contains(roles.Cupid);
+                        return (wolves >= 1 || gameroles.Contains(roles.SerialKiller)) && gameroles.Contains(roles.Cupid);
 
                     case achievements.PackHunter:
                         return spawnableWolves >= 7;
