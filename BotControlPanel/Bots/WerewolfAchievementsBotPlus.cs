@@ -393,7 +393,7 @@ namespace BotControlPanel.Bots
             {
                 if (!names.ContainsKey(newplayer.Id) && gamestate == state.Joining)
                 {
-                    names.Add(newplayer.Id, newplayer.FirstName.Remove(15));
+                    names.Add(newplayer.Id, newplayer.FirstName.Length > 15 ? newplayer.FirstName.Remove(15) : newplayer.FirstName);
                     UpdatePlayerlist();
                     return true;                    
                 }
