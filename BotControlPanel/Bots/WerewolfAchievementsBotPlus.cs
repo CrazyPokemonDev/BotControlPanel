@@ -478,7 +478,7 @@ namespace BotControlPanel.Bots
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private const string version = "3.1";
+        private const string version = "3.2";
         private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 };
         public List<long> disaledgroups = new List<long>();
         private readonly List<long> adminIds = new List<long>() { 267376056, 295152997 };
