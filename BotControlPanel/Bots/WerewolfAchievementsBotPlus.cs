@@ -619,7 +619,7 @@ namespace BotControlPanel.Bots
                         var msg = e.Update.Message;
 
                         #region Togglegroup
-                        if (text.ToLower() == "/togglegroup" && adminIds.Contains(msg.From.Id))
+                        if (text.ToLower().Replace("@werewolfwolfachievementbot", "") == "/togglegroup" && adminIds.Contains(msg.From.Id))
                         {
                             string word;
 
