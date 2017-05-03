@@ -678,6 +678,14 @@ namespace BotControlPanel.Bots
                         #endregion
 
                         #region Commands only
+                        #region Announce
+                        if(text.Contains(' ') && text.Split(' ')[0].ToLower().Replace("@werewolfwolfachievementbot", "") == "/announce" && adminIds.Contains(msg.From.Id))
+                        {
+                            client.SendTextMessageAsync(allowedgroups[1], text.Remove(0, text.IndexOf(' ')));
+                            ReplyToMessage("Successfully announced!", u);
+                        }
+                        #endregion
+
                         if (!disaledgroups.Contains(msg.Chat.Id))
                         {
                             switch (text.ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
