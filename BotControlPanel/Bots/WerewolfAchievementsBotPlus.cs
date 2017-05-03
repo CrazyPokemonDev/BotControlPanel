@@ -30,12 +30,15 @@ namespace BotControlPanel.Bots
         {
             #region Pre-declared stuff, such as variables and constants
             public Message pinmessage { get; set; }
-            public Dictionary<long, string> names = new Dictionary<long, string>();
             public state gamestate { get; set; }
             private TelegramBotClient client;
-            public Dictionary<long, roles> role = new Dictionary<long, roles>();
             public Dictionary<roles, string> rolestring = getRolestringDict();
             public long GroupId { get; }
+
+            public Dictionary<long, string> names = new Dictionary<long, string>();
+            public Dictionary<long, roles> role = new Dictionary<long, roles>();
+            public Dictionary<long, bool> love = new Dictionary<long, bool>();
+            
 
             private const string joinMessageText = "<b>Join this game!</b>\n\nPin this message and remember "
                 + "to press start when the roles are assigned and the game begins. <b>DON'T PRESS START BEFORE THE ROLES ARE ASSIGNED!</b>";
@@ -395,6 +398,7 @@ namespace BotControlPanel.Bots
                 {
                     names.Add(newplayer.Id, newplayer.FirstName.Length > 15 ? newplayer.FirstName.Remove(15) : newplayer.FirstName);
                     role.Add(newplayer.Id, roles.Unknown);
+                    love.Add(newplayer.Id, false);
                     UpdatePlayerlist();
                     return true;                    
                 }
@@ -417,6 +421,7 @@ namespace BotControlPanel.Bots
                 {
                     names.Remove(oldplayer.Id);
                     role.Remove(oldplayer.Id);
+                    love.Remove(oldplayer.Id);
                     UpdatePlayerlist();
                     return true;
                 }
@@ -434,8 +439,11 @@ namespace BotControlPanel.Bots
                     if(gamestate == state.Joining) playerlist += names[p] + "\n";
                     else if (gamestate == state.Running)
                     {
-                        if (role[p] != roles.Unknown) playerlist += "<b>" + names[p] + "</b>: " + rolestring[role[p]] + "\n";
-                        else playerlist += "<b>" + names[p] + "</b>: " + rolestring[roles.Unknown] + "\n";
+                        if (role[p] != roles.Unknown) playerlist += "<b>" + names[p] + "</b>: " + rolestring[role[p]];
+                        else playerlist += "<b>" + names[p] + "</b>: " + rolestring[roles.Unknown];
+
+                        if (love[p]) playerlist += "❤️";
+                        playerlist += "\n";
                     }
                 }
 
@@ -814,6 +822,25 @@ namespace BotControlPanel.Bots
                                                 : "";
                                         }
                                         ReplyToMessage(possible, u);
+                                    }
+                                    return;
+
+                                case "/love":
+                                    if(games.ContainsKey(msg.Chat.Id))
+                                    {
+                                        Game g = games[msg.Chat.Id];
+
+                                        User lover = msg.ReplyToMessage != null && g.names.Keys.Contains(msg.ReplyToMessage.From.Id)
+                                                ? msg.ReplyToMessage.From
+                                                : (
+                                                    g.names.Keys.Contains(msg.From.Id)
+                                                        ? msg.From
+                                                        : null
+                                                  );
+                                        if (lover == null || !g.names.ContainsKey(lover.Id)) return;
+
+                                        g.love[lover.Id] = !g.love[lover.Id] ? true : false;
+                                        g.UpdatePlayerlist();
                                     }
                                     return;
                             }
