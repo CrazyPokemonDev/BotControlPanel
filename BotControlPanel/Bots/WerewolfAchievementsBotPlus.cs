@@ -30,12 +30,15 @@ namespace BotControlPanel.Bots
         {
             #region Pre-declared stuff, such as variables and constants
             public Message pinmessage { get; set; }
-            public Dictionary<long, string> names = new Dictionary<long, string>();
             public state gamestate { get; set; }
             private TelegramBotClient client;
-            public Dictionary<long, roles> role = new Dictionary<long, roles>();
             public Dictionary<roles, string> rolestring = getRolestringDict();
             public long GroupId { get; }
+
+            public Dictionary<long, string> names = new Dictionary<long, string>();
+            public Dictionary<long, roles> role = new Dictionary<long, roles>();
+            public Dictionary<long, bool> love = new Dictionary<long, bool>();
+            
 
             private const string joinMessageText = "<b>Join this game!</b>\n\nPin this message and remember "
                 + "to press start when the roles are assigned and the game begins. <b>DON'T PRESS START BEFORE THE ROLES ARE ASSIGNED!</b>";
@@ -185,7 +188,7 @@ namespace BotControlPanel.Bots
                         return gameroles.Count(x => x == roles.Mason) >= 2;
 
                     case achievements.OHSHI:
-                        return wolves >= 1 || gameroles.Contains(roles.SerialKiller) && gameroles.Contains(roles.Cupid);
+                        return (wolves >= 1 || gameroles.Contains(roles.SerialKiller)) && gameroles.Contains(roles.Cupid);
 
                     case achievements.PackHunter:
                         return spawnableWolves >= 7;
@@ -393,7 +396,9 @@ namespace BotControlPanel.Bots
             {
                 if (!names.ContainsKey(newplayer.Id) && gamestate == state.Joining)
                 {
-                    names.Add(newplayer.Id, newplayer.FirstName.Remove(15));
+                    names.Add(newplayer.Id, newplayer.FirstName.Length > 15 ? newplayer.FirstName.Remove(15) : newplayer.FirstName);
+                    role.Add(newplayer.Id, roles.Unknown);
+                    love.Add(newplayer.Id, false);
                     UpdatePlayerlist();
                     return true;                    
                 }
@@ -415,6 +420,8 @@ namespace BotControlPanel.Bots
                 if(names.ContainsKey(oldplayer.Id))
                 {
                     names.Remove(oldplayer.Id);
+                    role.Remove(oldplayer.Id);
+                    love.Remove(oldplayer.Id);
                     UpdatePlayerlist();
                     return true;
                 }
@@ -424,25 +431,25 @@ namespace BotControlPanel.Bots
             public void UpdatePlayerlist()
             {
                 playerlist = gamestate == state.Running
-                    ? $"<b>LYNCHORDER ({names.Keys.Count(x => role.ContainsKey(x) && role[x] != roles.Dead)} of {names.Keys.Count}):</b>\n"
+                    ? $"<b>LYNCHORDER ({names.Keys.Count(x => role[x] != roles.Dead)} of {names.Keys.Count}):</b>\n"
                     : $"<b>Players ({names.Keys.Count}):</b>\n";
 
-                foreach(var p in names.Keys)
+                foreach(var p in names.Keys.Where(x => role[x] != roles.Dead))
                 {
                     if(gamestate == state.Joining) playerlist += names[p] + "\n";
                     else if (gamestate == state.Running)
                     {
-                        if (role.ContainsKey(p))
-                        {
-                            if(role[p] != roles.Dead) playerlist += "<b>" + names[p] + "</b>: " + rolestring[role[p]] + "\n";
-                        }
-                        else playerlist += "<b>" + names[p] + "</b>: " + rolestring[roles.Unknown] + "\n";
+                        if (role[p] != roles.Unknown) playerlist += "<b>" + names[p] + "</b>: " + rolestring[role[p]];
+                        else playerlist += "<b>" + names[p] + "</b>: " + rolestring[roles.Unknown];
+
+                        if (love[p]) playerlist += "❤️";
+                        playerlist += "\n";
                     }
                 }
 
-                playerlist += "\n\nDEAD PLAYERS 💀:";
+                playerlist += "\n\n<b>DEAD PLAYERS 💀:</b>";
 
-                if (gamestate == state.Running) foreach (var p in names.Keys.Where(x => role.ContainsKey(x) && role[x] == roles.Dead))
+                if (gamestate == state.Running) foreach (var p in names.Keys.Where(x => role[x] == roles.Dead))
                 {
                         playerlist += "\n" + names[p];
                 }
@@ -471,8 +478,9 @@ namespace BotControlPanel.Bots
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private const string version = "3.0";
+        private const string version = "3.1";
         private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 };
+        public List<long> disaledgroups = new List<long>();
         private readonly List<long> adminIds = new List<long>() { 267376056, 295152997 };
         #region Default Aliases
         private readonly List<string> defaultAliases = new List<string>()
@@ -598,6 +606,38 @@ namespace BotControlPanel.Bots
             }
         }
         #endregion
+
+        #region Reply Easily
+        private Message ReplyToMessage(string text, Update u)
+        {
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                if (u.Message != null)
+                {
+                    var chatid = u.Message.Chat.Id;
+                    var messageid = u.Message.MessageId;
+
+                    try
+                    {
+                        var task = client.SendTextMessageAsync(chatid, text, replyToMessageId: messageid, parseMode: ParseMode.Html);
+                        task.Wait();
+                        var msg = task.Result;
+                        return msg;
+                    }
+                    catch (Exception e)
+                    {
+                        client.SendTextMessageAsync(adminIds[0], e.Message).Wait();
+                        client.SendTextMessageAsync(adminIds[1], e.Message).Wait();
+                        client.SendTextMessageAsync(u.Message.Chat.Id, "Tried to send something to this chat but failed! The devs were informed! Sorry!").Wait();
+                        return null;
+                    }
+                }
+            }
+            return null;
+        }
+        #endregion
+
+
         #region Update Handler
         protected override void Client_OnUpdate(object sender, Telegram.Bot.Args.UpdateEventArgs e)
         {
@@ -616,265 +656,313 @@ namespace BotControlPanel.Bots
                     {
                         var text = e.Update.Message.Text;
                         var msg = e.Update.Message;
+                        var u = e.Update;
+
+                        #region Togglegroup
+                        if (text.ToLower().Replace("@werewolfwolfachievementbot", "") == "/togglegroup" && adminIds.Contains(msg.From.Id))
+                        {
+                            string word;
+
+                            if (disaledgroups.Contains(msg.Chat.Id))
+                            {
+                                disaledgroups.Remove(msg.Chat.Id);
+                                word = "enabled";
+                            }
+                            else
+                            {
+                                disaledgroups.Add(msg.From.Id);
+                                word = "disabled";
+                            }
+                            ReplyToMessage("<b>The bot is now " + word + " for this group!</b>", u);
+                        }
+                        #endregion
 
                         #region Commands only
-                        switch (text.ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
+                        #region Announce
+                        if(text.Contains(' ') && text.Split(' ')[0].ToLower().Replace("@werewolfwolfachievementbot", "") == "/announce" && adminIds.Contains(msg.From.Id))
                         {
-                            case "/startgame":
-                            case "/startchaos":
-                                if (games.ContainsKey(msg.Chat.Id))
-                                {
-                                    client.SendTextMessageAsync(msg.Chat.Id, "It seems there is already a game running in here! Stop that before you start a new one!").Wait();
-                                }
-                                else
-                                {
+                            client.SendTextMessageAsync(allowedgroups[1], text.Remove(0, text.IndexOf(' ')));
+                            ReplyToMessage("Successfully announced!", u);
+                        }
+                        #endregion
+
+                        if (!disaledgroups.Contains(msg.Chat.Id))
+                        {
+                            switch (text.ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
+                            {
+                                case "/startgame":
+                                case "/startchaos":
+                                    if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Running)
+                                    {
+                                        ReplyToMessage("It seems there is already a game running in here! Stop that before you start a new one!", u);
+                                    }
+                                    else
+                                    {
+                                        if (games.ContainsKey(msg.Chat.Id))
+                                        {
+
+                                            if (!games[msg.Chat.Id].AddPlayer(msg.From))
+                                            {
+                                                ReplyToMessage("Failed to add <b>" + msg.From.FirstName + "</b> to the players!", u);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Message m = ReplyToMessage("Initializing new game...", u);
+                                            if (m == null) return;
+                                            var game = new Game(client, msg.Chat.Id, m);
+                                            games.Add(msg.Chat.Id, game);
+                                            games[msg.Chat.Id].AddPlayer(msg.From);
+                                        }
+                                    }
+                                    return;
+
+                                case "/join":
+                                    if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Joining)
+                                    {
+                                        if (!games[msg.Chat.Id].AddPlayer(msg.From))
+                                        {
+                                            ReplyToMessage("Failed to add <b>" + msg.From.FirstName + "</b> to the players!", u);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        ReplyToMessage("It seems there is no game running in your group, or it can't be joined at the moment.", u);
+                                    }
+                                    return;
+
+                                case "/stopgame":
                                     if (games.ContainsKey(msg.Chat.Id))
                                     {
-
-                                        if (games[msg.Chat.Id].gamestate == Game.state.Joining && !games[msg.Chat.Id].AddPlayer(msg.From))
+                                        if (justCalledStop.Contains(msg.From.Id))
                                         {
-                                            client.SendTextMessageAsync(msg.Chat.Id, "Failed to add <b>" + msg.From.FirstName + "</b> to the players!", parseMode: ParseMode.Html).Wait();
+                                            games[msg.Chat.Id].Stop();
+                                            games[msg.Chat.Id].UpdatePlayerlist();
+                                            games.Remove(msg.Chat.Id);
+                                            ReplyToMessage($"<b>{msg.From.FirstName}</b> has considered the game stopped!", u);
+                                            justCalledStop.Remove(msg.From.Id);
+                                        }
+                                        else
+                                        {
+                                            justCalledStop.Add(msg.From.Id);
+                                            ReplyToMessage("Use this command again to confirm you want to stop the game.", u);
+                                            Timer t = new Timer(new TimerCallback
+                                                (
+                                                    delegate
+                                                    {
+                                                        justCalledStop.Remove(msg.From.Id);
+                                                    }
+                                                ), null, 10 * 1000, Timeout.Infinite);
                                         }
                                     }
-                                    else
-                                    {
-                                        Task<Message> t = client.SendTextMessageAsync(msg.Chat.Id, "Initializing new game...");
-                                        t.Wait();
-                                        var gamemessage = t.Result;
-                                        var game = new Game(client, msg.Chat.Id, gamemessage);
-                                        games.Add(msg.Chat.Id, game);
-                                        games[msg.Chat.Id].AddPlayer(msg.From);
-                                    }
-                                }
-                                return;
+                                    return;
 
-                            case "/join":
-                                if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Joining)
-                                {
-                                    if (!games[msg.Chat.Id].AddPlayer(msg.From))
+                                case "/flee":
+                                case "/dead":
+                                    if (games.ContainsKey(msg.Chat.Id))
                                     {
-                                        client.SendTextMessageAsync(msg.Chat.Id, "Failed to add <b>" + msg.From.FirstName + "</b> to the players!", parseMode: ParseMode.Html).Wait();
-                                    }
-                                }
-                                else
-                                {
-                                    client.SendTextMessageAsync(msg.Chat.Id, "It seems there is no game running in your group, or it can't be joined at the moment.").Wait();
-                                }
-                                return;
+                                        Game g = games[msg.Chat.Id];
 
-                            case "/stopgame":
-                                if (games.ContainsKey(msg.Chat.Id))
-                                {
-                                    if (justCalledStop.Contains(msg.From.Id))
-                                    {
-                                        games[msg.Chat.Id].Stop();
-                                        games[msg.Chat.Id].UpdatePlayerlist();
-                                        games.Remove(msg.Chat.Id);
-                                        client.SendTextMessageAsync(msg.Chat.Id, $"<b>{msg.From.FirstName}</b> has considered the game stopped!", parseMode: ParseMode.Html);
-                                        justCalledStop.Remove(msg.From.Id);
-                                    }
-                                    else
-                                    {
-                                        justCalledStop.Add(msg.From.Id);
-                                        client.SendTextMessageAsync(msg.Chat.Id, 
-                                            "Use this command again if the game really has stopped already.").Wait();
-                                        Timer t = new Timer(new TimerCallback
-                                            (
-                                                delegate
+                                        User dead = msg.ReplyToMessage != null && g.names.Keys.Contains(msg.ReplyToMessage.From.Id)
+                                                ? msg.ReplyToMessage.From
+                                                : (
+                                                    g.names.Keys.Contains(msg.From.Id)
+                                                        ? msg.From
+                                                        : null
+                                                  );
+                                        if (dead == null || !g.names.ContainsKey(dead.Id)) return;
+
+                                        switch (g.gamestate)
+                                        {
+                                            case Game.state.Joining:
+                                                if (!g.RemovePlayer(dead))
                                                 {
-                                                    justCalledStop.Remove(msg.From.Id);
+                                                    ReplyToMessage("Failed to remove player <b>" + dead.FirstName + "</b> from the game.", u);
                                                 }
-                                            ), null, 10 * 1000, Timeout.Infinite);
+                                                break;
+
+                                            case Game.state.Running:
+                                                g.role.Remove(dead.Id);
+                                                g.role.Add(dead.Id, Game.roles.Dead);
+                                                g.UpdatePlayerlist();
+                                                break;
+                                        }
+
                                     }
-                                }
-                                return;
+                                    return;
+                                case "/addalias":
+                                    if (adminIds.Contains(msg.From.Id)) ReplyToMessage("You need to write an alias behind this in the following format:\n Alias Role", u);
+                                    else ReplyToMessage("You are not a bot admin!", u);
+                                    return;
+                                case "/ping":
+                                    ReplyToMessage("<b>PENG!</b>", u);
+                                    return;
 
-                            case "/flee":
-                            case "/dead":
-                                if (games.ContainsKey(msg.Chat.Id))
-                                {
-                                    Game g = games[msg.Chat.Id];
+                                case "/version":
+                                    ReplyToMessage($"Werewolf Achievements Manager.\n <b>Version {version}.</b>", u);
+                                    return;
 
-                                    User dead = msg.ReplyToMessage != null && g.names.Keys.Contains(msg.ReplyToMessage.From.Id)
-                                            ? msg.ReplyToMessage.From
-                                            : (
-                                                g.names.Keys.Contains(msg.From.Id)
-                                                    ? msg.From
-                                                    : null
-                                              );
-                                    if (dead == null) return;
-
-                                    switch (g.gamestate)
+                                case "/listalias":
+                                    var rolestrings = Game.getRolestringDict();
+                                    var listalias = "<b>ALL ALIASSES OF ALL ROLES:</b>\n";
+                                    foreach (var thisrole in rolestrings.Keys)
                                     {
-                                        case Game.state.Joining:
-                                            if (!g.RemovePlayer(dead))
-                                            {
-                                                client.SendTextMessageAsync(msg.Chat.Id, "Failed to remove player <b>" + dead.FirstName + "</b> from the game.", parseMode: ParseMode.Html).Wait();
-                                            }
-                                            break;
+                                        listalias += "\n\n<b>" + rolestrings[thisrole] + "</b>";
 
-                                        case Game.state.Running:
-                                            g.role.Remove(dead.Id);
-                                            g.role.Add(dead.Id, Game.roles.Dead);
-                                            g.UpdatePlayerlist();
-                                            break;
+                                        foreach (var alias in roleAliases.Where(x => x.Value == thisrole))
+                                        {
+                                            listalias += "\n" + alias.Key;
+                                        }
                                     }
+                                    ReplyToMessage(listalias, u);
+                                    return;
 
-                                }
-                                return;
-                            case "/addalias":
-                                client.SendTextMessageAsync(msg.Chat.Id,
-                                    "You need to write an alias behind this in the following format:\n"
-                                    + "Alias Role").Wait();
-                                return;
-                            case "/ping":
-                                client.SendTextMessageAsync(msg.Chat.Id, "PENG!").Wait();
-                                return;
-
-                            case "/version":
-                                client.SendTextMessageAsync(msg.Chat.Id, $"Werewolf Achievements Manager Version {version}").Wait();
-                                return;
-
-                            case "/listalias":
-                                var rolestrings = Game.getRolestringDict();
-                                var listalias = "<b>ALL ALIASSES OF ALL ROLES:</b>\n";
-                                foreach (var thisrole in rolestrings.Keys)
-                                {
-                                    listalias += "\n\n<b>" + rolestrings[thisrole] + "</b>";
-
-                                    foreach (var alias in roleAliases.Where(x => x.Value == thisrole))
+                                case "/achv":
+                                    if (games.ContainsKey(msg.Chat.Id))
                                     {
-                                        listalias += "\n" + alias.Key;
+                                        Game g = games[msg.Chat.Id];
+                                        string possible = "<b>POSSIBLE ACHIEVEMENTS:</b>\n";
+
+                                        foreach (var achv in Game.getAchvDict().Keys)
+                                        {
+                                            possible += g.isAchievable(achv)
+                                                ? Game.getAchvDict()[achv] + "\n"
+                                                : "";
+                                        }
+                                        ReplyToMessage(possible, u);
                                     }
-                                }
-                                client.SendTextMessageAsync(msg.Chat.Id, listalias, parseMode: ParseMode.Html).Wait();
-                                return;
+                                    return;
 
-                            case "/achv":
-                                if(games.ContainsKey(msg.Chat.Id))
-                                {
-                                    Game g = games[msg.Chat.Id];
-                                    string possible = "<b>POSSIBLE ACHIEVEMENTS:</b>\n";
-
-                                    foreach(var achv in Game.getAchvDict().Keys)
+                                case "/love":
+                                    if(games.ContainsKey(msg.Chat.Id))
                                     {
-                                        possible += g.isAchievable(achv)
-                                            ? Game.getAchvDict()[achv] + "\n"
-                                            : "";
-                                    }
-                                    client.SendTextMessageAsync(msg.Chat.Id, possible, parseMode: ParseMode.Html);
-                                }
-                                return;
-                        }
-                        #endregion
+                                        Game g = games[msg.Chat.Id];
 
-                        #region addalias und delalias
-                        if (text.StartsWith("/addalias"))
-                        {
-                            if (adminIds.Contains(msg.From.Id))
-                            {
-                                if (text.Split(' ').Count() == 3)
-                                {
-                                    string alias = text.Split(' ')[1].ToLower();
-                                    string roleS = text.Split(' ')[2];
-                                    Game.roles role = GetRoleByAlias(roleS);
-                                    if (role == Game.roles.Unknown)
-                                    {
-                                        client.SendTextMessageAsync(msg.Chat.Id, "The role was not recognized! Adding alias failed!").Wait();
-                                    }
-                                    else if (!roleAliases.Keys.Contains(alias))
-                                    {
-                                        roleAliases.Add(alias, role);
-                                        writeAliasesFile();
-                                        client.SendTextMessageAsync(msg.Chat.Id, $"Alias <i>{alias}</i> successfully added for role <b>{role}</b>.", parseMode: ParseMode.Html).Wait();
-                                    }
-                                    else
-                                    {
-                                        roleAliases[alias] = role;
-                                        writeAliasesFile();
-                                        client.SendTextMessageAsync(msg.Chat.Id, $"Alias <i>{alias}</i> successfully updated for role <b>{role}</b>.", parseMode: ParseMode.Html).Wait();
-                                    }
+                                        User lover = msg.ReplyToMessage != null && g.names.Keys.Contains(msg.ReplyToMessage.From.Id)
+                                                ? msg.ReplyToMessage.From
+                                                : (
+                                                    g.names.Keys.Contains(msg.From.Id)
+                                                        ? msg.From
+                                                        : null
+                                                  );
+                                        if (lover == null || !g.names.ContainsKey(lover.Id)) return;
 
-                                }
-                            }
-                            else client.SendTextMessageAsync(msg.Chat.Id, "You are not a bot admin!");
-
-                        }
-
-                        if (text.StartsWith("/delalias"))
-                        {
-                            if (adminIds.Contains(msg.From.Id))
-                            {
-                                if (text.Split(' ').Count() == 2)
-                                {
-                                    string alias = text.Split(' ')[1].ToLower();
-
-                                    if (roleAliases.ContainsKey(alias))
-                                    {
-                                        roleAliases.Remove(alias);
-                                        writeAliasesFile();
-                                        client.SendTextMessageAsync(msg.Chat.Id, $"Alias <i>{alias}</i> was successfully removed!", parseMode: ParseMode.Html).Wait();
-                                    }
-                                    else
-                                    {
-                                        client.SendTextMessageAsync(msg.Chat.Id, $"Couldn't find Alias <i>{alias}</i>!", parseMode: ParseMode.Html).Wait();
-                                    }
-                                }
-                                else client.SendTextMessageAsync(msg.Chat.Id, "Failed: Wrong command syntax. Syntax: /delalias <alias>").Wait();
-                            }
-                            else client.SendTextMessageAsync(msg.Chat.Id, "You are not a bot admin!");
-                        }
-                        #endregion
-
-                        #region The heavy part: checking for each and every alias
-                        if (games.ContainsKey(msg.Chat.Id))
-                        {
-                            if (games[msg.Chat.Id].gamestate == Game.state.Running)
-                            {
-                                Game g = games[msg.Chat.Id];
-
-                                long player = 0;
-                                if (msg.ReplyToMessage != null)
-                                {
-                                    if (g.names.Keys.Contains(msg.ReplyToMessage.From.Id)) player = msg.ReplyToMessage.From.Id;
-                                }
-                                else if (g.names.Keys.Contains(msg.From.Id))
-                                {
-                                    player = msg.From.Id;
-                                }
-
-                                if (player == 0) return;
-
-                                List<string> Keys = roleAliases.Keys.ToList();
-                                foreach (string s in defaultAliases)
-                                {
-                                    Keys.Add(s);
-                                }
-
-                                if (!g.role.ContainsKey(player) && Keys.Contains(text.ToLower()))
-                                {
-                                    var role = GetRoleByAlias(text.ToLower());
-                                    if (role != Game.roles.Unknown)
-                                    {
-                                        g.role.Add(player, GetRoleByAlias(text.ToLower()));
+                                        g.love[lover.Id] = !g.love[lover.Id] ? true : false;
                                         g.UpdatePlayerlist();
                                     }
-                                }
-                                else if (text.ToLower().StartsWith("now ") && Keys.Contains(text.ToLower().Substring(4)))
+                                    return;
+                            }
+                            #endregion
+
+                            #region addalias und delalias
+                            if (text.StartsWith("/addalias"))
+                            {
+                                if (adminIds.Contains(msg.From.Id))
                                 {
-                                    var role = GetRoleByAlias(text.ToLower().Substring(4));
-                                    if (role != Game.roles.Unknown)
+                                    if (text.Split(' ').Count() == 3)
                                     {
-                                        var oldRole = g.role[player];
-                                        if (oldRole != role)
+                                        string alias = text.Split(' ')[1].ToLower();
+                                        string roleS = text.Split(' ')[2];
+                                        Game.roles role = GetRoleByAlias(roleS);
+                                        if (role == Game.roles.Unknown)
                                         {
-                                            g.role[player] = role;
+                                            ReplyToMessage("The role was not recognized! Adding alias failed!", u);
+                                        }
+                                        else if (!roleAliases.Keys.Contains(alias))
+                                        {
+                                            roleAliases.Add(alias, role);
+                                            writeAliasesFile();
+                                            ReplyToMessage($"Alias <i>{alias}</i> successfully added for role <b>{role}</b>.", u);
+                                        }
+                                        else
+                                        {
+                                            roleAliases[alias] = role;
+                                            writeAliasesFile();
+                                            ReplyToMessage($"Alias <i>{alias}</i> successfully updated for role <b>{role}</b>.", u);
+                                        }
+
+                                    }
+                                    else ReplyToMessage("Failed: Wrong command syntax. Syntax: /addalias <alias>", u);
+                                }
+                                else ReplyToMessage("You are not a bot admin!", u);
+
+                            }
+
+                            if (text.StartsWith("/delalias"))
+                            {
+                                if (adminIds.Contains(msg.From.Id))
+                                {
+                                    if (text.Split(' ').Count() == 2)
+                                    {
+                                        string alias = text.Split(' ')[1].ToLower();
+
+                                        if (roleAliases.ContainsKey(alias))
+                                        {
+                                            roleAliases.Remove(alias);
+                                            writeAliasesFile();
+                                            ReplyToMessage($"Alias <i>{alias}</i> was successfully removed!", u);
+                                        }
+                                        else
+                                        {
+                                            ReplyToMessage($"Couldn't find Alias <i>{alias}</i>!", u);
+                                        }
+                                    }
+                                    else ReplyToMessage("Failed: Wrong command syntax. Syntax: /delalias <alias>", u);
+                                }
+                                else ReplyToMessage("You are not a bot admin!", u);
+                            }
+                            #endregion
+
+                            #region The heavy part: checking for each and every alias
+                            if (games.ContainsKey(msg.Chat.Id))
+                            {
+                                if (games[msg.Chat.Id].gamestate == Game.state.Running)
+                                {
+                                    Game g = games[msg.Chat.Id];
+
+                                    long player = 0;
+                                    if (msg.ReplyToMessage != null)
+                                    {
+                                        if (g.names.Keys.Contains(msg.ReplyToMessage.From.Id)) player = msg.ReplyToMessage.From.Id;
+                                    }
+                                    else if (g.names.Keys.Contains(msg.From.Id))
+                                    {
+                                        player = msg.From.Id;
+                                    }
+
+                                    if (player == 0) return;
+
+                                    List<string> Keys = roleAliases.Keys.ToList();
+                                    foreach (string s in defaultAliases)
+                                    {
+                                        Keys.Add(s);
+                                    }
+
+                                    if (g.role[player] == Game.roles.Unknown && Keys.Contains(text.ToLower()))
+                                    {
+                                        var role = GetRoleByAlias(text.ToLower());
+                                        if (role != Game.roles.Unknown)
+                                        {
+                                            g.role.Add(player, GetRoleByAlias(text.ToLower()));
                                             g.UpdatePlayerlist();
                                         }
                                     }
+                                    if (text.ToLower().StartsWith("now ") && Keys.Contains(text.ToLower().Substring(4)))
+                                    {
+                                        var role = GetRoleByAlias(text.ToLower().Substring(4));
+                                        if (role != Game.roles.Unknown)
+                                        {
+                                            var oldRole = g.role[player];
+                                            if (oldRole != role)
+                                            {
+                                                g.role[player] = role;
+                                                g.UpdatePlayerlist();
+                                            }
+                                        }
+                                    }
                                 }
+                                #endregion
                             }
-                            #endregion
                         }
                     }
                 }
