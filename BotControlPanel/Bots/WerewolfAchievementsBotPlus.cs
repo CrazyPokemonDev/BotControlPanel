@@ -598,6 +598,38 @@ namespace BotControlPanel.Bots
             }
         }
         #endregion
+
+        #region Reply Easily
+        private Message ReplyToMessage(string text, Update u)
+        {
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                if (u.Message != null)
+                {
+                    var chatid = u.Message.Chat.Id;
+                    var messageid = u.Message.MessageId;
+
+                    try
+                    {
+                        var task = client.SendTextMessageAsync(chatid, text, replyToMessageId: messageid, parseMode: ParseMode.Html);
+                        task.Wait();
+                        var msg = task.Result;
+                        return msg;
+                    }
+                    catch (Exception e)
+                    {
+                        client.SendTextMessageAsync(adminIds[0], e.Message).Wait();
+                        client.SendTextMessageAsync(adminIds[1], e.Message).Wait();
+                        client.SendTextMessageAsync(u.Message.Chat.Id, "Tried to send something to this chat but failed! The devs were informed! Sorry!").Wait();
+                        return null;
+                    }
+                }
+            }
+            return null;
+        }
+        #endregion
+
+
         #region Update Handler
         protected override void Client_OnUpdate(object sender, Telegram.Bot.Args.UpdateEventArgs e)
         {
@@ -616,6 +648,7 @@ namespace BotControlPanel.Bots
                     {
                         var text = e.Update.Message.Text;
                         var msg = e.Update.Message;
+                        var u = e.Update;
 
                         #region Togglegroup
                         if (text.ToLower().Replace("@werewolfwolfachievementbot", "") == "/togglegroup" && adminIds.Contains(msg.From.Id))
@@ -632,7 +665,7 @@ namespace BotControlPanel.Bots
                                 disaledgroups.Add(msg.From.Id);
                                 word = "disabled";
                             }
-                            client.SendTextMessageAsync(msg.Chat.Id, "<b>The bot is now " + word + " for this group!</b>", parseMode: ParseMode.Html);
+                            ReplyToMessage("<b>The bot is now " + word + " for this group!</b>", u);
                         }
                         #endregion
 
@@ -645,7 +678,7 @@ namespace BotControlPanel.Bots
                                 case "/startchaos":
                                     if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Running)
                                     {
-                                        client.SendTextMessageAsync(msg.Chat.Id, "It seems there is already a game running in here! Stop that before you start a new one!").Wait();
+                                        ReplyToMessage("It seems there is already a game running in here! Stop that before you start a new one!", u);
                                     }
                                     else
                                     {
@@ -654,15 +687,14 @@ namespace BotControlPanel.Bots
 
                                             if (!games[msg.Chat.Id].AddPlayer(msg.From))
                                             {
-                                                client.SendTextMessageAsync(msg.Chat.Id, "Failed to add <b>" + msg.From.FirstName + "</b> to the players!", parseMode: ParseMode.Html).Wait();
+                                                ReplyToMessage("Failed to add <b>" + msg.From.FirstName + "</b> to the players!", u);
                                             }
                                         }
                                         else
                                         {
-                                            Task<Message> t = client.SendTextMessageAsync(msg.Chat.Id, "Initializing new game...");
-                                            t.Wait();
-                                            var gamemessage = t.Result;
-                                            var game = new Game(client, msg.Chat.Id, gamemessage);
+                                            Message m = ReplyToMessage("Initializing new game...", u);
+                                            if (m == null) return;
+                                            var game = new Game(client, msg.Chat.Id, m);
                                             games.Add(msg.Chat.Id, game);
                                             games[msg.Chat.Id].AddPlayer(msg.From);
                                         }
@@ -674,12 +706,12 @@ namespace BotControlPanel.Bots
                                     {
                                         if (!games[msg.Chat.Id].AddPlayer(msg.From))
                                         {
-                                            client.SendTextMessageAsync(msg.Chat.Id, "Failed to add <b>" + msg.From.FirstName + "</b> to the players!", parseMode: ParseMode.Html).Wait();
+                                            ReplyToMessage("Failed to add <b>" + msg.From.FirstName + "</b> to the players!", u);
                                         }
                                     }
                                     else
                                     {
-                                        client.SendTextMessageAsync(msg.Chat.Id, "It seems there is no game running in your group, or it can't be joined at the moment.").Wait();
+                                        ReplyToMessage("It seems there is no game running in your group, or it can't be joined at the moment.", u);
                                     }
                                     return;
 
@@ -691,14 +723,13 @@ namespace BotControlPanel.Bots
                                             games[msg.Chat.Id].Stop();
                                             games[msg.Chat.Id].UpdatePlayerlist();
                                             games.Remove(msg.Chat.Id);
-                                            client.SendTextMessageAsync(msg.Chat.Id, $"<b>{msg.From.FirstName}</b> has considered the game stopped!", parseMode: ParseMode.Html);
+                                            ReplyToMessage($"<b>{msg.From.FirstName}</b> has considered the game stopped!", u);
                                             justCalledStop.Remove(msg.From.Id);
                                         }
                                         else
                                         {
                                             justCalledStop.Add(msg.From.Id);
-                                            client.SendTextMessageAsync(msg.Chat.Id,
-                                                "Use this command again if the game really has stopped already.").Wait();
+                                            ReplyToMessage("Use this command again to confirm you want to stop the game.", u);
                                             Timer t = new Timer(new TimerCallback
                                                 (
                                                     delegate
@@ -730,7 +761,7 @@ namespace BotControlPanel.Bots
                                             case Game.state.Joining:
                                                 if (!g.RemovePlayer(dead))
                                                 {
-                                                    client.SendTextMessageAsync(msg.Chat.Id, "Failed to remove player <b>" + dead.FirstName + "</b> from the game.", parseMode: ParseMode.Html).Wait();
+                                                    ReplyToMessage("Failed to remove player <b>" + dead.FirstName + "</b> from the game.", u);
                                                 }
                                                 break;
 
@@ -744,16 +775,15 @@ namespace BotControlPanel.Bots
                                     }
                                     return;
                                 case "/addalias":
-                                    client.SendTextMessageAsync(msg.Chat.Id,
-                                        "You need to write an alias behind this in the following format:\n"
-                                        + "Alias Role").Wait();
+                                    if (adminIds.Contains(msg.From.Id)) ReplyToMessage("You need to write an alias behind this in the following format:\n Alias Role", u);
+                                    else ReplyToMessage("You are not a bot admin!", u);
                                     return;
                                 case "/ping":
-                                    client.SendTextMessageAsync(msg.Chat.Id, "PENG!").Wait();
+                                    ReplyToMessage("<b>PENG!</b>", u);
                                     return;
 
                                 case "/version":
-                                    client.SendTextMessageAsync(msg.Chat.Id, $"Werewolf Achievements Manager Version {version}").Wait();
+                                    ReplyToMessage($"Werewolf Achievements Manager.\n <b>Version {version}.</b>", u);
                                     return;
 
                                 case "/listalias":
@@ -768,7 +798,7 @@ namespace BotControlPanel.Bots
                                             listalias += "\n" + alias.Key;
                                         }
                                     }
-                                    client.SendTextMessageAsync(msg.Chat.Id, listalias, parseMode: ParseMode.Html).Wait();
+                                    ReplyToMessage(listalias, u);
                                     return;
 
                                 case "/achv":
@@ -783,7 +813,7 @@ namespace BotControlPanel.Bots
                                                 ? Game.getAchvDict()[achv] + "\n"
                                                 : "";
                                         }
-                                        client.SendTextMessageAsync(msg.Chat.Id, possible, parseMode: ParseMode.Html);
+                                        ReplyToMessage(possible, u);
                                     }
                                     return;
                             }
@@ -801,24 +831,25 @@ namespace BotControlPanel.Bots
                                         Game.roles role = GetRoleByAlias(roleS);
                                         if (role == Game.roles.Unknown)
                                         {
-                                            client.SendTextMessageAsync(msg.Chat.Id, "The role was not recognized! Adding alias failed!").Wait();
+                                            ReplyToMessage("The role was not recognized! Adding alias failed!", u);
                                         }
                                         else if (!roleAliases.Keys.Contains(alias))
                                         {
                                             roleAliases.Add(alias, role);
                                             writeAliasesFile();
-                                            client.SendTextMessageAsync(msg.Chat.Id, $"Alias <i>{alias}</i> successfully added for role <b>{role}</b>.", parseMode: ParseMode.Html).Wait();
+                                            ReplyToMessage($"Alias <i>{alias}</i> successfully added for role <b>{role}</b>.", u);
                                         }
                                         else
                                         {
                                             roleAliases[alias] = role;
                                             writeAliasesFile();
-                                            client.SendTextMessageAsync(msg.Chat.Id, $"Alias <i>{alias}</i> successfully updated for role <b>{role}</b>.", parseMode: ParseMode.Html).Wait();
+                                            ReplyToMessage($"Alias <i>{alias}</i> successfully updated for role <b>{role}</b>.", u);
                                         }
 
                                     }
+                                    else ReplyToMessage("Failed: Wrong command syntax. Syntax: /addalias <alias>", u);
                                 }
-                                else client.SendTextMessageAsync(msg.Chat.Id, "You are not a bot admin!");
+                                else ReplyToMessage("You are not a bot admin!", u);
 
                             }
 
@@ -834,16 +865,16 @@ namespace BotControlPanel.Bots
                                         {
                                             roleAliases.Remove(alias);
                                             writeAliasesFile();
-                                            client.SendTextMessageAsync(msg.Chat.Id, $"Alias <i>{alias}</i> was successfully removed!", parseMode: ParseMode.Html).Wait();
+                                            ReplyToMessage($"Alias <i>{alias}</i> was successfully removed!", u);
                                         }
                                         else
                                         {
-                                            client.SendTextMessageAsync(msg.Chat.Id, $"Couldn't find Alias <i>{alias}</i>!", parseMode: ParseMode.Html).Wait();
+                                            ReplyToMessage($"Couldn't find Alias <i>{alias}</i>!", u);
                                         }
                                     }
-                                    else client.SendTextMessageAsync(msg.Chat.Id, "Failed: Wrong command syntax. Syntax: /delalias <alias>").Wait();
+                                    else ReplyToMessage("Failed: Wrong command syntax. Syntax: /delalias <alias>", u);
                                 }
-                                else client.SendTextMessageAsync(msg.Chat.Id, "You are not a bot admin!");
+                                else ReplyToMessage("You are not a bot admin!", u);
                             }
                             #endregion
 
