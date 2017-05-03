@@ -644,7 +644,7 @@ namespace BotControlPanel.Bots
                             {
                                 case "/startgame":
                                 case "/startchaos":
-                                    if (games.ContainsKey(msg.Chat.Id))
+                                    if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Running)
                                     {
                                         client.SendTextMessageAsync(msg.Chat.Id, "It seems there is already a game running in here! Stop that before you start a new one!").Wait();
                                     }
@@ -653,7 +653,7 @@ namespace BotControlPanel.Bots
                                         if (games.ContainsKey(msg.Chat.Id))
                                         {
 
-                                            if (games[msg.Chat.Id].gamestate == Game.state.Joining && !games[msg.Chat.Id].AddPlayer(msg.From))
+                                            if (!games[msg.Chat.Id].AddPlayer(msg.From))
                                             {
                                                 client.SendTextMessageAsync(msg.Chat.Id, "Failed to add <b>" + msg.From.FirstName + "</b> to the players!", parseMode: ParseMode.Html).Wait();
                                             }
