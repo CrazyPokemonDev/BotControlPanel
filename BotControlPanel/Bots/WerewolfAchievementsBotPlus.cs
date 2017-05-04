@@ -13,7 +13,6 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace BotControlPanel.Bots
 {
-    #region Features to add
     /*
      ----------------------------------------------------------------------------------------------------
      + Check possible achievements with missing player achievements and number/roles of available players
@@ -22,13 +21,10 @@ namespace BotControlPanel.Bots
      + 
      ----------------------------------------------------------------------------------------------------
      */
-    #endregion
     public class WerewolfAchievementsBotPlus : FlomBot
     {
-        #region Custom "Game" class
         class Game
         {
-            #region Pre-declared stuff, such as variables and constants
             public Message pinmessage { get; set; }
             public state gamestate { get; set; }
             private TelegramBotClient client;
@@ -45,7 +41,6 @@ namespace BotControlPanel.Bots
             private const string runMessageText = "<b>Game running!</b>\n\nPress stop <b>ONCE THE GAME STOPPED!</b>";
             private const string stoppedMessageText = "<b>This game is finished!</b>";
             private string playerlist;
-            #endregion
 
             public Game(TelegramBotClient cl, long groupid, Message pin)
             {
@@ -466,14 +461,10 @@ namespace BotControlPanel.Bots
                         parseMode: ParseMode.Html).Wait();
             }
         }
-        #endregion
 
-        #region Variables
         private Dictionary<long, Game> games = new Dictionary<long, Game>();
         private Dictionary<string, Game.roles> roleAliases = new Dictionary<string, Game.roles>();
         List<long> justCalledStop = new List<long>();
-        #endregion
-        #region Constants
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
@@ -481,7 +472,6 @@ namespace BotControlPanel.Bots
         private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 };
         public List<long> disaledgroups = new List<long>();
         private readonly List<long> adminIds = new List<long>() { 267376056, 295152997 };
-        #region Default Aliases
         private readonly List<string> defaultAliases = new List<string>()
         {
             "alphawolf",
@@ -515,9 +505,6 @@ namespace BotControlPanel.Bots
             "wildchild",
             "wolfcub"
         };
-        #endregion
-        #endregion
-        #region Constructor
         public WerewolfAchievementsBotPlus(string token) : base(token)
         {
             try
@@ -526,15 +513,11 @@ namespace BotControlPanel.Bots
             }
             catch { }
         }
-        #endregion
-
-        #region Callback Query Handler
         private void Client_OnCallbackQuery(object sender, Telegram.Bot.Args.CallbackQueryEventArgs e)
         {
             try
             {
                 string data = e.CallbackQuery.Data;
-                #region Callback Query Start
                 if (data.StartsWith("start_"))
                 {
                     long id = Convert.ToInt64(data.Substring(6));
@@ -558,8 +541,6 @@ namespace BotControlPanel.Bots
                         client.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Did not find that game.").Wait();
                     }
                 }
-                #endregion
-                #region Callback Query Stop
                 else if (data.StartsWith("stop_"))
                 {
                     long id = Convert.ToInt64(data.Substring(5));
@@ -594,7 +575,6 @@ namespace BotControlPanel.Bots
                         client.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Did not find that game.").Wait();
                     }
                 }
-                #endregion
             }
             catch (Exception ex)
             {
@@ -604,9 +584,7 @@ namespace BotControlPanel.Bots
                     + "\n" + ex.StackTrace);
             }
         }
-        #endregion
 
-        #region Reply Easily
         private Message ReplyToMessage(string text, Update u)
         {
             if (!string.IsNullOrWhiteSpace(text))
@@ -634,10 +612,7 @@ namespace BotControlPanel.Bots
             }
             return null;
         }
-        #endregion
 
-
-        #region Update Handler
         protected override void Client_OnUpdate(object sender, Telegram.Bot.Args.UpdateEventArgs e)
         {
             try
@@ -657,7 +632,6 @@ namespace BotControlPanel.Bots
                         var msg = e.Update.Message;
                         var u = e.Update;
 
-                        #region Togglegroup
                         if (text.ToLower().Replace("@werewolfwolfachievementbot", "") == "/togglegroup" && adminIds.Contains(msg.From.Id))
                         {
                             string word;
@@ -674,16 +648,11 @@ namespace BotControlPanel.Bots
                             }
                             ReplyToMessage("<b>The bot is now " + word + " for this group!</b>", u);
                         }
-                        #endregion
-
-                        #region Commands only
-                        #region Announce
                         if(text.Contains(' ') && text.Split(' ')[0].ToLower().Replace("@werewolfwolfachievementbot", "") == "/announce" && adminIds.Contains(msg.From.Id))
                         {
                             client.SendTextMessageAsync(allowedgroups[1], text.Remove(0, text.IndexOf(' ')), parseMode: ParseMode.Html);
                             ReplyToMessage("Successfully announced!", u);
                         }
-                        #endregion
 
                         if (!disaledgroups.Contains(msg.Chat.Id))
                         {
@@ -851,9 +820,7 @@ namespace BotControlPanel.Bots
                                     }
                                     return;
                             }
-                            #endregion
 
-                            #region addalias und delalias
                             if (text.StartsWith("/addalias"))
                             {
                                 if (adminIds.Contains(msg.From.Id))
@@ -910,9 +877,7 @@ namespace BotControlPanel.Bots
                                 }
                                 else ReplyToMessage("You are not a bot admin!", u);
                             }
-                            #endregion
 
-                            #region The heavy part: checking for each and every alias
                             if (games.ContainsKey(msg.Chat.Id))
                             {
                                 if (games[msg.Chat.Id].gamestate == Game.state.Running)
@@ -961,7 +926,6 @@ namespace BotControlPanel.Bots
                                         }
                                     }
                                 }
-                                #endregion
                             }
                         }
                     }
@@ -975,9 +939,8 @@ namespace BotControlPanel.Bots
                     ex.InnerException + "\n" + ex.Message + "\n" + ex.StackTrace).Wait();
             }
         }
-        #endregion
 
-        #region Get Role By Alias
+
         private Game.roles GetRoleByAlias(string alias)
         {
             if (roleAliases.ContainsKey(alias)) return roleAliases[alias];
@@ -1080,9 +1043,8 @@ namespace BotControlPanel.Bots
                 }
             }
         }
-        #endregion
 
-        #region File Methods
+
         private void writeAliasesFile()
         {
             if (!System.IO.Directory.Exists(basePath)) System.IO.Directory.CreateDirectory(basePath);
@@ -1103,16 +1065,13 @@ namespace BotControlPanel.Bots
             }
             if (roleAliases == null) roleAliases = new Dictionary<string, Game.roles>();
         }
-        #endregion
 
-        #region Control Methods
-        #region Start Bot
+
         public override bool StartBot()
         {
             getAliasesFromFile();
             return base.StartBot();
         }
-        #endregion
-        #endregion
+
     }
 }
