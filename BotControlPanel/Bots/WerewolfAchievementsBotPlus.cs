@@ -442,12 +442,15 @@ namespace BotControlPanel.Bots
                         playerlist += "\n";
                     }
                 }
-
-                playerlist += "\n\n<b>DEAD PLAYERS 💀:</b>";
-
-                if (gamestate == state.Running) foreach (var p in names.Keys.Where(x => role[x] == roles.Dead))
+                
+                if (gamestate == state.Running)
                 {
+                    playerlist += "\n\n<b>DEAD PLAYERS 💀:</b>";
+
+                    foreach (var p in names.Keys.Where(x => role[x] == roles.Dead))
+                    {
                         playerlist += "\n" + names[p];
+                    }
                 }
 
                 if (gamestate == state.Running)
@@ -474,7 +477,7 @@ namespace BotControlPanel.Bots
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private const string version = "3.2";
+        private const string version = "3.3";
         private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 };
         public List<long> disaledgroups = new List<long>();
         private readonly List<long> adminIds = new List<long>() { 267376056, 295152997 };
