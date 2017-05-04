@@ -13,14 +13,6 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace BotControlPanel.Bots
 {
-    /*
-     ----------------------------------------------------------------------------------------------------
-     + Check possible achievements with missing player achievements and number/roles of available players
-     + 
-     + 
-     + 
-     ----------------------------------------------------------------------------------------------------
-     */
     public class WerewolfAchievementsBotPlus : FlomBot
     {
         class Game
