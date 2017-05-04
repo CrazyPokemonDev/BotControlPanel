@@ -681,7 +681,7 @@ namespace BotControlPanel.Bots
                         #region Announce
                         if(text.Contains(' ') && text.Split(' ')[0].ToLower().Replace("@werewolfwolfachievementbot", "") == "/announce" && adminIds.Contains(msg.From.Id))
                         {
-                            client.SendTextMessageAsync(allowedgroups[1], text.Remove(0, text.IndexOf(' ')));
+                            client.SendTextMessageAsync(allowedgroups[1], text.Remove(0, text.IndexOf(' ')), parseMode: ParseMode.Html);
                             ReplyToMessage("Successfully announced!", u);
                         }
                         #endregion
