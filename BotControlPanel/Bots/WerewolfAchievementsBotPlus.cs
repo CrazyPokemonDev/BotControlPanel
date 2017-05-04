@@ -452,18 +452,22 @@ namespace BotControlPanel.Bots
                     client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, stoppedMessageText,
                         parseMode: ParseMode.Html).Wait();
             }
-        }
+        } // End of class Group
 
-        private Dictionary<long, Game> games = new Dictionary<long, Game>();
-        private Dictionary<string, Game.roles> roleAliases = new Dictionary<string, Game.roles>();
-        List<long> justCalledStop = new List<long>();
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
         private const string version = "3.3";
-        private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 };
+
+        private Dictionary<long, Game> games = new Dictionary<long, Game>();
+        private Dictionary<string, Game.roles> roleAliases = new Dictionary<string, Game.roles>();
+
+        List<long> justCalledStop = new List<long>();
         public List<long> disaledgroups = new List<long>();
-        private readonly List<long> adminIds = new List<long>() { 267376056, 295152997 };
+
+        private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 }; // [0] is testing group, [1] is achv group
+        private readonly List<long> adminIds = new List<long>() { 267376056, 295152997 }; // [0] is Florian, [1] is Ludwig
+
         private readonly List<string> defaultAliases = new List<string>()
         {
             "alphawolf",
