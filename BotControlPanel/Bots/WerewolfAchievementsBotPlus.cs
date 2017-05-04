@@ -640,15 +640,10 @@ namespace BotControlPanel.Bots
                             }
                             ReplyToMessage("<b>The bot is now " + word + " for this group!</b>", u);
                         }
-                        if(text.Contains(' ') && text.Split(' ')[0].ToLower().Replace("@werewolfwolfachievementbot", "") == "/announce" && adminIds.Contains(msg.From.Id))
-                        {
-                            client.SendTextMessageAsync(allowedgroups[1], text.Remove(0, text.IndexOf(' ')), parseMode: ParseMode.Html);
-                            ReplyToMessage("Successfully announced!", u);
-                        }
 
                         if (!disaledgroups.Contains(msg.Chat.Id))
                         {
-                            switch (text.ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
+                            switch (text.Split(' ')[0].ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
                             {
                                 case "/startgame":
                                 case "/startchaos":
@@ -750,10 +745,7 @@ namespace BotControlPanel.Bots
 
                                     }
                                     return;
-                                case "/addalias":
-                                    if (adminIds.Contains(msg.From.Id)) ReplyToMessage("You need to write an alias behind this in the following format:\n Alias Role", u);
-                                    else ReplyToMessage("You are not a bot admin!", u);
-                                    return;
+
                                 case "/ping":
                                     ReplyToMessage("<b>PENG!</b>", u);
                                     return;
@@ -811,63 +803,60 @@ namespace BotControlPanel.Bots
                                         g.UpdatePlayerlist();
                                     }
                                     return;
-                            }
 
-                            if (text.StartsWith("/addalias"))
-                            {
-                                if (adminIds.Contains(msg.From.Id))
-                                {
-                                    if (text.Split(' ').Count() == 3)
+                                case "/addalias":
+                                    if (adminIds.Contains(msg.From.Id))
                                     {
-                                        string alias = text.Split(' ')[1].ToLower();
-                                        string roleS = text.Split(' ')[2];
-                                        Game.roles role = GetRoleByAlias(roleS);
-                                        if (role == Game.roles.Unknown)
+                                        if (text.Split(' ').Count() == 3)
                                         {
-                                            ReplyToMessage("The role was not recognized! Adding alias failed!", u);
-                                        }
-                                        else if (!roleAliases.Keys.Contains(alias))
-                                        {
-                                            roleAliases.Add(alias, role);
-                                            writeAliasesFile();
-                                            ReplyToMessage($"Alias <i>{alias}</i> successfully added for role <b>{role}</b>.", u);
-                                        }
-                                        else
-                                        {
-                                            roleAliases[alias] = role;
-                                            writeAliasesFile();
-                                            ReplyToMessage($"Alias <i>{alias}</i> successfully updated for role <b>{role}</b>.", u);
-                                        }
+                                            string alias = text.Split(' ')[1].ToLower();
+                                            string roleS = text.Split(' ')[2];
+                                            Game.roles role = GetRoleByAlias(roleS);
+                                            if (role == Game.roles.Unknown)
+                                            {
+                                                ReplyToMessage("The role was not recognized! Adding alias failed!", u);
+                                            }
+                                            else if (!roleAliases.Keys.Contains(alias))
+                                            {
+                                                roleAliases.Add(alias, role);
+                                                writeAliasesFile();
+                                                ReplyToMessage($"Alias <i>{alias}</i> successfully added for role <b>{role}</b>.", u);
+                                            }
+                                            else
+                                            {
+                                                roleAliases[alias] = role;
+                                                writeAliasesFile();
+                                                ReplyToMessage($"Alias <i>{alias}</i> successfully updated for role <b>{role}</b>.", u);
+                                            }
 
+                                        }
+                                        else ReplyToMessage("Failed: Wrong command syntax. Syntax: /addalias <alias>", u);
                                     }
-                                    else ReplyToMessage("Failed: Wrong command syntax. Syntax: /addalias <alias>", u);
-                                }
-                                else ReplyToMessage("You are not a bot admin!", u);
+                                    else ReplyToMessage("You are not a bot admin!", u);
+                                    return;
 
-                            }
-
-                            if (text.StartsWith("/delalias"))
-                            {
-                                if (adminIds.Contains(msg.From.Id))
-                                {
-                                    if (text.Split(' ').Count() == 2)
+                                case "/delalias":
+                                    if (adminIds.Contains(msg.From.Id))
                                     {
-                                        string alias = text.Split(' ')[1].ToLower();
+                                        if (text.Split(' ').Count() == 2)
+                                        {
+                                            string alias = text.Split(' ')[1].ToLower();
 
-                                        if (roleAliases.ContainsKey(alias))
-                                        {
-                                            roleAliases.Remove(alias);
-                                            writeAliasesFile();
-                                            ReplyToMessage($"Alias <i>{alias}</i> was successfully removed!", u);
+                                            if (roleAliases.ContainsKey(alias))
+                                            {
+                                                roleAliases.Remove(alias);
+                                                writeAliasesFile();
+                                                ReplyToMessage($"Alias <i>{alias}</i> was successfully removed!", u);
+                                            }
+                                            else
+                                            {
+                                                ReplyToMessage($"Couldn't find Alias <i>{alias}</i>!", u);
+                                            }
                                         }
-                                        else
-                                        {
-                                            ReplyToMessage($"Couldn't find Alias <i>{alias}</i>!", u);
-                                        }
+                                        else ReplyToMessage("Failed: Wrong command syntax. Syntax: /delalias <alias>", u);
                                     }
-                                    else ReplyToMessage("Failed: Wrong command syntax. Syntax: /delalias <alias>", u);
-                                }
-                                else ReplyToMessage("You are not a bot admin!", u);
+                                    else ReplyToMessage("You are not a bot admin!", u);
+                                    return;
                             }
 
                             if (games.ContainsKey(msg.Chat.Id))
