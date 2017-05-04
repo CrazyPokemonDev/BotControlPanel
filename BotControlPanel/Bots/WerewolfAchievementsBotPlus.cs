@@ -425,7 +425,7 @@ namespace BotControlPanel.Bots
                         if (role[p] != roles.Unknown) playerlist += "<b>" + names[p] + "</b>: " + rolestring[role[p]];
                         else playerlist += "<b>" + names[p] + "</b>: " + rolestring[roles.Unknown];
 
-                        if (love[p]) playerlist += "❤️";
+                        if (love[p]) playerlist += " ❤️";
                         playerlist += "\n";
                     }
                 }
