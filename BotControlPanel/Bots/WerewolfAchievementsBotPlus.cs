@@ -157,9 +157,6 @@ namespace BotControlPanel.Bots
                     case achievements.DoubleVision:
                         return gameroles.Contains(roles.ApprenticeSeer) && gameroles.Contains(roles.Doppelgänger) && (gameroles.Contains(roles.Seer) || gameroles.Contains(roles.SeerFool));
 
-                    case achievements.Enochlophobia:
-                        return names.Count == 35;
-
                     case achievements.EvenAStoppedClockIsRightTwiceADay:
                         return gameroles.Contains(roles.Fool) || gameroles.Contains(roles.SeerFool);
 
@@ -171,9 +168,6 @@ namespace BotControlPanel.Bots
 
                     case achievements.Inconspicuous:
                         return names.Count >= 20;
-
-                    case achievements.Introvert:
-                        return names.Count == 5;
 
                     case achievements.ISeeALackOfTrust:
                         return gameroles.Contains(roles.Seer) || gameroles.Contains(roles.SeerFool) || gameroles.Contains(roles.ApprenticeSeer);
@@ -241,10 +235,12 @@ namespace BotControlPanel.Bots
                         // BlackSheep
                         // Dedicated
                         // Developer
+                        // Enochlophobia
                         // Explorer
                         // HeresJohnny
                         // IHaveNoIdeaWhatImDoing
                         // InForTheLongHaul
+                        // Introvert
                         // IveGotYourBack
                         // Linguist
                         // Naughty
