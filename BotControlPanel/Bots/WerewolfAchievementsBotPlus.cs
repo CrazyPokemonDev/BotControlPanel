@@ -679,7 +679,7 @@ namespace BotControlPanel.Bots
                                                     m = t.Result;
                                                     ReplyToMessage($"The new game starts in the pin message! If there is none, please ask an admin for help.", u);
                                                 }
-                                                catch (Exception ex)
+                                                catch
                                                 {
                                                     m = ReplyToMessage("Initializing new game...", u);
                                                     pinmessages.Remove(msg.Chat.Id);
