@@ -650,6 +650,16 @@ namespace BotControlPanel.Bots
                         {
                             switch (text.Split(' ')[0].ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
                             {
+                                case "/announce":
+                                    if (adminIds.Contains(msg.From.Id))
+                                    {
+                                        client.SendTextMessageAsync(allowedgroups[1], text.Remove(0, text.IndexOf(' '))).Wait();
+                                        ReplyToMessage("Successfully announced!", u);
+                                    }
+                                    else ReplyToMessage("You are not a bot admin!", u);
+
+                                    return;
+
                                 case "/startgame":
                                 case "/startchaos":
                                     if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Running)
