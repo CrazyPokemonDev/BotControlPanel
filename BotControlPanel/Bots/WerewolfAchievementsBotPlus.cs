@@ -13,22 +13,10 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace BotControlPanel.Bots
 {
-    #region Features to add
-    /*
-     ----------------------------------------------------------------------------------------------------
-     + Check possible achievements with missing player achievements and number/roles of available players
-     + 
-     + 
-     + 
-     ----------------------------------------------------------------------------------------------------
-     */
-    #endregion
     public class WerewolfAchievementsBotPlus : FlomBot
     {
-        #region Custom "Game" class
         class Game
         {
-            #region Pre-declared stuff, such as variables and constants
             public Message pinmessage { get; set; }
             public state gamestate { get; set; }
             private TelegramBotClient client;
@@ -45,7 +33,6 @@ namespace BotControlPanel.Bots
             private const string runMessageText = "<b>Game running!</b>\n\nPress stop <b>ONCE THE GAME STOPPED!</b>";
             private const string stoppedMessageText = "<b>This game is finished!</b>";
             private string playerlist;
-            #endregion
 
             public Game(TelegramBotClient cl, long groupid, Message pin)
             {
@@ -157,9 +144,6 @@ namespace BotControlPanel.Bots
                     case achievements.DoubleVision:
                         return gameroles.Contains(roles.ApprenticeSeer) && gameroles.Contains(roles.Doppelgänger) && (gameroles.Contains(roles.Seer) || gameroles.Contains(roles.SeerFool));
 
-                    case achievements.Enochlophobia:
-                        return names.Count == 35;
-
                     case achievements.EvenAStoppedClockIsRightTwiceADay:
                         return gameroles.Contains(roles.Fool) || gameroles.Contains(roles.SeerFool);
 
@@ -171,9 +155,6 @@ namespace BotControlPanel.Bots
 
                     case achievements.Inconspicuous:
                         return names.Count >= 20;
-
-                    case achievements.Introvert:
-                        return names.Count == 5;
 
                     case achievements.ISeeALackOfTrust:
                         return gameroles.Contains(roles.Seer) || gameroles.Contains(roles.SeerFool) || gameroles.Contains(roles.ApprenticeSeer);
@@ -241,10 +222,12 @@ namespace BotControlPanel.Bots
                         // BlackSheep
                         // Dedicated
                         // Developer
+                        // Enochlophobia
                         // Explorer
                         // HeresJohnny
                         // IHaveNoIdeaWhatImDoing
                         // InForTheLongHaul
+                        // Introvert
                         // IveGotYourBack
                         // Linguist
                         // Naughty
@@ -442,16 +425,19 @@ namespace BotControlPanel.Bots
                         if (role[p] != roles.Unknown) playerlist += "<b>" + names[p] + "</b>: " + rolestring[role[p]];
                         else playerlist += "<b>" + names[p] + "</b>: " + rolestring[roles.Unknown];
 
-                        if (love[p]) playerlist += "❤️";
+                        if (love[p]) playerlist += " ❤️";
                         playerlist += "\n";
                     }
                 }
-
-                playerlist += "\n\n<b>DEAD PLAYERS 💀:</b>";
-
-                if (gamestate == state.Running) foreach (var p in names.Keys.Where(x => role[x] == roles.Dead))
+                
+                if (gamestate == state.Running)
                 {
+                    playerlist += "\n\n<b>DEAD PLAYERS 💀:</b>";
+
+                    foreach (var p in names.Keys.Where(x => role[x] == roles.Dead))
+                    {
                         playerlist += "\n" + names[p];
+                    }
                 }
 
                 if (gamestate == state.Running)
@@ -466,23 +452,23 @@ namespace BotControlPanel.Bots
                     client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, stoppedMessageText,
                         parseMode: ParseMode.Html).Wait();
             }
-        }
-        #endregion
+        } // End of class Group
 
-        #region Variables
-        private Dictionary<long, Game> games = new Dictionary<long, Game>();
-        private Dictionary<string, Game.roles> roleAliases = new Dictionary<string, Game.roles>();
-        List<long> justCalledStop = new List<long>();
-        #endregion
-        #region Constants
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private const string version = "3.2";
-        private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 };
+        private const string version = "3.3";
+
+        private Dictionary<long, Game> games = new Dictionary<long, Game>();
+        private Dictionary<long, int> pinmessages = new Dictionary<long, int>();
+        private Dictionary<string, Game.roles> roleAliases = new Dictionary<string, Game.roles>();
+
+        List<long> justCalledStop = new List<long>();
         public List<long> disaledgroups = new List<long>();
-        private readonly List<long> adminIds = new List<long>() { 267376056, 295152997 };
-        #region Default Aliases
+
+        private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 }; // [0] is testing group, [1] is achv group
+        private readonly List<long> adminIds = new List<long>() { 267376056, 295152997 }; // [0] is Florian, [1] is Ludwig
+
         private readonly List<string> defaultAliases = new List<string>()
         {
             "alphawolf",
@@ -516,9 +502,6 @@ namespace BotControlPanel.Bots
             "wildchild",
             "wolfcub"
         };
-        #endregion
-        #endregion
-        #region Constructor
         public WerewolfAchievementsBotPlus(string token) : base(token)
         {
             try
@@ -527,15 +510,11 @@ namespace BotControlPanel.Bots
             }
             catch { }
         }
-        #endregion
-
-        #region Callback Query Handler
         private void Client_OnCallbackQuery(object sender, Telegram.Bot.Args.CallbackQueryEventArgs e)
         {
             try
             {
                 string data = e.CallbackQuery.Data;
-                #region Callback Query Start
                 if (data.StartsWith("start_"))
                 {
                     long id = Convert.ToInt64(data.Substring(6));
@@ -559,8 +538,6 @@ namespace BotControlPanel.Bots
                         client.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Did not find that game.").Wait();
                     }
                 }
-                #endregion
-                #region Callback Query Stop
                 else if (data.StartsWith("stop_"))
                 {
                     long id = Convert.ToInt64(data.Substring(5));
@@ -595,7 +572,6 @@ namespace BotControlPanel.Bots
                         client.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Did not find that game.").Wait();
                     }
                 }
-                #endregion
             }
             catch (Exception ex)
             {
@@ -605,9 +581,7 @@ namespace BotControlPanel.Bots
                     + "\n" + ex.StackTrace);
             }
         }
-        #endregion
 
-        #region Reply Easily
         private Message ReplyToMessage(string text, Update u)
         {
             if (!string.IsNullOrWhiteSpace(text))
@@ -635,10 +609,7 @@ namespace BotControlPanel.Bots
             }
             return null;
         }
-        #endregion
 
-
-        #region Update Handler
         protected override void Client_OnUpdate(object sender, Telegram.Bot.Args.UpdateEventArgs e)
         {
             try
@@ -658,7 +629,6 @@ namespace BotControlPanel.Bots
                         var msg = e.Update.Message;
                         var u = e.Update;
 
-                        #region Togglegroup
                         if (text.ToLower().Replace("@werewolfwolfachievementbot", "") == "/togglegroup" && adminIds.Contains(msg.From.Id))
                         {
                             string word;
@@ -675,20 +645,10 @@ namespace BotControlPanel.Bots
                             }
                             ReplyToMessage("<b>The bot is now " + word + " for this group!</b>", u);
                         }
-                        #endregion
-
-                        #region Commands only
-                        #region Announce
-                        if(text.Contains(' ') && text.Split(' ')[0].ToLower().Replace("@werewolfwolfachievementbot", "") == "/announce" && adminIds.Contains(msg.From.Id))
-                        {
-                            client.SendTextMessageAsync(allowedgroups[1], text.Remove(0, text.IndexOf(' ')));
-                            ReplyToMessage("Successfully announced!", u);
-                        }
-                        #endregion
 
                         if (!disaledgroups.Contains(msg.Chat.Id))
                         {
-                            switch (text.ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
+                            switch (text.Split(' ')[0].ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
                             {
                                 case "/startgame":
                                 case "/startchaos":
@@ -708,7 +668,30 @@ namespace BotControlPanel.Bots
                                         }
                                         else
                                         {
-                                            Message m = ReplyToMessage("Initializing new game...", u);
+                                            Message m;
+
+                                            if (pinmessages.ContainsKey(msg.Chat.Id))
+                                            {
+                                                try
+                                                {
+                                                    var t = client.EditMessageTextAsync(msg.Chat.Id, pinmessages[msg.Chat.Id], "Initializing new game...");
+                                                    t.Wait();
+                                                    m = t.Result;
+                                                    ReplyToMessage($"The new game starts in the pin message! If there is none, please ask an admin for help.", u);
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    m = ReplyToMessage("Initializing new game...", u);
+                                                    pinmessages.Remove(msg.Chat.Id);
+                                                    client.SendTextMessageAsync(adminIds[0], $"Removed pinmessage of group {msg.Chat.Title} ({msg.Chat.Id}) because it seems it is deleted");
+                                                    client.SendTextMessageAsync(adminIds[1], $"Removed pinmessage of group {msg.Chat.Title} ({msg.Chat.Id}) because it seems it is deleted");
+                                                }
+                                                 
+                                            }
+                                            else
+                                            {
+                                                m = ReplyToMessage("Initializing new game...", u);
+                                            }
                                             if (m == null) return;
                                             var game = new Game(client, msg.Chat.Id, m);
                                             games.Add(msg.Chat.Id, game);
@@ -790,10 +773,7 @@ namespace BotControlPanel.Bots
 
                                     }
                                     return;
-                                case "/addalias":
-                                    if (adminIds.Contains(msg.From.Id)) ReplyToMessage("You need to write an alias behind this in the following format:\n Alias Role", u);
-                                    else ReplyToMessage("You are not a bot admin!", u);
-                                    return;
+
                                 case "/ping":
                                     ReplyToMessage("<b>PENG!</b>", u);
                                     return;
@@ -851,69 +831,103 @@ namespace BotControlPanel.Bots
                                         g.UpdatePlayerlist();
                                     }
                                     return;
-                            }
-                            #endregion
 
-                            #region addalias und delalias
-                            if (text.StartsWith("/addalias"))
-                            {
-                                if (adminIds.Contains(msg.From.Id))
-                                {
-                                    if (text.Split(' ').Count() == 3)
+                                case "/addalias":
+                                    if (adminIds.Contains(msg.From.Id))
                                     {
-                                        string alias = text.Split(' ')[1].ToLower();
-                                        string roleS = text.Split(' ')[2];
-                                        Game.roles role = GetRoleByAlias(roleS);
-                                        if (role == Game.roles.Unknown)
+                                        if (text.Split(' ').Count() == 3)
                                         {
-                                            ReplyToMessage("The role was not recognized! Adding alias failed!", u);
-                                        }
-                                        else if (!roleAliases.Keys.Contains(alias))
-                                        {
-                                            roleAliases.Add(alias, role);
-                                            writeAliasesFile();
-                                            ReplyToMessage($"Alias <i>{alias}</i> successfully added for role <b>{role}</b>.", u);
-                                        }
-                                        else
-                                        {
-                                            roleAliases[alias] = role;
-                                            writeAliasesFile();
-                                            ReplyToMessage($"Alias <i>{alias}</i> successfully updated for role <b>{role}</b>.", u);
-                                        }
+                                            string alias = text.Split(' ')[1].ToLower();
+                                            string roleS = text.Split(' ')[2];
+                                            Game.roles role = GetRoleByAlias(roleS);
+                                            if (role == Game.roles.Unknown)
+                                            {
+                                                ReplyToMessage("The role was not recognized! Adding alias failed!", u);
+                                            }
+                                            else if (!roleAliases.Keys.Contains(alias))
+                                            {
+                                                roleAliases.Add(alias, role);
+                                                writeAliasesFile();
+                                                ReplyToMessage($"Alias <i>{alias}</i> successfully added for role <b>{role}</b>.", u);
+                                            }
+                                            else
+                                            {
+                                                roleAliases[alias] = role;
+                                                writeAliasesFile();
+                                                ReplyToMessage($"Alias <i>{alias}</i> successfully updated for role <b>{role}</b>.", u);
+                                            }
 
+                                        }
+                                        else ReplyToMessage("Failed: Wrong command syntax. Syntax: /addalias <alias>", u);
                                     }
-                                    else ReplyToMessage("Failed: Wrong command syntax. Syntax: /addalias <alias>", u);
-                                }
-                                else ReplyToMessage("You are not a bot admin!", u);
+                                    else ReplyToMessage("You are not a bot admin!", u);
+                                    return;
 
-                            }
-
-                            if (text.StartsWith("/delalias"))
-                            {
-                                if (adminIds.Contains(msg.From.Id))
-                                {
-                                    if (text.Split(' ').Count() == 2)
+                                case "/delalias":
+                                    if (adminIds.Contains(msg.From.Id))
                                     {
-                                        string alias = text.Split(' ')[1].ToLower();
+                                        if (text.Split(' ').Count() == 2)
+                                        {
+                                            string alias = text.Split(' ')[1].ToLower();
 
-                                        if (roleAliases.ContainsKey(alias))
-                                        {
-                                            roleAliases.Remove(alias);
-                                            writeAliasesFile();
-                                            ReplyToMessage($"Alias <i>{alias}</i> was successfully removed!", u);
+                                            if (roleAliases.ContainsKey(alias))
+                                            {
+                                                roleAliases.Remove(alias);
+                                                writeAliasesFile();
+                                                ReplyToMessage($"Alias <i>{alias}</i> was successfully removed!", u);
+                                            }
+                                            else
+                                            {
+                                                ReplyToMessage($"Couldn't find Alias <i>{alias}</i>!", u);
+                                            }
                                         }
-                                        else
-                                        {
-                                            ReplyToMessage($"Couldn't find Alias <i>{alias}</i>!", u);
-                                        }
+                                        else ReplyToMessage("Failed: Wrong command syntax. Syntax: /delalias <alias>", u);
                                     }
-                                    else ReplyToMessage("Failed: Wrong command syntax. Syntax: /delalias <alias>", u);
-                                }
-                                else ReplyToMessage("You are not a bot admin!", u);
-                            }
-                            #endregion
+                                    else ReplyToMessage("You are not a bot admin!", u);
+                                    return;
 
-                            #region The heavy part: checking for each and every alias
+                                case "/genpin":
+                                    if (adminIds.Contains(msg.From.Id))
+                                    {
+                                        var m = client.SendTextMessageAsync(msg.Chat.Id, $"This is a pinmessage generated by {msg.From.FirstName}");
+                                        m.Wait();
+                                        var mID = m.Result.MessageId;
+
+                                        if (pinmessages.ContainsKey(msg.Chat.Id)) pinmessages.Remove(msg.Chat.Id);
+                                        pinmessages.Add(msg.Chat.Id, mID);
+                                    }
+                                    else ReplyToMessage("You are not a bot admin!", u);
+                                    return;
+
+                                case "/delpin":
+                                    if (adminIds.Contains(msg.From.Id))
+                                    {
+                                        if (pinmessages.ContainsKey(msg.Chat.Id))
+                                        {
+                                            pinmessages.Remove(msg.Chat.Id);
+                                            ReplyToMessage("Done", u);
+                                        }
+                                        else ReplyToMessage("No pin message found", u);
+                                    }
+                                    else ReplyToMessage("You are not a bot admin!", u);
+                                    return;
+
+                                case "/getpin":
+                                    if (pinmessages.ContainsKey(msg.Chat.Id))
+                                    {
+                                        client.SendTextMessageAsync(msg.Chat.Id, "Here is the pin message.", replyToMessageId: pinmessages[msg.Chat.Id]);
+                                    }
+                                    else if (games.ContainsKey(msg.Chat.Id))
+                                    {
+                                        client.SendTextMessageAsync(msg.Chat.Id, "Here is the game message.", replyToMessageId: games[msg.Chat.Id].pinmessage.MessageId);
+                                    }
+                                    else
+                                    {
+                                        ReplyToMessage("No pin message found.", u);
+                                    }
+                                    return;
+                            }
+
                             if (games.ContainsKey(msg.Chat.Id))
                             {
                                 if (games[msg.Chat.Id].gamestate == Game.state.Running)
@@ -962,7 +976,6 @@ namespace BotControlPanel.Bots
                                         }
                                     }
                                 }
-                                #endregion
                             }
                         }
                     }
@@ -976,9 +989,8 @@ namespace BotControlPanel.Bots
                     ex.InnerException + "\n" + ex.Message + "\n" + ex.StackTrace).Wait();
             }
         }
-        #endregion
 
-        #region Get Role By Alias
+
         private Game.roles GetRoleByAlias(string alias)
         {
             if (roleAliases.ContainsKey(alias)) return roleAliases[alias];
@@ -1081,9 +1093,8 @@ namespace BotControlPanel.Bots
                 }
             }
         }
-        #endregion
 
-        #region File Methods
+
         private void writeAliasesFile()
         {
             if (!System.IO.Directory.Exists(basePath)) System.IO.Directory.CreateDirectory(basePath);
@@ -1104,16 +1115,13 @@ namespace BotControlPanel.Bots
             }
             if (roleAliases == null) roleAliases = new Dictionary<string, Game.roles>();
         }
-        #endregion
 
-        #region Control Methods
-        #region Start Bot
+
         public override bool StartBot()
         {
             getAliasesFromFile();
             return base.StartBot();
         }
-        #endregion
-        #endregion
+
     }
 }
