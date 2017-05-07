@@ -653,7 +653,7 @@ namespace BotControlPanel.Bots
                                 case "/announce":
                                     if (adminIds.Contains(msg.From.Id))
                                     {
-                                        client.SendTextMessageAsync(allowedgroups[1], text.Remove(0, text.IndexOf(' '))).Wait();
+                                        client.SendTextMessageAsync(allowedgroups[1], text.Remove(0, text.IndexOf(' ')), parseMode: ParseMode.Html).Wait();
                                         ReplyToMessage("Successfully announced!", u);
                                     }
                                     else ReplyToMessage("You are not a bot admin!", u);
