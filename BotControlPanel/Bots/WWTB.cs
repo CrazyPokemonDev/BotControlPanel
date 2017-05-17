@@ -93,10 +93,10 @@ namespace BotControlPanel.Bots
             {
                 Update u = e.Update;
                 #region Message Updates
-                if (u.Message != null)
+                if (u.Type == UpdateType.MessageUpdate)
                 {
                     #region Text messages
-                    if (u.Message.Text != null)
+                    if (u.Message.Type == MessageType.TextMessage)
                     {
                         #region Messages containing entities
                         if (u.Message.Entities.Count != 0)
@@ -130,7 +130,7 @@ namespace BotControlPanel.Bots
 
                     #region System messages
                     #region New member
-                    if (u.Message.NewChatMember != null)
+                    if (u.Message.Type == MessageType.ServiceMessage && u.Message.NewChatMember != null)
                     {
                         #region Bot added to group
                         if (u.Message.NewChatMember.Id == me.Id)
@@ -417,7 +417,7 @@ namespace BotControlPanel.Bots
         #region Bot joined Group
         private  void handleBotJoinedGroup(Message msg)
         {
-            client.SendTextMessageAsync(msg.Chat.Id, "Please do not add me to any groups!");
+            client.SendTextMessageAsync(msg.Chat.Id, "Please do not add me to any groups!").Wait();
             client.LeaveChatAsync(msg.Chat.Id);
         }
         #endregion
