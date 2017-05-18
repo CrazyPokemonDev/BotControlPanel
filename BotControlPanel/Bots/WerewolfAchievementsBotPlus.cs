@@ -236,7 +236,7 @@ namespace BotControlPanel.Bots
                         return gameroles.Contains(roles.Harlot) && (spawnableWolves >= 1 || gameroles.Contains(roles.Cultist));
 
                     case achievements.WobbleWobble:
-                        return gameroles.Contains(roles.Drunk);
+                        return gameroles.Contains(roles.Drunk) && gameroles.Count >= 10;
 
                     /*
                     // NEW ACHIEVEMENTS
