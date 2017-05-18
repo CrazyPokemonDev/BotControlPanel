@@ -223,6 +223,7 @@ namespace BotControlPanel.Bots
             CompilerParameters parameters = new CompilerParameters();
             parameters.ReferencedAssemblies.Add(dllPath1);
             parameters.ReferencedAssemblies.Add(dllPath2);
+            parameters.ReferencedAssemblies.Add("System.dll");
             parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
             parameters.GenerateInMemory = true;
             parameters.GenerateExecutable = true;
@@ -257,6 +258,7 @@ namespace BotControlPanel.Bots
                 CompilerParameters parameters = new CompilerParameters();
                 parameters.ReferencedAssemblies.Add(dllPath1);
                 parameters.ReferencedAssemblies.Add(dllPath2);
+                parameters.ReferencedAssemblies.Add("System.dll");
                 parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
                 parameters.GenerateInMemory = true;
                 parameters.GenerateExecutable = true;
@@ -314,6 +316,7 @@ namespace BotControlPanel.Bots
             CompilerParameters parameters = new CompilerParameters();
             parameters.ReferencedAssemblies.Add(dllPath1);
             parameters.ReferencedAssemblies.Add(dllPath2);
+            parameters.ReferencedAssemblies.Add("System.dll");
             parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
             parameters.GenerateInMemory = true;
             parameters.GenerateExecutable = true;
@@ -353,6 +356,7 @@ namespace BotControlPanel.Bots
             CompilerParameters parameters = new CompilerParameters();
             parameters.ReferencedAssemblies.Add(dllPath1);
             parameters.ReferencedAssemblies.Add(dllPath2);
+            parameters.ReferencedAssemblies.Add("System.dll");
             parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
             parameters.GenerateInMemory = true;
             parameters.GenerateExecutable = true;
@@ -392,6 +396,7 @@ namespace BotControlPanel.Bots
             CompilerParameters parameters = new CompilerParameters();
             parameters.ReferencedAssemblies.Add(dllPath1);
             parameters.ReferencedAssemblies.Add(dllPath2);
+            parameters.ReferencedAssemblies.Add("System.dll");
             parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
             parameters.GenerateInMemory = true;
             parameters.GenerateExecutable = true;
