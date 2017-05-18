@@ -104,7 +104,23 @@ namespace BotControlPanel.Bots
                 BlackSheep,
                 Explorer,
                 Linguist,
-                Developer
+                Developer,
+
+                /*
+                // NEW ACHIEVEMENTS
+                NoSorcery,
+                CultistTracker,
+                ImNotDrunBurppp,
+                WuffieCult,
+                DidYouGuardYourself,
+                SpoiledRichBrat,
+                ThreeLittleWolvesAndABigBadPig,
+                President,
+                IHelped,
+                ItWasABusyNight,
+                */
+                
+                
             }
 
             public bool isAchievable(achievements achv)
@@ -121,8 +137,14 @@ namespace BotControlPanel.Bots
                 spawnableWolves += spawnableWolves > 0 ? gameroles.Count(x => x == roles.Cursed) : 0;
                 spawnableWolves += spawnableWolves > 0 ? gameroles.Count(x => x == roles.Doppelgänger) : 0;
                 spawnableWolves += gameroles.Count(x => x == roles.Traitor);
-                
 
+                int visitcount = 0;
+                visitcount += spawnableWolves >= 1 ? 1 : 0;
+                visitcount += gameroles.Contains(roles.SerialKiller) ? 1 : 0;
+                visitcount += gameroles.Contains(roles.Cultist) ? 1 : 0;
+                visitcount += gameroles.Contains(roles.CultistHunter) ? 1 : 0;
+                visitcount += gameroles.Contains(roles.Harlot) ? 1 : 0;
+                visitcount += gameroles.Contains(roles.GuardianAngel) ? 1 : 0;
 
                 switch (achv)
                 {
@@ -214,7 +236,41 @@ namespace BotControlPanel.Bots
                         return gameroles.Contains(roles.Harlot) && (spawnableWolves >= 1 || gameroles.Contains(roles.Cultist));
 
                     case achievements.WobbleWobble:
-                        return gameroles.Contains(roles.Drunk);
+                        return gameroles.Contains(roles.Drunk) && gameroles.Count >= 10;
+
+                    /*
+                    // NEW ACHIEVEMENTS
+                    case achievements.NoSorcery:
+                        return spawnableWolves >= 1 && gameroles.Contains(roles.Sorcerer);
+
+                    case achievements.CultistTracker:
+                        return gameroles.Contains(roles.CultistHunter) && gameroles.Contains(roles.Cultist);
+
+                    case achievements.ImNotDrunBurppp:
+                        return gameroles.Contains(roles.ClumsyGuy);
+
+                    case achievements.WuffieCult:
+                        return gameroles.Contains(roles.AlphaWolf);
+
+                    case achievements.DidYouGuardYourself:
+                        return gameroles.Contains(roles.GuardianAngel) && spawnableWolves >= 1;
+
+                    case achievements.SpoiledRichBrat:
+                        return gameroles.Contains(roles.Prince);
+
+                    case achievements.ThreeLittleWolvesAndABigBadPig:
+                        return gameroles.Contains(roles.Sorcerer) && spawnableWolves >= 3;
+
+                    case achievements.President:
+                        return gameroles.Contains(roles.Mayor);
+                    
+                    case achievements.IHelped:
+                        return gameroles.Contains(roles.WolfCub) && spawnableWolves >= 2;
+
+                    case achievements.ItWasABusyNight:
+                        return visitcount >= 3;
+                    */  
+                     
 
                     default:
                         // UNATTAINABLE ONES AND ONES BOT CAN'T KNOW:
@@ -372,6 +428,20 @@ namespace BotControlPanel.Bots
                 dict.Add(achievements.WelcomeToHell, "Welcome To Hell");
                 dict.Add(achievements.WelcomeToTheAsylum, "Welcome To The Asylum");
                 dict.Add(achievements.WobbleWobble, "Wobble Wobble");
+
+                /*
+                // NEW ACHIEVEMENTS
+                dict.Add(achievements.NoSorcery, "No Sorcery!");
+                dict.Add(achievements.WuffieCult, "Wuffie-Cult");
+                dict.Add(achievements.ThreeLittleWolvesAndABigBadPig, "Three Little Wolves And A Big Bad Pig");
+                dict.Add(achievements.IHelped, "I Helped!");
+                dict.Add(achievements.CultistTracker, "Cultist Tracker");
+                dict.Add(achievements.ImNotDrunBurppp, "I'M NOT DRUN-- *BURPPP*");
+                dict.Add(achievements.DidYouGuardYourself, "Did You Guard Yourself?");
+                dict.Add(achievements.SpoiledRichBrat, "Spoiled Rich Brat");
+                dict.Add(achievements.President, "President");
+                dict.Add(achievements.ItWasABusyNight, "It Was A Busy Night!");
+                */
                 return dict;
             }
 
@@ -653,7 +723,7 @@ namespace BotControlPanel.Bots
                                 case "/announce":
                                     if (adminIds.Contains(msg.From.Id))
                                     {
-                                        client.SendTextMessageAsync(allowedgroups[1], text.Remove(0, text.IndexOf(' '))).Wait();
+                                        client.SendTextMessageAsync(allowedgroups[1], text.Remove(0, text.IndexOf(' ')), parseMode: ParseMode.Html).Wait();
                                         ReplyToMessage("Successfully announced!", u);
                                     }
                                     else ReplyToMessage("You are not a bot admin!", u);
