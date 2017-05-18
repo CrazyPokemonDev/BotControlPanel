@@ -54,8 +54,7 @@ namespace BotControlPanel.Bots
             try
             {
                 if (e.Update.Type == UpdateType.MessageUpdate
-                    && e.Update.Message.Type == MessageType.TextMessage
-                    && e.Update.Message.Chat.Type != ChatType.Channel)
+                    && e.Update.Message.Type == MessageType.TextMessage)
                 {
                     Message msg = e.Update.Message;
                     string text = msg.Text;
