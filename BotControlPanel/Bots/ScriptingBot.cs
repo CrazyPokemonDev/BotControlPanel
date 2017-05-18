@@ -261,6 +261,7 @@ namespace BotControlPanel.Bots
                 parameters.ReferencedAssemblies.Add(dllPath2);
                 parameters.ReferencedAssemblies.Add("System.dll");
                 parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
+                parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
                 parameters.GenerateInMemory = true;
                 parameters.GenerateExecutable = true;
                 CompilerResults results = provider.CompileAssemblyFromSource(parameters, newFile);
@@ -319,6 +320,7 @@ namespace BotControlPanel.Bots
             parameters.ReferencedAssemblies.Add(dllPath2);
             parameters.ReferencedAssemblies.Add("System.dll");
             parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
+            parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
             parameters.GenerateInMemory = true;
             parameters.GenerateExecutable = true;
             CompilerResults results = provider.CompileAssemblyFromSource(parameters, newFile);
@@ -359,6 +361,7 @@ namespace BotControlPanel.Bots
             parameters.ReferencedAssemblies.Add(dllPath2);
             parameters.ReferencedAssemblies.Add("System.dll");
             parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
+            parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
             parameters.GenerateInMemory = true;
             parameters.GenerateExecutable = true;
             CompilerResults results = provider.CompileAssemblyFromSource(parameters, newFile);
@@ -399,6 +402,7 @@ namespace BotControlPanel.Bots
             parameters.ReferencedAssemblies.Add(dllPath2);
             parameters.ReferencedAssemblies.Add("System.dll");
             parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
+            parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
             parameters.GenerateInMemory = true;
             parameters.GenerateExecutable = true;
             CompilerResults results = provider.CompileAssemblyFromSource(parameters, newFile);
