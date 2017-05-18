@@ -96,7 +96,8 @@ namespace BotControlPanel.Bots
                 if (u.Type == UpdateType.MessageUpdate)
                 {
                     #region Text messages
-                    if (u.Message.Type == MessageType.TextMessage)
+                    if (u.Message.Type == MessageType.TextMessage
+                    && u.Message.Chat.Type != ChatType.Channel)
                     {
                         #region Messages containing entities
                         if (u.Message.Entities.Count != 0)
