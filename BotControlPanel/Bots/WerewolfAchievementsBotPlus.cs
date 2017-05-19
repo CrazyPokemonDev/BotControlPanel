@@ -780,12 +780,14 @@ namespace BotControlPanel.Bots
                                     }
                                     return;
 
-                                case "/join":
+                                case "/addplayer":
                                     if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Joining)
                                     {
-                                        if (!games[msg.Chat.Id].AddPlayer(msg.From))
+                                        User newplayer = msg.ReplyToMessage == null ? msg.From : msg.ReplyToMessage.From;
+
+                                        if (!games[msg.Chat.Id].AddPlayer(newplayer))
                                         {
-                                            ReplyToMessage("Failed to add <b>" + msg.From.FirstName + "</b> to the players!", u);
+                                            ReplyToMessage("Failed to add <b>" + newplayer.FirstName + "</b> to the players!", u);
                                         }
                                     }
                                     else
