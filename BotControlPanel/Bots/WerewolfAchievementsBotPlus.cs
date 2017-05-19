@@ -106,7 +106,7 @@ namespace BotControlPanel.Bots
                 Linguist,
                 Developer,
 
-                /*
+                
                 // NEW ACHIEVEMENTS
                 NoSorcery,
                 CultistTracker,
@@ -118,7 +118,7 @@ namespace BotControlPanel.Bots
                 President,
                 IHelped,
                 ItWasABusyNight,
-                */
+                
                 
                 
             }
@@ -238,7 +238,7 @@ namespace BotControlPanel.Bots
                     case achievements.WobbleWobble:
                         return gameroles.Contains(roles.Drunk) && gameroles.Count >= 10;
 
-                    /*
+                    
                     // NEW ACHIEVEMENTS
                     case achievements.NoSorcery:
                         return spawnableWolves >= 1 && gameroles.Contains(roles.Sorcerer);
@@ -269,7 +269,7 @@ namespace BotControlPanel.Bots
 
                     case achievements.ItWasABusyNight:
                         return visitcount >= 3;
-                    */  
+                      
                      
 
                     default:
@@ -429,7 +429,7 @@ namespace BotControlPanel.Bots
                 dict.Add(achievements.WelcomeToTheAsylum, "Welcome To The Asylum");
                 dict.Add(achievements.WobbleWobble, "Wobble Wobble");
 
-                /*
+                
                 // NEW ACHIEVEMENTS
                 dict.Add(achievements.NoSorcery, "No Sorcery!");
                 dict.Add(achievements.WuffieCult, "Wuffie-Cult");
@@ -441,7 +441,7 @@ namespace BotControlPanel.Bots
                 dict.Add(achievements.SpoiledRichBrat, "Spoiled Rich Brat");
                 dict.Add(achievements.President, "President");
                 dict.Add(achievements.ItWasABusyNight, "It Was A Busy Night!");
-                */
+                
                 return dict;
             }
 
