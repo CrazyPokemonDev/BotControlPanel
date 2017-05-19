@@ -527,7 +527,7 @@ namespace BotControlPanel.Bots
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private const string version = "3.3.2";
+        private const string version = "3.3.3";
 
         private Dictionary<long, Game> games = new Dictionary<long, Game>();
         private Dictionary<long, int> pinmessages = new Dictionary<long, int>();
@@ -879,7 +879,7 @@ namespace BotControlPanel.Bots
                                     ReplyToMessage(listalias, u);
                                     return;
 
-                                case "/achv":
+                                case "/listachv":
                                     if (games.ContainsKey(msg.Chat.Id))
                                     {
                                         Game g = games[msg.Chat.Id];
