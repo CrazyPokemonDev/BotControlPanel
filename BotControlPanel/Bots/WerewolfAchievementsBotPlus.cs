@@ -106,7 +106,7 @@ namespace BotControlPanel.Bots
                 Linguist,
                 Developer,
 
-                /*
+                
                 // NEW ACHIEVEMENTS
                 NoSorcery,
                 CultistTracker,
@@ -118,7 +118,7 @@ namespace BotControlPanel.Bots
                 President,
                 IHelped,
                 ItWasABusyNight,
-                */
+                
                 
                 
             }
@@ -238,7 +238,7 @@ namespace BotControlPanel.Bots
                     case achievements.WobbleWobble:
                         return gameroles.Contains(roles.Drunk) && gameroles.Count >= 10;
 
-                    /*
+                    
                     // NEW ACHIEVEMENTS
                     case achievements.NoSorcery:
                         return spawnableWolves >= 1 && gameroles.Contains(roles.Sorcerer);
@@ -269,7 +269,7 @@ namespace BotControlPanel.Bots
 
                     case achievements.ItWasABusyNight:
                         return visitcount >= 3;
-                    */  
+                      
                      
 
                     default:
@@ -429,7 +429,7 @@ namespace BotControlPanel.Bots
                 dict.Add(achievements.WelcomeToTheAsylum, "Welcome To The Asylum");
                 dict.Add(achievements.WobbleWobble, "Wobble Wobble");
 
-                /*
+                
                 // NEW ACHIEVEMENTS
                 dict.Add(achievements.NoSorcery, "No Sorcery!");
                 dict.Add(achievements.WuffieCult, "Wuffie-Cult");
@@ -441,7 +441,7 @@ namespace BotControlPanel.Bots
                 dict.Add(achievements.SpoiledRichBrat, "Spoiled Rich Brat");
                 dict.Add(achievements.President, "President");
                 dict.Add(achievements.ItWasABusyNight, "It Was A Busy Night!");
-                */
+                
                 return dict;
             }
 
@@ -527,7 +527,7 @@ namespace BotControlPanel.Bots
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private const string version = "3.3.2";
+        private const string version = "3.3.3";
 
         private Dictionary<long, Game> games = new Dictionary<long, Game>();
         private Dictionary<long, int> pinmessages = new Dictionary<long, int>();
@@ -780,12 +780,14 @@ namespace BotControlPanel.Bots
                                     }
                                     return;
 
-                                case "/join":
+                                case "/addplayer":
                                     if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Joining)
                                     {
-                                        if (!games[msg.Chat.Id].AddPlayer(msg.From))
+                                        User newplayer = msg.ReplyToMessage == null ? msg.From : msg.ReplyToMessage.From;
+
+                                        if (!games[msg.Chat.Id].AddPlayer(newplayer))
                                         {
-                                            ReplyToMessage("Failed to add <b>" + msg.From.FirstName + "</b> to the players!", u);
+                                            ReplyToMessage("Failed to add <b>" + newplayer.FirstName + "</b> to the players!", u);
                                         }
                                     }
                                     else
@@ -877,7 +879,7 @@ namespace BotControlPanel.Bots
                                     ReplyToMessage(listalias, u);
                                     return;
 
-                                case "/achv":
+                                case "/listachv":
                                     if (games.ContainsKey(msg.Chat.Id))
                                     {
                                         Game g = games[msg.Chat.Id];
