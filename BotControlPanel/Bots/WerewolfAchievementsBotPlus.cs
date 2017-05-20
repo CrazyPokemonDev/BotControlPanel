@@ -527,7 +527,7 @@ namespace BotControlPanel.Bots
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private const string version = "3.3.7";
+        private const string version = "3.3.8";
         private readonly DateTime starttime = DateTime.UtcNow;
 
         private Dictionary<long, Game> games = new Dictionary<long, Game>();
@@ -1018,7 +1018,7 @@ namespace BotControlPanel.Bots
 
                                             foreach (var n in alives)
                                             {
-                                                order += n + " ➡️\n";
+                                                order += n + "\n";
                                             }
                                             order += alives[0];
 
@@ -1101,8 +1101,8 @@ namespace BotControlPanel.Bots
 
                                 case "/runinfo":
                                     string infomessage = "<b>RUNTIME INFO:</b>\n";
-                                    infomessage += "Running for: " + (DateTime.UtcNow - starttime).ToString() + "\n";
-                                    infomessage += "Running games: " + games.Count;
+                                    infomessage += "Running for: <b>" + (DateTime.UtcNow - starttime).ToString().Remove((DateTime.UtcNow - starttime).ToString().LastIndexOf('.') + 2) + "</b>\n";
+                                    infomessage += "Running games: <b>" + games.Count + "</b>\n";
                                     ReplyToMessage(infomessage, u);
                                     return;
                             }
