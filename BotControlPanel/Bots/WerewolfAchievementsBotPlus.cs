@@ -28,8 +28,7 @@ namespace BotControlPanel.Bots
             public Dictionary<long, bool> love = new Dictionary<long, bool>();
             
 
-            private const string joinMessageText = "<b>Join this game!</b>\n\nPin this message and remember "
-                + "to press start when the roles are assigned and the game begins. <b>DON'T PRESS START BEFORE THE ROLES ARE ASSIGNED!</b>";
+            private const string joinMessageText = "<b>Join this game!</b>\n\nJoin using the button and remember to use /addplayer after joining. Click the start button below as soon as the roles are assigned and the game begins. <b>DON'T PRESS START BEFORE THE ROLES ARE ASSIGNED!</b>";
             private const string runMessageText = "<b>Game running!</b>\n\nPress stop <b>ONCE THE GAME STOPPED!</b>";
             private const string stoppedMessageText = "<b>This game is finished!</b>";
             private string playerlist;
