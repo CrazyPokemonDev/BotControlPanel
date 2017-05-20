@@ -820,7 +820,7 @@ namespace BotControlPanel.Bots
                                                         ? msg.From
                                                         : null
                                                   );
-                                        if (dead == null || !g.names.ContainsKey(dead.Id)) return;
+                                        if (dead == null || !g.names.ContainsKey(dead.Id) || g.role[dead.Id] == Game.roles.Dead) return;
 
                                         switch (g.gamestate)
                                         {
