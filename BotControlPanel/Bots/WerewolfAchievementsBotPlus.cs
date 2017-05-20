@@ -527,14 +527,15 @@ namespace BotControlPanel.Bots
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private const string version = "3.3.6";
+        private const string version = "3.3.7";
+        private readonly DateTime starttime = DateTime.UtcNow;
 
         private Dictionary<long, Game> games = new Dictionary<long, Game>();
         private Dictionary<long, int> pinmessages = new Dictionary<long, int>();
         private Dictionary<string, Game.roles> roleAliases = new Dictionary<string, Game.roles>();
 
         List<long> justCalledStop = new List<long>();
-        public List<long> disaledgroups = new List<long>();
+        public bool maint = false;
 
         private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 }; // [0] is testing group, [1] is achv group
         private readonly List<long> adminIds = new List<long>() { 267376056, 295152997 }; // [0] is Florian, [1] is Ludwig
@@ -699,24 +700,7 @@ namespace BotControlPanel.Bots
                         var msg = e.Update.Message;
                         var u = e.Update;
 
-                        if (text.ToLower().Replace("@werewolfwolfachievementbot", "") == "/togglegroup" && adminIds.Contains(msg.From.Id))
-                        {
-                            string word;
-
-                            if (disaledgroups.Contains(msg.Chat.Id))
-                            {
-                                disaledgroups.Remove(msg.Chat.Id);
-                                word = "enabled";
-                            }
-                            else
-                            {
-                                disaledgroups.Add(msg.Chat.Id);
-                                word = "disabled";
-                            }
-                            ReplyToMessage("<b>The bot is now " + word + " for this group!</b>", u);
-                        }
-
-                        if (!disaledgroups.Contains(msg.Chat.Id))
+                        if (!maint || msg.Chat.Id == allowedgroups[0] || games.ContainsKey(msg.Chat.Id))
                         {
                             switch (text.Split(' ')[0].ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
                             {
@@ -732,9 +716,19 @@ namespace BotControlPanel.Bots
 
                                 case "/startgame":
                                 case "/startchaos":
-                                    if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Running)
+                                    if (games.ContainsKey(msg.Chat.Id))
                                     {
-                                        ReplyToMessage("It seems there is already a game running in here! Stop that before you start a new one!", u);
+                                        switch (games[msg.Chat.Id].gamestate)
+                                        {
+                                            case Game.state.Joining:
+                                                ReplyToMessage("It seems there is already a game in joining phase! Join that one!", u);
+                                                break;
+
+                                            case Game.state.Running:
+                                                ReplyToMessage("It seems there is already a game running in here! Stop that before you start a new one!", u);
+                                                break;
+                                        }
+                                    
                                     }
                                     else
                                     {
@@ -1014,11 +1008,19 @@ namespace BotControlPanel.Bots
                                         else
                                         {
                                             string order = "";
-                                            foreach (var n in g.names.Where(x => g.role[x.Key] != Game.roles.Dead))
+
+                                            List<string> alives = new List<string>();
+
+                                            foreach (var x in g.names)
                                             {
-                                                order += n.Value + " ➡️ ";
+                                                if (g.role[x.Key] != Game.roles.Dead) alives.Add(x.Value);
                                             }
-                                            order += g.names.Values.ToList()[0];
+
+                                            foreach (var n in alives)
+                                            {
+                                                order += n + " ➡️\n";
+                                            }
+                                            order += alives[0];
 
                                             ReplyToMessage("<b>Lynchorder:</b>\n" + order, u);
                                         }
@@ -1065,6 +1067,43 @@ namespace BotControlPanel.Bots
                                         ReplyToMessage($"The lynchorder was reset by <b>{msg.From.FirstName}</b>.", u);
                                     }
                                     else ReplyToMessage("This command can only be used while a game is running.", u);
+                                    return;
+
+                                case "/maint":
+                                    if (adminIds.Contains(msg.From.Id))
+                                    {
+                                        maint = !maint;
+                                        if (maint) // We just enabled maintenance
+                                        {
+                                            if (games.Count > 0)
+                                            {
+                                                foreach (var g in games.Keys)
+                                                {
+                                                    client.SendTextMessageAsync(g, "<b>After this game, the bot is shutting down for maintenance!</b>", parseMode: ParseMode.Html);
+                                                }
+                                                if (!games.Keys.Contains(allowedgroups[1])) client.SendTextMessageAsync(allowedgroups[1], "<b>After this game, the bot is shutting down for maintenance!</b>", parseMode: ParseMode.Html);
+                                                ReplyToMessage($"There are still {games.Count} games running. The maintenance mode was enabled.", u);
+                                            }
+                                            else
+                                            {
+                                                client.SendTextMessageAsync(allowedgroups[1], "<b>The bot is now going down for maintenance!</b>", parseMode: ParseMode.Html);
+                                                ReplyToMessage("There are no games running. The maintenance mode was enabled", u);
+                                            }
+                                        }
+                                        else // We just disabled maintenance
+                                        {
+                                            client.SendTextMessageAsync(allowedgroups[1], "<b>The bot is no longer under maintenance! You can now play games!</b>", parseMode: ParseMode.Html);
+                                            ReplyToMessage("The maintenance mode was disabled!", u);
+                                        }
+                                    }
+                                    else ReplyToMessage("You aren't a bot admin!", u);
+                                    return;
+
+                                case "/runinfo":
+                                    string infomessage = "<b>RUNTIME INFO:</b>\n";
+                                    infomessage += "Running for: " + (DateTime.UtcNow - starttime).ToString() + "\n";
+                                    infomessage += "Running games: " + games.Count;
+                                    ReplyToMessage(infomessage, u);
                                     return;
                             }
 
