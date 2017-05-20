@@ -738,45 +738,33 @@ namespace BotControlPanel.Bots
                                     }
                                     else
                                     {
-                                        if (games.ContainsKey(msg.Chat.Id))
-                                        {
+                                        Message m;
 
-                                            if (!games[msg.Chat.Id].AddPlayer(msg.From))
+                                        if (pinmessages.ContainsKey(msg.Chat.Id))
+                                        {
+                                            try
                                             {
-                                                ReplyToMessage("Failed to add <b>" + msg.From.FirstName + "</b> to the players!", u);
+                                                var t = client.EditMessageTextAsync(msg.Chat.Id, pinmessages[msg.Chat.Id], "Initializing new game...");
+                                                t.Wait();
+                                                m = t.Result;
+                                                ReplyToMessage($"The new game starts in the pin message! If there is none, please ask an admin for help.", u);
                                             }
+                                            catch
+                                            {
+                                                m = ReplyToMessage("Initializing new game...", u);
+                                                pinmessages.Remove(msg.Chat.Id);
+                                                client.SendTextMessageAsync(adminIds[0], $"Removed pinmessage of group {msg.Chat.Title} ({msg.Chat.Id}) because it seems it is deleted");
+                                                client.SendTextMessageAsync(adminIds[1], $"Removed pinmessage of group {msg.Chat.Title} ({msg.Chat.Id}) because it seems it is deleted");
+                                            }
+
                                         }
                                         else
                                         {
-                                            Message m;
-
-                                            if (pinmessages.ContainsKey(msg.Chat.Id))
-                                            {
-                                                try
-                                                {
-                                                    var t = client.EditMessageTextAsync(msg.Chat.Id, pinmessages[msg.Chat.Id], "Initializing new game...");
-                                                    t.Wait();
-                                                    m = t.Result;
-                                                    ReplyToMessage($"The new game starts in the pin message! If there is none, please ask an admin for help.", u);
-                                                }
-                                                catch
-                                                {
-                                                    m = ReplyToMessage("Initializing new game...", u);
-                                                    pinmessages.Remove(msg.Chat.Id);
-                                                    client.SendTextMessageAsync(adminIds[0], $"Removed pinmessage of group {msg.Chat.Title} ({msg.Chat.Id}) because it seems it is deleted");
-                                                    client.SendTextMessageAsync(adminIds[1], $"Removed pinmessage of group {msg.Chat.Title} ({msg.Chat.Id}) because it seems it is deleted");
-                                                }
-                                                 
-                                            }
-                                            else
-                                            {
-                                                m = ReplyToMessage("Initializing new game...", u);
-                                            }
-                                            if (m == null) return;
-                                            var game = new Game(client, msg.Chat.Id, m);
-                                            games.Add(msg.Chat.Id, game);
-                                            games[msg.Chat.Id].AddPlayer(msg.From);
+                                            m = ReplyToMessage("Initializing new game...", u);
                                         }
+                                        if (m == null) return;
+                                        var game = new Game(client, msg.Chat.Id, m);
+                                        games.Add(msg.Chat.Id, game);
                                     }
                                     return;
 
