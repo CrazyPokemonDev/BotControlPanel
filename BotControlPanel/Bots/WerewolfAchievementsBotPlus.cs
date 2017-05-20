@@ -26,6 +26,7 @@ namespace BotControlPanel.Bots
             public Dictionary<long, string> names = new Dictionary<long, string>();
             public Dictionary<long, roles> role = new Dictionary<long, roles>();
             public Dictionary<long, bool> love = new Dictionary<long, bool>();
+            public string lynchorder = "";
             
 
             private const string joinMessageText = "<b>Join this game!</b>\n\nJoin using the button and remember to use /addplayer after joining. Click the start button below as soon as the roles are assigned and the game begins. <b>DON'T PRESS START BEFORE THE ROLES ARE ASSIGNED!</b>";
@@ -994,6 +995,72 @@ namespace BotControlPanel.Bots
                                     {
                                         ReplyToMessage("No pin message found.", u);
                                     }
+                                    return;
+
+                                case "/lynchorder":
+                                    if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Running)
+                                    {
+                                        Game g = games[msg.Chat.Id];
+
+                                        if (!string.IsNullOrEmpty(g.lynchorder))
+                                        {
+                                            string order = g.lynchorder.Replace("<-->", "↔️").Replace("<->", "↔️").Replace("<>", "↔️").Replace("-->", "➡️").Replace("->", "➡️").Replace(">", "➡️");
+                                            ReplyToMessage("<b>Lynchorder:</b>\n" + order, u);
+                                        }
+                                        else
+                                        {
+                                            string order = "";
+                                            foreach (string n in g.names.Values)
+                                            {
+                                                order += n + " ➡️ ";
+                                            }
+                                            order += g.names.Values.ToList()[0];
+
+                                            ReplyToMessage("<b>Lynchorder:</b>\n" + order, u);
+                                        }
+                                    }
+                                    else ReplyToMessage("This command can only be used while a game is running.", u);
+                                    return;
+
+                                case "/setlynchorder":
+                                    if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Running)
+                                    {
+                                        Game g = games[msg.Chat.Id];
+
+                                        if (msg.ReplyToMessage != null && msg.ReplyToMessage.Type == MessageType.TextMessage && !string.IsNullOrEmpty(msg.ReplyToMessage.Text))
+                                        {
+                                            if (msg.ReplyToMessage.From.Id == 245445220) // The bot itself
+                                            {
+                                                g.lynchorder = "";
+                                                ReplyToMessage($"The lynchorder was reset by <b>{msg.From.FirstName}</b>.", u);
+                                                return;
+                                            }
+                                            else
+                                            {
+                                                string t = msg.ReplyToMessage.Text;
+                                                g.lynchorder = t;
+                                                ReplyToMessage($"The lynchorder was set by <b>{msg.From.FirstName}</b>. Get it with the /lynchorder command.", u);
+                                            }
+                                        }
+                                        else if (text.Split(' ').Count() > 1)
+                                        {
+                                            string t = msg.Text.Substring(msg.Text.IndexOf(' '));
+                                            g.lynchorder = t;
+                                            ReplyToMessage($"The lynchorder was set by <b>{msg.From.FirstName}</b>. Get it with the /lynchorder command.", u);
+                                        }
+                                        else ReplyToMessage("Either use \n\n<code>/setlynchorder [lynchorder here]</code>\n\nor reply to the lynchorder with <code>/setlynchorder</code>.", u);
+                                    }
+                                    else ReplyToMessage("This command can only be used while a game is running.", u);
+                                    return;
+
+                                case "/resetlynchorder":
+                                    if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Running)
+                                    {
+                                        Game g = games[msg.Chat.Id];
+                                        g.lynchorder = "";
+                                        ReplyToMessage($"The lynchorder was reset by <b>{msg.From.FirstName}</b>.", u);
+                                    }
+                                    else ReplyToMessage("This command can only be used while a game is running.", u);
                                     return;
                             }
 
