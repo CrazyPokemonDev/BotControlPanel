@@ -26,10 +26,10 @@ namespace BotControlPanel.Bots
             public Dictionary<long, string> names = new Dictionary<long, string>();
             public Dictionary<long, roles> role = new Dictionary<long, roles>();
             public Dictionary<long, bool> love = new Dictionary<long, bool>();
+            public string lynchorder = "";
             
 
-            private const string joinMessageText = "<b>Join this game!</b>\n\nPin this message and remember "
-                + "to press start when the roles are assigned and the game begins. <b>DON'T PRESS START BEFORE THE ROLES ARE ASSIGNED!</b>";
+            private const string joinMessageText = "<b>Join this game!</b>\n\nJoin using the button and remember to use /addplayer after joining. Click the start button below as soon as the roles are assigned and the game begins. <b>DON'T PRESS START BEFORE THE ROLES ARE ASSIGNED!</b>";
             private const string runMessageText = "<b>Game running!</b>\n\nPress stop <b>ONCE THE GAME STOPPED!</b>";
             private const string stoppedMessageText = "<b>This game is finished!</b>";
             private string playerlist;
@@ -527,7 +527,7 @@ namespace BotControlPanel.Bots
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private const string version = "3.3.3";
+        private const string version = "3.3.4";
 
         private Dictionary<long, Game> games = new Dictionary<long, Game>();
         private Dictionary<long, int> pinmessages = new Dictionary<long, int>();
@@ -738,45 +738,33 @@ namespace BotControlPanel.Bots
                                     }
                                     else
                                     {
-                                        if (games.ContainsKey(msg.Chat.Id))
-                                        {
+                                        Message m;
 
-                                            if (!games[msg.Chat.Id].AddPlayer(msg.From))
+                                        if (pinmessages.ContainsKey(msg.Chat.Id))
+                                        {
+                                            try
                                             {
-                                                ReplyToMessage("Failed to add <b>" + msg.From.FirstName + "</b> to the players!", u);
+                                                var t = client.EditMessageTextAsync(msg.Chat.Id, pinmessages[msg.Chat.Id], "Initializing new game...");
+                                                t.Wait();
+                                                m = t.Result;
+                                                ReplyToMessage($"The new game starts in the pin message! If there is none, please ask an admin for help.", u);
                                             }
+                                            catch
+                                            {
+                                                m = ReplyToMessage("Initializing new game...", u);
+                                                pinmessages.Remove(msg.Chat.Id);
+                                                client.SendTextMessageAsync(adminIds[0], $"Removed pinmessage of group {msg.Chat.Title} ({msg.Chat.Id}) because it seems it is deleted");
+                                                client.SendTextMessageAsync(adminIds[1], $"Removed pinmessage of group {msg.Chat.Title} ({msg.Chat.Id}) because it seems it is deleted");
+                                            }
+
                                         }
                                         else
                                         {
-                                            Message m;
-
-                                            if (pinmessages.ContainsKey(msg.Chat.Id))
-                                            {
-                                                try
-                                                {
-                                                    var t = client.EditMessageTextAsync(msg.Chat.Id, pinmessages[msg.Chat.Id], "Initializing new game...");
-                                                    t.Wait();
-                                                    m = t.Result;
-                                                    ReplyToMessage($"The new game starts in the pin message! If there is none, please ask an admin for help.", u);
-                                                }
-                                                catch
-                                                {
-                                                    m = ReplyToMessage("Initializing new game...", u);
-                                                    pinmessages.Remove(msg.Chat.Id);
-                                                    client.SendTextMessageAsync(adminIds[0], $"Removed pinmessage of group {msg.Chat.Title} ({msg.Chat.Id}) because it seems it is deleted");
-                                                    client.SendTextMessageAsync(adminIds[1], $"Removed pinmessage of group {msg.Chat.Title} ({msg.Chat.Id}) because it seems it is deleted");
-                                                }
-                                                 
-                                            }
-                                            else
-                                            {
-                                                m = ReplyToMessage("Initializing new game...", u);
-                                            }
-                                            if (m == null) return;
-                                            var game = new Game(client, msg.Chat.Id, m);
-                                            games.Add(msg.Chat.Id, game);
-                                            games[msg.Chat.Id].AddPlayer(msg.From);
+                                            m = ReplyToMessage("Initializing new game...", u);
                                         }
+                                        if (m == null) return;
+                                        var game = new Game(client, msg.Chat.Id, m);
+                                        games.Add(msg.Chat.Id, game);
                                     }
                                     return;
 
@@ -1007,6 +995,72 @@ namespace BotControlPanel.Bots
                                     {
                                         ReplyToMessage("No pin message found.", u);
                                     }
+                                    return;
+
+                                case "/lynchorder":
+                                    if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Running)
+                                    {
+                                        Game g = games[msg.Chat.Id];
+
+                                        if (!string.IsNullOrEmpty(g.lynchorder))
+                                        {
+                                            string order = g.lynchorder.Replace("<-->", "↔️").Replace("<->", "↔️").Replace("<>", "↔️").Replace("-->", "➡️").Replace("->", "➡️").Replace(">", "➡️");
+                                            ReplyToMessage("<b>Lynchorder:</b>\n" + order, u);
+                                        }
+                                        else
+                                        {
+                                            string order = "";
+                                            foreach (string n in g.names.Values)
+                                            {
+                                                order += n + " ➡️ ";
+                                            }
+                                            order += g.names.Values.ToList()[0];
+
+                                            ReplyToMessage("<b>Lynchorder:</b>\n" + order, u);
+                                        }
+                                    }
+                                    else ReplyToMessage("This command can only be used while a game is running.", u);
+                                    return;
+
+                                case "/setlynchorder":
+                                    if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Running)
+                                    {
+                                        Game g = games[msg.Chat.Id];
+
+                                        if (msg.ReplyToMessage != null && msg.ReplyToMessage.Type == MessageType.TextMessage && !string.IsNullOrEmpty(msg.ReplyToMessage.Text))
+                                        {
+                                            if (msg.ReplyToMessage.From.Id == 245445220) // The bot itself
+                                            {
+                                                g.lynchorder = "";
+                                                ReplyToMessage($"The lynchorder was reset by <b>{msg.From.FirstName}</b>.", u);
+                                                return;
+                                            }
+                                            else
+                                            {
+                                                string t = msg.ReplyToMessage.Text;
+                                                g.lynchorder = t;
+                                                ReplyToMessage($"The lynchorder was set by <b>{msg.From.FirstName}</b>. Get it with the /lynchorder command.", u);
+                                            }
+                                        }
+                                        else if (text.Split(' ').Count() > 1)
+                                        {
+                                            string t = msg.Text.Substring(msg.Text.IndexOf(' '));
+                                            g.lynchorder = t;
+                                            ReplyToMessage($"The lynchorder was set by <b>{msg.From.FirstName}</b>. Get it with the /lynchorder command.", u);
+                                        }
+                                        else ReplyToMessage("Either use \n\n<code>/setlynchorder [lynchorder here]</code>\n\nor reply to the lynchorder with <code>/setlynchorder</code>.", u);
+                                    }
+                                    else ReplyToMessage("This command can only be used while a game is running.", u);
+                                    return;
+
+                                case "/resetlynchorder":
+                                    if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Running)
+                                    {
+                                        Game g = games[msg.Chat.Id];
+                                        g.lynchorder = "";
+                                        ReplyToMessage($"The lynchorder was reset by <b>{msg.From.FirstName}</b>.", u);
+                                    }
+                                    else ReplyToMessage("This command can only be used while a game is running.", u);
                                     return;
                             }
 
