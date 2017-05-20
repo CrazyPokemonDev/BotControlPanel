@@ -527,7 +527,7 @@ namespace BotControlPanel.Bots
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private const string version = "3.3.5";
+        private const string version = "3.3.6";
 
         private Dictionary<long, Game> games = new Dictionary<long, Game>();
         private Dictionary<long, int> pinmessages = new Dictionary<long, int>();
@@ -777,7 +777,7 @@ namespace BotControlPanel.Bots
                                         {
                                             ReplyToMessage("Failed to add <b>" + newplayer.FirstName + "</b> to the players!", u);
                                         }
-                                        else ReplyToMessage($"Player <b>{newplayer.FirstName} was successfully added to the game.", u);
+                                        else ReplyToMessage($"Player <b>{newplayer.FirstName}</b> was successfully added to the game.", u);
                                     }
                                     else
                                     {
