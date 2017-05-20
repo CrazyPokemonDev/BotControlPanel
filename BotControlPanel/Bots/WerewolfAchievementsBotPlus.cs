@@ -527,7 +527,7 @@ namespace BotControlPanel.Bots
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private const string version = "3.3.4";
+        private const string version = "3.3.5";
 
         private Dictionary<long, Game> games = new Dictionary<long, Game>();
         private Dictionary<long, int> pinmessages = new Dictionary<long, int>();
@@ -777,6 +777,7 @@ namespace BotControlPanel.Bots
                                         {
                                             ReplyToMessage("Failed to add <b>" + newplayer.FirstName + "</b> to the players!", u);
                                         }
+                                        else ReplyToMessage($"Player <b>{newplayer.FirstName} was successfully added to the game.", u);
                                     }
                                     else
                                     {
@@ -830,14 +831,16 @@ namespace BotControlPanel.Bots
                                             case Game.state.Joining:
                                                 if (!g.RemovePlayer(dead))
                                                 {
-                                                    ReplyToMessage("Failed to remove player <b>" + dead.FirstName + "</b> from the game.", u);
+                                                    ReplyToMessage($"Failed to remove player <b>{dead.FirstName}</b> from the game.", u);
                                                 }
+                                                else ReplyToMessage($"Player <b>{dead.FirstName}</b> was successfully removed from the game.", u);
                                                 break;
 
                                             case Game.state.Running:
                                                 g.role.Remove(dead.Id);
                                                 g.role.Add(dead.Id, Game.roles.Dead);
                                                 g.UpdatePlayerlist();
+                                                ReplyToMessage($"Player <b>{dead.FirstName}</b> was marked as dead.", u);
                                                 break;
                                         }
 
@@ -898,6 +901,7 @@ namespace BotControlPanel.Bots
                                         if (lover == null || !g.names.ContainsKey(lover.Id)) return;
 
                                         g.love[lover.Id] = !g.love[lover.Id] ? true : false;
+                                        ReplyToMessage($"The love status of <b>{lover.FirstName}</b> was updated.", u);
                                         g.UpdatePlayerlist();
                                     }
                                     return;
@@ -1010,9 +1014,9 @@ namespace BotControlPanel.Bots
                                         else
                                         {
                                             string order = "";
-                                            foreach (string n in g.names.Values)
+                                            foreach (var n in g.names.Where(x => g.role[x.Key] != Game.roles.Dead))
                                             {
-                                                order += n + " ➡️ ";
+                                                order += n.Value + " ➡️ ";
                                             }
                                             order += g.names.Values.ToList()[0];
 
@@ -1094,8 +1098,9 @@ namespace BotControlPanel.Bots
                                         if (role != Game.roles.Unknown)
                                         {
                                             g.role.Remove(player);
-                                            g.role.Add(player, GetRoleByAlias(text.ToLower()));
+                                            g.role.Add(player, role);
                                             g.UpdatePlayerlist();
+                                            ReplyToMessage($"Role was set to: <b>{g.rolestring[role]}</b>", u);
                                         }
                                     }
                                     if (text.ToLower().StartsWith("now ") && Keys.Contains(text.ToLower().Substring(4)))
@@ -1108,7 +1113,9 @@ namespace BotControlPanel.Bots
                                             {
                                                 g.role[player] = role;
                                                 g.UpdatePlayerlist();
+                                                ReplyToMessage($"Role was updated to: <b>{g.rolestring[role]}</b>.", u);
                                             }
+                                            else ReplyToMessage($"The role was already <b>{g.rolestring[role]}</b>!", u);
                                         }
                                     }
                                 }
