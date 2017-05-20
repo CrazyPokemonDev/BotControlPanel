@@ -1014,9 +1014,9 @@ namespace BotControlPanel.Bots
                                         else
                                         {
                                             string order = "";
-                                            foreach (string n in g.names.Values)
+                                            foreach (var n in g.names.Where(x => g.role[x.Key] != Game.roles.Dead))
                                             {
-                                                order += n + " ➡️ ";
+                                                order += n.Value + " ➡️ ";
                                             }
                                             order += g.names.Values.ToList()[0];
 
