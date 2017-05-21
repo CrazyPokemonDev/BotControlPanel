@@ -224,7 +224,7 @@ namespace BotControlPanel.Bots
                         return gameroles.Contains(roles.Cupid);
 
                     case achievements.Streetwise:
-                        return gameroles.Contains(roles.Detective) && (spawnableWolves + gameroles.Count(x => x == roles.SerialKiller || x == roles.Cultist) >= 3);
+                        return gameroles.Contains(roles.Detective) && (spawnableWolves + gameroles.Count(x => x == roles.SerialKiller || x == roles.Cultist) >= 4);
 
                     case achievements.SundayBloodySunday:
                         return false; // TOO HARD YET, GOTTA BE FIXED!
