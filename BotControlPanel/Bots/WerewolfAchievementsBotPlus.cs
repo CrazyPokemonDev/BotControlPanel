@@ -224,7 +224,7 @@ namespace BotControlPanel.Bots
                         return gameroles.Contains(roles.Cupid);
 
                     case achievements.Streetwise:
-                        return gameroles.Contains(roles.Detective) && (spawnableWolves + gameroles.Count(x => x == roles.SerialKiller || x == roles.Cultist) >= 3);
+                        return gameroles.Contains(roles.Detective) && (spawnableWolves + gameroles.Count(x => x == roles.SerialKiller || x == roles.Cultist) >= 4);
 
                     case achievements.SundayBloodySunday:
                         return false; // TOO HARD YET, GOTTA BE FIXED!
@@ -527,7 +527,7 @@ namespace BotControlPanel.Bots
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private const string version = "3.3.8";
+        private const string version = "3.3.9";
         private readonly DateTime starttime = DateTime.UtcNow;
 
         private Dictionary<long, Game> games = new Dictionary<long, Game>();
@@ -623,7 +623,11 @@ namespace BotControlPanel.Bots
                                 "The game is now considered stopped.").Wait();
                             client.SendTextMessageAsync(id, $"<b>{e.CallbackQuery.From.FirstName}</b> has considered the game stopped!", parseMode: ParseMode.Html);
                             justCalledStop.Remove(e.CallbackQuery.From.Id);
-                            if (maint) client.SendTextMessageAsync(id, "<b>The bot is in maintenance mode, so you can't start any further games for now!</b>", parseMode: ParseMode.Html);
+                            if (maint)
+                            {
+                                client.SendTextMessageAsync(id, "<b>The bot is in maintenance mode, so you can't start any further games for now!</b>", parseMode: ParseMode.Html);
+                                client.SendTextMessageAsync(allowedgroups[0], $"1 Game just finished. There are {games.Count} more games running.");
+                            }
                         }
                         else
                         {
@@ -790,7 +794,11 @@ namespace BotControlPanel.Bots
                                             games.Remove(msg.Chat.Id);
                                             ReplyToMessage($"<b>{msg.From.FirstName}</b> has considered the game stopped!", u);
                                             justCalledStop.Remove(msg.From.Id);
-                                            if (maint) client.SendTextMessageAsync(msg.Chat.Id, "<b>The bot is in maintenance mode, so you can't start any further games for now!</b>", parseMode: ParseMode.Html);
+                                            if (maint)
+                                            {
+                                                client.SendTextMessageAsync(msg.Chat.Id, "<b>The bot is in maintenance mode, so you can't start any further games for now!</b>", parseMode: ParseMode.Html);
+                                                client.SendTextMessageAsync(allowedgroups[0], $"1 Game just finished. There are {games.Count} more games running.");
+                                            }
                                         }
                                         else
                                         {
@@ -1079,9 +1087,19 @@ namespace BotControlPanel.Bots
                                         {
                                             if (games.Count > 0)
                                             {
-                                                foreach (var g in games.Keys)
+                                                foreach (var g in games)
                                                 {
-                                                    client.SendTextMessageAsync(g, "<b>After this game, the bot is shutting down for maintenance!</b>", parseMode: ParseMode.Html);
+                                                    if (g.Value.gamestate == Game.state.Joining)
+                                                    {
+                                                        client.SendTextMessageAsync(g.Key, "<b>The bot is shutting down for maintenance and this game was cancelled! You can play it, but I won't manage it!</b>", parseMode: ParseMode.Html);
+                                                        g.Value.Stop();
+                                                        g.Value.UpdatePlayerlist();
+                                                        games.Remove(g.Key);
+                                                    }
+                                                    else
+                                                    {
+                                                        client.SendTextMessageAsync(g.Key, "<b>After this game, the bot is shutting down for maintenance!</b>", parseMode: ParseMode.Html);
+                                                    }
                                                 }
                                                 if (!games.Keys.Contains(allowedgroups[1])) client.SendTextMessageAsync(allowedgroups[1], "<b>After this game, the bot is shutting down for maintenance!</b>", parseMode: ParseMode.Html);
                                                 ReplyToMessage($"There are still {games.Count} games running. The maintenance mode was enabled.", u);
@@ -1158,6 +1176,11 @@ namespace BotControlPanel.Bots
                                             }
                                             else ReplyToMessage($"The role was already <b>{g.rolestring[role]}</b>!", u);
                                         }
+                                    }
+
+                                    if (msg.ForwardFrom != null && (msg.ForwardFrom.Id == 175844556 || msg.ForwardFrom.Id == 19862752) && msg.Text.ToLower().Contains("unlock") || msg.Text.ToLower().Contains("achievement"))
+                                    {
+                                        ReplyToMessage("👍🏻", u);
                                     }
                                 }
                             }
