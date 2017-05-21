@@ -527,7 +527,7 @@ namespace BotControlPanel.Bots
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private const string version = "3.3.8";
+        private const string version = "3.3.9";
         private readonly DateTime starttime = DateTime.UtcNow;
 
         private Dictionary<long, Game> games = new Dictionary<long, Game>();
