@@ -623,7 +623,11 @@ namespace BotControlPanel.Bots
                                 "The game is now considered stopped.").Wait();
                             client.SendTextMessageAsync(id, $"<b>{e.CallbackQuery.From.FirstName}</b> has considered the game stopped!", parseMode: ParseMode.Html);
                             justCalledStop.Remove(e.CallbackQuery.From.Id);
-                            if (maint) client.SendTextMessageAsync(id, "<b>The bot is in maintenance mode, so you can't start any further games for now!</b>", parseMode: ParseMode.Html);
+                            if (maint)
+                            {
+                                client.SendTextMessageAsync(id, "<b>The bot is in maintenance mode, so you can't start any further games for now!</b>", parseMode: ParseMode.Html);
+                                client.SendTextMessageAsync(allowedgroups[0], $"1 Game just finished. There are {games.Count} more games running.");
+                            }
                         }
                         else
                         {
@@ -790,7 +794,11 @@ namespace BotControlPanel.Bots
                                             games.Remove(msg.Chat.Id);
                                             ReplyToMessage($"<b>{msg.From.FirstName}</b> has considered the game stopped!", u);
                                             justCalledStop.Remove(msg.From.Id);
-                                            if (maint) client.SendTextMessageAsync(msg.Chat.Id, "<b>The bot is in maintenance mode, so you can't start any further games for now!</b>", parseMode: ParseMode.Html);
+                                            if (maint)
+                                            {
+                                                client.SendTextMessageAsync(msg.Chat.Id, "<b>The bot is in maintenance mode, so you can't start any further games for now!</b>", parseMode: ParseMode.Html);
+                                                client.SendTextMessageAsync(allowedgroups[0], $"1 Game just finished. There are {games.Count} more games running.");
+                                            }
                                         }
                                         else
                                         {
