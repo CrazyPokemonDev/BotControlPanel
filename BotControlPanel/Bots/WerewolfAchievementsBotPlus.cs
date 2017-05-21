@@ -1079,9 +1079,19 @@ namespace BotControlPanel.Bots
                                         {
                                             if (games.Count > 0)
                                             {
-                                                foreach (var g in games.Keys)
+                                                foreach (var g in games)
                                                 {
-                                                    client.SendTextMessageAsync(g, "<b>After this game, the bot is shutting down for maintenance!</b>", parseMode: ParseMode.Html);
+                                                    if (g.Value.gamestate == Game.state.Joining)
+                                                    {
+                                                        client.SendTextMessageAsync(g.Key, "<b>The bot is shutting down for maintenance and this game was cancelled! You can play it, but I won't manage it!</b>", parseMode: ParseMode.Html);
+                                                        g.Value.Stop();
+                                                        g.Value.UpdatePlayerlist();
+                                                        games.Remove(g.Key);
+                                                    }
+                                                    else
+                                                    {
+                                                        client.SendTextMessageAsync(g.Key, "<b>After this game, the bot is shutting down for maintenance!</b>", parseMode: ParseMode.Html);
+                                                    }
                                                 }
                                                 if (!games.Keys.Contains(allowedgroups[1])) client.SendTextMessageAsync(allowedgroups[1], "<b>After this game, the bot is shutting down for maintenance!</b>", parseMode: ParseMode.Html);
                                                 ReplyToMessage($"There are still {games.Count} games running. The maintenance mode was enabled.", u);
