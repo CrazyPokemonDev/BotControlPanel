@@ -1195,12 +1195,12 @@ namespace BotControlPanel.Bots
                                             else ReplyToMessage($"The role was already <b>{g.rolestring[role]}</b>!", u);
                                         }
                                     }
-
-                                    if (msg.ForwardFrom != null && (msg.ForwardFrom.Id == 175844556 || msg.ForwardFrom.Id == 19862752) && (msg.Text.ToLower().Contains("unlock") || msg.Text.ToLower().Contains("achievement")))
-                                    {
-                                        ReplyToMessage("👍🏻", u);
-                                    }
                                 }
+                            }
+
+                            if (msg.ForwardFrom != null && (msg.ForwardFrom.Id == 175844556 || msg.ForwardFrom.Id == 19862752) && (msg.Text.ToLower().Contains("unlock") || msg.Text.ToLower().Contains("achievement")))
+                            {
+                                ReplyToMessage("👍🏻", u);
                             }
                         }
                     }
