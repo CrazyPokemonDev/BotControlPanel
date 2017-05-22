@@ -15,17 +15,32 @@ namespace BotControlPanel.Bots
 {
     public class WerewolfAchievementsBotPlus : FlomBot
     {
+
+        class Player
+        {
+            public string name { get; set; }
+            public int id { get; set; }
+            public Game.roles role { get; set; }
+            public bool love { get; set; }
+
+            public Player(int id, string name)
+            {
+                this.id = id;
+                this.name = name;
+            }
+        }
+
+
         class Game
         {
+            public Dictionary<int, Player> players = new Dictionary<int, Player>();
+
             public Message pinmessage { get; set; }
             public state gamestate { get; set; }
             private TelegramBotClient client;
             public Dictionary<roles, string> rolestring = getRolestringDict();
             public long GroupId { get; }
 
-            public Dictionary<long, string> names = new Dictionary<long, string>();
-            public Dictionary<long, roles> role = new Dictionary<long, roles>();
-            public Dictionary<long, bool> love = new Dictionary<long, bool>();
             public string lynchorder = "";
             
 
@@ -125,7 +140,12 @@ namespace BotControlPanel.Bots
 
             public bool isAchievable(achievements achv)
             {
-                var gameroles = role.Values;
+                List<roles> gameroles = new List<roles>();
+
+                foreach(var p in players.Values)
+                {
+                    gameroles.Add(p.role);
+                }
 
                 int wolves = 0;
                 wolves += gameroles.Count(x => x == roles.AlphaWolf);
@@ -176,13 +196,13 @@ namespace BotControlPanel.Bots
                         return gameroles.Contains(roles.Hunter);
 
                     case achievements.Inconspicuous:
-                        return names.Count >= 20;
+                        return players.Count >= 20;
 
                     case achievements.ISeeALackOfTrust:
                         return gameroles.Contains(roles.Seer) || gameroles.Contains(roles.SeerFool) || gameroles.Contains(roles.ApprenticeSeer);
 
                     case achievements.LoneWolf:
-                        return wolves == 1 && !gameroles.Contains(roles.Traitor) && names.Count >= 10;
+                        return wolves == 1 && !gameroles.Contains(roles.Traitor) && players.Count >= 10;
 
                     case achievements.Masochist:
                         return gameroles.Contains(roles.Tanner);
@@ -447,11 +467,11 @@ namespace BotControlPanel.Bots
 
             public bool AddPlayer(User newplayer)
             {
-                if (!names.ContainsKey(newplayer.Id) && gamestate == state.Joining)
+                if (!players.ContainsKey(newplayer.Id) && gamestate == state.Joining)
                 {
-                    names.Add(newplayer.Id, newplayer.FirstName.Length > 15 ? newplayer.FirstName.Remove(15) : newplayer.FirstName);
-                    role.Add(newplayer.Id, roles.Unknown);
-                    love.Add(newplayer.Id, false);
+                    players.Add(newplayer.Id, new Player(newplayer.Id, newplayer.FirstName));
+                    players[newplayer.Id].role = roles.Unknown;
+                    players[newplayer.Id].love = false;
                     UpdatePlayerlist();
                     return true;                    
                 }
@@ -470,11 +490,9 @@ namespace BotControlPanel.Bots
 
             public bool RemovePlayer(User oldplayer)
             {
-                if(names.ContainsKey(oldplayer.Id))
+                if(players.ContainsKey(oldplayer.Id))
                 {
-                    names.Remove(oldplayer.Id);
-                    role.Remove(oldplayer.Id);
-                    love.Remove(oldplayer.Id);
+                    players.Remove(oldplayer.Id);
                     UpdatePlayerlist();
                     return true;
                 }
@@ -484,18 +502,18 @@ namespace BotControlPanel.Bots
             public void UpdatePlayerlist()
             {
                 playerlist = gamestate == state.Running
-                    ? $"<b>LYNCHORDER ({names.Keys.Count(x => role[x] != roles.Dead)} of {names.Keys.Count}):</b>\n"
-                    : $"<b>Players ({names.Keys.Count}):</b>\n";
+                    ? $"<b>LYNCHORDER ({players.Count(x => x.Value.role != roles.Dead)} of {players.Count}):</b>\n"
+                    : $"<b>Players ({players.Count}):</b>\n";
 
-                foreach(var p in names.Keys.Where(x => role[x] != roles.Dead))
+                foreach(var p in players.Values.Where(x => x.role != roles.Dead))
                 {
-                    if(gamestate == state.Joining) playerlist += names[p] + "\n";
+                    if(gamestate == state.Joining) playerlist += p.name + "\n";
                     else if (gamestate == state.Running)
                     {
-                        if (role[p] != roles.Unknown) playerlist += "<b>" + names[p] + "</b>: " + rolestring[role[p]];
-                        else playerlist += "<b>" + names[p] + "</b>: " + rolestring[roles.Unknown];
+                        if (p.role != roles.Unknown) playerlist += "<b>" + p.name + "</b>: " + rolestring[p.role];
+                        else playerlist += "<b>" + p.name + "</b>: " + rolestring[roles.Unknown];
 
-                        if (love[p]) playerlist += " ❤️";
+                        if (p.love) playerlist += " ❤️";
                         playerlist += "\n";
                     }
                 }
@@ -504,9 +522,9 @@ namespace BotControlPanel.Bots
                 {
                     playerlist += "\n\n<b>DEAD PLAYERS 💀:</b>";
 
-                    foreach (var p in names.Keys.Where(x => role[x] == roles.Dead))
+                    foreach (var p in players.Values.Where(x => x.role == roles.Dead))
                     {
-                        playerlist += "\n" + names[p];
+                        playerlist += "\n" + p.name;
                     }
                 }
 
@@ -535,7 +553,7 @@ namespace BotControlPanel.Bots
         private Dictionary<string, Game.roles> roleAliases = new Dictionary<string, Game.roles>();
 
         List<long> justCalledStop = new List<long>();
-        public bool maint = false;
+        public bool maint = true;
 
         private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 }; // [0] is testing group, [1] is achv group
         private readonly List<long> adminIds = new List<long>() { 267376056, 295152997 }; // [0] is Florian, [1] is Ludwig
@@ -591,7 +609,7 @@ namespace BotControlPanel.Bots
                     long id = Convert.ToInt64(data.Substring(6));
                     if (games.ContainsKey(id))
                     {
-                        if (games[id].names.Count >= 5 || id == allowedgroups[0]) // player limit disabled for test group
+                        if (games[id].players.Count >= 5 || id == allowedgroups[0]) // player limit disabled for test group
                         {
                             games[id].Start();
                             games[id].UpdatePlayerlist();
@@ -821,14 +839,14 @@ namespace BotControlPanel.Bots
                                     {
                                         Game g = games[msg.Chat.Id];
 
-                                        User dead = msg.ReplyToMessage != null && g.names.Keys.Contains(msg.ReplyToMessage.From.Id)
+                                        User dead = msg.ReplyToMessage != null && g.players.ContainsKey(msg.ReplyToMessage.From.Id)
                                                 ? msg.ReplyToMessage.From
                                                 : (
-                                                    g.names.Keys.Contains(msg.From.Id)
+                                                    g.players.ContainsKey(msg.From.Id)
                                                         ? msg.From
                                                         : null
                                                   );
-                                        if (dead == null || !g.names.ContainsKey(dead.Id) || g.role[dead.Id] == Game.roles.Dead) return;
+                                        if (dead == null || !g.players.ContainsKey(dead.Id) || g.players[dead.Id].role == Game.roles.Dead) return;
 
                                         switch (g.gamestate)
                                         {
@@ -841,8 +859,7 @@ namespace BotControlPanel.Bots
                                                 break;
 
                                             case Game.state.Running:
-                                                g.role.Remove(dead.Id);
-                                                g.role.Add(dead.Id, Game.roles.Dead);
+                                                g.players[dead.Id].role = Game.roles.Dead;
                                                 g.UpdatePlayerlist();
                                                 ReplyToMessage($"Player <b>{dead.FirstName}</b> was marked as dead.", u);
                                                 break;
@@ -895,16 +912,16 @@ namespace BotControlPanel.Bots
                                     {
                                         Game g = games[msg.Chat.Id];
 
-                                        User lover = msg.ReplyToMessage != null && g.names.Keys.Contains(msg.ReplyToMessage.From.Id)
+                                        User lover = msg.ReplyToMessage != null && g.players.Keys.Contains(msg.ReplyToMessage.From.Id)
                                                 ? msg.ReplyToMessage.From
                                                 : (
-                                                    g.names.Keys.Contains(msg.From.Id)
+                                                    g.players.Keys.Contains(msg.From.Id)
                                                         ? msg.From
                                                         : null
                                                   );
-                                        if (lover == null || !g.names.ContainsKey(lover.Id)) return;
+                                        if (lover == null || !g.players.ContainsKey(lover.Id)) return;
 
-                                        g.love[lover.Id] = !g.love[lover.Id] ? true : false;
+                                        g.players[lover.Id].love = !g.players[lover.Id].love;
                                         ReplyToMessage($"The love status of <b>{lover.FirstName}</b> was updated.", u);
                                         g.UpdatePlayerlist();
                                     }
@@ -977,6 +994,24 @@ namespace BotControlPanel.Bots
                                     else ReplyToMessage("You are not a bot admin!", u);
                                     return;
 
+                                case "/setpin":
+                                    if (adminIds.Contains(msg.From.Id))
+                                    {
+                                        if (msg.ReplyToMessage != null && msg.ReplyToMessage.From.Id == 245445220)
+                                        {
+                                            var m = client.EditMessageTextAsync(msg.Chat.Id, msg.ReplyToMessage.MessageId, $"This is a pinmessage generated by {msg.From.FirstName}");
+                                            m.Wait();
+                                            var mID = m.Result.MessageId;
+
+                                            if (pinmessages.ContainsKey(msg.Chat.Id)) pinmessages.Remove(msg.Chat.Id);
+                                            pinmessages.Add(msg.Chat.Id, mID);
+                                            ReplyToMessage("That message was successfully set as pin message!", u);
+                                        }
+                                        else ReplyToMessage("You need to reply to a message of mine!", u);
+                                    }
+                                    else ReplyToMessage("You are not a bot admin!", u);
+                                    return;
+
                                 case "/delpin":
                                     if (adminIds.Contains(msg.From.Id))
                                     {
@@ -1021,9 +1056,9 @@ namespace BotControlPanel.Bots
 
                                             List<string> alives = new List<string>();
 
-                                            foreach (var x in g.names)
+                                            foreach (var x in g.players.Values)
                                             {
-                                                if (g.role[x.Key] != Game.roles.Dead) alives.Add(x.Value);
+                                                if (x.role != Game.roles.Dead) alives.Add(x.name);
                                             }
 
                                             foreach (var n in alives)
@@ -1133,12 +1168,12 @@ namespace BotControlPanel.Bots
                                 {
                                     Game g = games[msg.Chat.Id];
 
-                                    long player = 0;
+                                    int player = 0;
                                     if (msg.ReplyToMessage != null)
                                     {
-                                        if (g.names.Keys.Contains(msg.ReplyToMessage.From.Id)) player = msg.ReplyToMessage.From.Id;
+                                        if (g.players.Keys.Contains(msg.ReplyToMessage.From.Id)) player = msg.ReplyToMessage.From.Id;
                                     }
-                                    else if (g.names.Keys.Contains(msg.From.Id))
+                                    else if (g.players.Keys.Contains(msg.From.Id))
                                     {
                                         player = msg.From.Id;
                                     }
@@ -1151,13 +1186,12 @@ namespace BotControlPanel.Bots
                                         Keys.Add(s);
                                     }
 
-                                    if (g.role[player] == Game.roles.Unknown && Keys.Contains(text.ToLower()))
+                                    if (g.players[player].role == Game.roles.Unknown && Keys.Contains(text.ToLower()))
                                     {
                                         var role = GetRoleByAlias(text.ToLower());
                                         if (role != Game.roles.Unknown)
                                         {
-                                            g.role.Remove(player);
-                                            g.role.Add(player, role);
+                                            g.players[player].role = role;
                                             g.UpdatePlayerlist();
                                             ReplyToMessage($"Role was set to: <b>{g.rolestring[role]}</b>", u);
                                         }
@@ -1167,22 +1201,22 @@ namespace BotControlPanel.Bots
                                         var role = GetRoleByAlias(text.ToLower().Substring(4));
                                         if (role != Game.roles.Unknown)
                                         {
-                                            var oldRole = g.role[player];
+                                            var oldRole = g.players[player].role;
                                             if (oldRole != role)
                                             {
-                                                g.role[player] = role;
+                                                g.players[player].role = role;
                                                 g.UpdatePlayerlist();
                                                 ReplyToMessage($"Role was updated to: <b>{g.rolestring[role]}</b>.", u);
                                             }
                                             else ReplyToMessage($"The role was already <b>{g.rolestring[role]}</b>!", u);
                                         }
                                     }
-
-                                    if (msg.ForwardFrom != null && (msg.ForwardFrom.Id == 175844556 || msg.ForwardFrom.Id == 19862752) && (msg.Text.ToLower().Contains("unlock") || msg.Text.ToLower().Contains("achievement")))
-                                    {
-                                        ReplyToMessage("👍🏻", u);
-                                    }
                                 }
+                            }
+
+                            if (msg.ForwardFrom != null && (msg.ForwardFrom.Id == 175844556 || msg.ForwardFrom.Id == 19862752) && (msg.Text.ToLower().Contains("unlock") || msg.Text.ToLower().Contains("achievement")))
+                            {
+                                ReplyToMessage("👍🏻", u);
                             }
                         }
                     }
