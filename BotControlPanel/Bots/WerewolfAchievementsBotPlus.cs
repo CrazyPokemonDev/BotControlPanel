@@ -535,7 +535,7 @@ namespace BotControlPanel.Bots
         private Dictionary<string, Game.roles> roleAliases = new Dictionary<string, Game.roles>();
 
         List<long> justCalledStop = new List<long>();
-        public bool maint = false;
+        public bool maint = true;
 
         private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 }; // [0] is testing group, [1] is achv group
         private readonly List<long> adminIds = new List<long>() { 267376056, 295152997 }; // [0] is Florian, [1] is Ludwig
