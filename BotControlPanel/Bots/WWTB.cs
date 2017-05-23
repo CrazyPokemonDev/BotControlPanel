@@ -199,7 +199,7 @@ namespace BotControlPanel.Bots
 #if DEBUG
                 throw ex;
 #else
-                client.SendTextMessageAsync(flomsId, "An error has occurred: \n" + ex.ToString() + "\n"
+                client.SendTextMessageAsync(Flom, "An error has occurred: \n" + ex.ToString() + "\n"
                     + ex.Message + "\n" + ex.StackTrace);
                 return;
 #endif
