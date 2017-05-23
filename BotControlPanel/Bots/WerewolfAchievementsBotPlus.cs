@@ -41,12 +41,6 @@ namespace BotControlPanel.Bots
 
             public string lynchorder = "";
 
-
-            private const string joinMessageText = "<b>Join this game!</b>\n\nJoin using the button and remember to use /addplayer after joining. Click the start button below as soon as the roles are assigned and the game begins. <b>DON'T PRESS START BEFORE THE ROLES ARE ASSIGNED!</b>";
-            private const string runMessageText = "<b>Game running!</b>\n\nPress stop <b>ONCE THE GAME STOPPED!</b>";
-            private const string stoppedMessageText = "<b>This game is finished!</b>";
-            private string playerlist;
-
             public Game(TelegramBotClient cl, Message pin)
             {
                 client = cl;
@@ -58,11 +52,36 @@ namespace BotControlPanel.Bots
             {
                 if (!players.ContainsKey(newplayer.Id) && gamestate == state.Joining)
                 {
-                    players.Add(newplayer.Id, new Player(newplayer.Id, newplayer.FirstName));
-                    players[newplayer.Id].role = roles.Unknown;
-                    players[newplayer.Id].love = false;
-                    UpdatePlayerlist();
-                    return true;
+                    try
+                    {
+                        players.Add(newplayer.Id, new Player(newplayer.Id, newplayer.FirstName));
+                        players[newplayer.Id].role = roles.Unknown;
+                        players[newplayer.Id].love = false;
+                        UpdatePlayerlist();
+                        return true;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                }
+                return false;
+            }
+
+            public bool RemovePlayer(User oldplayer)
+            {
+                if (players.ContainsKey(oldplayer.Id))
+                {
+                    try
+                    {
+                        players.Remove(oldplayer.Id);
+                        UpdatePlayerlist();
+                        return true;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
                 }
                 return false;
             }
@@ -77,20 +96,9 @@ namespace BotControlPanel.Bots
                 gamestate = state.Stopped;
             }
 
-            public bool RemovePlayer(User oldplayer)
-            {
-                if (players.ContainsKey(oldplayer.Id))
-                {
-                    players.Remove(oldplayer.Id);
-                    UpdatePlayerlist();
-                    return true;
-                }
-                return false;
-            }
-
             public void UpdatePlayerlist()
             {
-                playerlist = gamestate == state.Running
+                string playerlist = gamestate == state.Running
                     ? $"<b>LYNCHORDER ({players.Count(x => x.Value.role != roles.Dead)} of {players.Count}):</b>\n"
                     : $"<b>Players ({players.Count}):</b>\n";
 
@@ -117,17 +125,24 @@ namespace BotControlPanel.Bots
                     }
                 }
 
-                if (gamestate == state.Running)
-                    client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, runMessageText
-                        + "\n\n" + playerlist, parseMode: ParseMode.Html,
-                        replyMarkup: InlineKeyboardStop.Get(pinmessage.Chat.Id)).Wait();
-                else if (gamestate == state.Joining)
-                    client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, joinMessageText
-                        + "\n\n" + playerlist, parseMode: ParseMode.Html,
-                        replyMarkup: InlineKeyboardStart.Get(pinmessage.Chat.Id)).Wait();
-                else if (gamestate == state.Stopped)
-                    client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, stoppedMessageText,
-                        parseMode: ParseMode.Html).Wait();
+                switch (gamestate)
+                {
+
+                    case state.Joining:
+                        client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, $"<b>Join this game!</b>\n\nJoin using the button and remember to use /addplayer after joining. Click the start button below as soon as the roles are assigned and the game begins. <b>DON'T PRESS START BEFORE THE ROLES ARE ASSIGNED!</b>\n\n{playerlist}", parseMode: ParseMode.Html, replyMarkup: InlineKeyboardStart.Get(pinmessage.Chat.Id)).Wait();
+                        break;
+
+                    case state.Running:
+                        client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, $"<b>Game running!</b>\n\nPress stop <b>ONCE THE GAME STOPPED!</b>\n\n{playerlist}", parseMode: ParseMode.Html, replyMarkup: InlineKeyboardStop.Get(pinmessage.Chat.Id)).Wait();
+                        break;
+
+                    case state.Stopped:
+                        client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, "<b>This game is finished!</b>", parseMode: ParseMode.Html).Wait();
+                        break;
+
+                    default: // fucked
+                        return;
+                }
             }
 
             public enum state
@@ -464,76 +479,73 @@ namespace BotControlPanel.Bots
                 { roles.Unknown, "No role detected yet" },
             };
 
-            public static Dictionary<achievements, string> getAchvDict()
+            public static Dictionary<achievements, string> achv = new Dictionary<achievements, string>()
             {
-                var dict = new Dictionary<achievements, string>();
-                dict.Add(achievements.AlzheimersPatient, "Alzheimer's Patient");
-                dict.Add(achievements.BlackSheep, "Black Sheep");
-                dict.Add(achievements.ChangeSidesWorks, "Change Sides Works");
-                dict.Add(achievements.CultistConvention, "Cultist Convention");
-                dict.Add(achievements.CultistFodder, "Cultist Fodder");
-                dict.Add(achievements.Dedicated, "Dedicated");
-                dict.Add(achievements.Developer, "Developer");
-                dict.Add(achievements.DoubleKill, "Double Kill");
-                dict.Add(achievements.DoubleShifter, "Double Shifter");
-                dict.Add(achievements.DoubleVision, "Double Vision");
-                dict.Add(achievements.Enochlophobia, "Enochlophobia");
-                dict.Add(achievements.EvenAStoppedClockIsRightTwiceADay, "Even A Stopped Clock Is Right Twice A Day");
-                dict.Add(achievements.Explorer, "Explorer");
-                dict.Add(achievements.ForbiddenLove, "Forbidden Love");
-                dict.Add(achievements.HeresJohnny, "Here's Johnny");
-                dict.Add(achievements.HeyManNiceShot, "Hey Man, Nice Shot!");
-                dict.Add(achievements.IHaveNoIdeaWhatImDoing, "I Have No Idea What I'm Doing");
-                dict.Add(achievements.Inconspicuous, "Inconspicuous");
-                dict.Add(achievements.InForTheLongHaul, "In For The Long Haul");
-                dict.Add(achievements.Introvert, "Introvert");
-                dict.Add(achievements.ISeeALackOfTrust, "I See A Lack Of Trust");
-                dict.Add(achievements.IveGotYourBack, "I've Got Your Back");
-                dict.Add(achievements.Linguist, "Linguist");
-                dict.Add(achievements.LoneWolf, "Lone Wolf");
-                dict.Add(achievements.Masochist, "Masochist");
-                dict.Add(achievements.MasonBrother, "Mason Brother");
-                dict.Add(achievements.Naughty, "Naughty");
-                dict.Add(achievements.Obsessed, "Obsessed");
-                dict.Add(achievements.OHAIDER, "O HAI DER");
-                dict.Add(achievements.OHSHI, "OH SHI-");
-                dict.Add(achievements.PackHunter, "Pack Hunter");
-                dict.Add(achievements.Promiscuous, "Promiscuous");
-                dict.Add(achievements.SavedByTheBullet, "Saved By The Bullet");
-                dict.Add(achievements.SelfLoving, "Self Loving");
-                dict.Add(achievements.SerialSamaritan, "Serial Samaritan");
-                dict.Add(achievements.ShouldHaveKnown, "Should Have Known");
-                dict.Add(achievements.ShouldveSaidSomething, "Should've Said Something");
-                dict.Add(achievements.SmartGunner, "Smart Gunner");
-                dict.Add(achievements.SoClose, "So Close");
-                dict.Add(achievements.SpeedDating, "Speed Dating");
-                dict.Add(achievements.SpyVsSpy, "Spy Vs Spy");
-                dict.Add(achievements.Streetwise, "Streetwise");
-                dict.Add(achievements.SundayBloodySunday, "Sunday Bloody Sunday");
-                dict.Add(achievements.Survivalist, "Survivalist");
-                dict.Add(achievements.TannerOverkill, "Tanner Overkill");
-                dict.Add(achievements.ThatsWhyYouDontStayHome, "That's Why You Don't Stay Home");
-                dict.Add(achievements.TheFirstStone, "The First Stone");
-                dict.Add(achievements.Veteran, "Veteran");
-                dict.Add(achievements.WelcomeToHell, "Welcome To Hell");
-                dict.Add(achievements.WelcomeToTheAsylum, "Welcome To The Asylum");
-                dict.Add(achievements.WobbleWobble, "Wobble Wobble");
+                { achievements.AlzheimersPatient, "Alzheimer's Patient" },
+                { achievements.BlackSheep, "Black Sheep" },
+                { achievements.ChangeSidesWorks, "Change Sides Works" },
+                { achievements.CultistConvention, "Cultist Convention" },
+                { achievements.CultistFodder, "Cultist Fodder" },
+                { achievements.Dedicated, "Dedicated" },
+                { achievements.Developer, "Developer" },
+                { achievements.DoubleKill, "Double Kill" },
+                { achievements.DoubleShifter, "Double Shifter" },
+                { achievements.DoubleVision, "Double Vision" },
+                { achievements.Enochlophobia, "Enochlophobia" },
+                { achievements.EvenAStoppedClockIsRightTwiceADay, "Even A Stopped Clock Is Right Twice A Day" },
+                { achievements.Explorer, "Explorer" },
+                { achievements.ForbiddenLove, "Forbidden Love" },
+                { achievements.HeresJohnny, "Here's Johnny" },
+                { achievements.HeyManNiceShot, "Hey Man, Nice Shot!" },
+                { achievements.IHaveNoIdeaWhatImDoing, "I Have No Idea What I'm Doing" },
+                { achievements.Inconspicuous, "Inconspicuous" },
+                { achievements.InForTheLongHaul, "In For The Long Haul" },
+                { achievements.Introvert, "Introvert" },
+                { achievements.ISeeALackOfTrust, "I See A Lack Of Trust" },
+                { achievements.IveGotYourBack, "I've Got Your Back" },
+                { achievements.Linguist, "Linguist" },
+                { achievements.LoneWolf, "Lone Wolf" },
+                { achievements.Masochist, "Masochist" },
+                { achievements.MasonBrother, "Mason Brother" },
+                { achievements.Naughty, "Naughty" },
+                { achievements.Obsessed, "Obsessed" },
+                { achievements.OHAIDER, "O HAI DER" },
+                { achievements.OHSHI, "OH SHI-" },
+                { achievements.PackHunter, "Pack Hunter" },
+                { achievements.Promiscuous, "Promiscuous" },
+                { achievements.SavedByTheBullet, "Saved By The Bullet" },
+                { achievements.SelfLoving, "Self Loving" },
+                { achievements.SerialSamaritan, "Serial Samaritan" },
+                { achievements.ShouldHaveKnown, "Should Have Known" },
+                { achievements.ShouldveSaidSomething, "Should've Said Something" },
+                { achievements.SmartGunner, "Smart Gunner" },
+                { achievements.SoClose, "So Close" },
+                { achievements.SpeedDating, "Speed Dating" },
+                { achievements.SpyVsSpy, "Spy Vs Spy" },
+                { achievements.Streetwise, "Streetwise" },
+                { achievements.SundayBloodySunday, "Sunday Bloody Sunday" },
+                { achievements.Survivalist, "Survivalist" },
+                { achievements.TannerOverkill, "Tanner Overkill" },
+                { achievements.ThatsWhyYouDontStayHome, "That's Why You Don't Stay Home" },
+                { achievements.TheFirstStone, "The First Stone" },
+                { achievements.Veteran, "Veteran" },
+                { achievements.WelcomeToHell, "Welcome To Hell" },
+                { achievements.WelcomeToTheAsylum, "Welcome To The Asylum" },
+                { achievements.WobbleWobble, "Wobble Wobble" },
 
 
                 // NEW ACHIEVEMENTS
-                dict.Add(achievements.NoSorcery, "No Sorcery!");
-                dict.Add(achievements.WuffieCult, "Wuffie-Cult");
-                dict.Add(achievements.ThreeLittleWolvesAndABigBadPig, "Three Little Wolves And A Big Bad Pig");
-                dict.Add(achievements.IHelped, "I Helped!");
-                dict.Add(achievements.CultistTracker, "Cultist Tracker");
-                dict.Add(achievements.ImNotDrunBurppp, "I'M NOT DRUN-- *BURPPP*");
-                dict.Add(achievements.DidYouGuardYourself, "Did You Guard Yourself?");
-                dict.Add(achievements.SpoiledRichBrat, "Spoiled Rich Brat");
-                dict.Add(achievements.President, "President");
-                dict.Add(achievements.ItWasABusyNight, "It Was A Busy Night!");
-
-                return dict;
-            }
+                { achievements.NoSorcery, "No Sorcery!" },
+                { achievements.WuffieCult, "Wuffie-Cult" },
+                { achievements.ThreeLittleWolvesAndABigBadPig, "Three Little Wolves And A Big Bad Pig" },
+                { achievements.IHelped, "I Helped!" },
+                { achievements.CultistTracker, "Cultist Tracker" },
+                { achievements.ImNotDrunBurppp, "I'M NOT DRUN-- *BURPPP*" },
+                { achievements.DidYouGuardYourself, "Did You Guard Yourself?" },
+                { achievements.SpoiledRichBrat, "Spoiled Rich Brat" },
+                { achievements.President, "President" },
+                { achievements.ItWasABusyNight, "It Was A Busy Night!" },
+            };
         } // End of class Game
 
         public override string Name { get; } = "Werewolf Achievements Bot";
