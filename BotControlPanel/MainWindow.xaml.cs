@@ -37,7 +37,7 @@ namespace BotControlPanel
         private const string tokenSuffix = ".token";
         #endregion
         #region Variables
-        private WWTB wwtb;
+        private Wwtb wwtb;
         private WerewolfAchievementsBotPlus achBot;
         private List<FlomBot> bots = new List<FlomBot>() { new ScriptingBot() };
         private string wwtbToken = "";
@@ -48,8 +48,8 @@ namespace BotControlPanel
         {
             InitializeComponent();
             GetTokens();
-            try { wwtb = new WWTB(wwtbToken); }
-            catch { textBlockWWTB.Background = erroredBackground; }
+            /*try {*/ wwtb = new Wwtb(wwtbToken); /*}
+            catch { textBlockWWTB.Background = erroredBackground; }*/
             try { achBot = new WerewolfAchievementsBotPlus(achToken); }
             catch { textBlockAchv.Background = erroredBackground; }
             foreach (FlomBot b in bots)
@@ -89,7 +89,7 @@ namespace BotControlPanel
             File.WriteAllText(wwtbTokenPath, token);
             wwtbToken = token;
             textBlockWWTB.Background = inactiveBackground;
-            try { wwtb = new WWTB(wwtbToken); }
+            try { wwtb = new Wwtb(wwtbToken); }
             catch { textBlockWWTB.Background = erroredBackground; }
         }
         #endregion
@@ -127,29 +127,34 @@ namespace BotControlPanel
         private void InitializeFlomBot(FlomBot b)
         {
             b.Token = GetTokenByName(b.Name);
-            RowDefinition rd = new RowDefinition();
-            rd.Height = new GridLength(1, GridUnitType.Star);
+            RowDefinition rd = new RowDefinition() { Height = new GridLength(1, GridUnitType.Star) };
             grid.RowDefinitions.Add(rd);
-            TextBlock tb = new TextBlock();
-            tb.Text = b.Name;
-            tb.Background = inactiveBackground;
-            tb.VerticalAlignment = VerticalAlignment.Center;
-            tb.HorizontalAlignment = HorizontalAlignment.Left;
-            tb.Margin = new Thickness(10, 10, 10, 10);
+            TextBlock tb = new TextBlock()
+            {
+                Text = b.Name,
+                Background = inactiveBackground,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(10, 10, 10, 10)
+            };
             Grid.SetRow(tb, grid.RowDefinitions.Count - 1);
-            Button b1 = new Button();
-            b1.Content = "Starten";
-            b1.VerticalAlignment = VerticalAlignment.Center;
-            b1.HorizontalAlignment = HorizontalAlignment.Center;
-            b1.Margin = new Thickness(10, 10, 10, 10);
-            b1.Width = 75;
+            Button b1 = new Button()
+            {
+                Content = "Starten",
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(10, 10, 10, 10),
+                Width = 75
+            };
             Grid.SetRow(b1, grid.RowDefinitions.Count - 1);
-            Button b2 = new Button();
-            b2.Content = "Einstellungen";
-            b2.VerticalAlignment = VerticalAlignment.Center;
-            b2.HorizontalAlignment = HorizontalAlignment.Right;
-            b2.Margin = new Thickness(10, 10, 10, 10);
-            b2.Width = 75;
+            Button b2 = new Button()
+            {
+                Content = "Einstellungen",
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(10, 10, 10, 10),
+                Width = 75
+            };
             Grid.SetRow(b2, grid.RowDefinitions.Count - 1);
             b.Panel = new BotPanelPart(tb, b1, b2);
             #region FlomBot Start Button
@@ -195,7 +200,7 @@ namespace BotControlPanel
                 {
                     TokenDialog td = new TokenDialog(b.Token);
                     td.ShowDialog();
-                    setFlomBotToken(b, td.result);
+                    SetFlomBotToken(b, td.result);
                 }
                 else
                 {
@@ -217,7 +222,7 @@ namespace BotControlPanel
         #region Button
         #region WWTB
         #region Start WWTB
-        private void startButtonWWTB_Click(object sender, RoutedEventArgs e)
+        private void StartButtonWWTB_Click(object sender, RoutedEventArgs e)
         {
             if (textBlockWWTB.Background == erroredBackground)
             {
@@ -233,13 +238,13 @@ namespace BotControlPanel
             {
                 textBlockWWTB.Background = activeBackground;
                 startButtonWWTB.Content = "Stoppen";
-                startButtonWWTB.Click -= startButtonWWTB_Click;
-                startButtonWWTB.Click += stopButtonWWTB_Click;
+                startButtonWWTB.Click -= StartButtonWWTB_Click;
+                startButtonWWTB.Click += StopButtonWWTB_Click;
             }
         }
         #endregion
         #region Stop WWTB
-        private void stopButtonWWTB_Click(object sender, RoutedEventArgs e)
+        private void StopButtonWWTB_Click(object sender, RoutedEventArgs e)
         {
             if (wwtb.IsRunning)
             {
@@ -247,12 +252,12 @@ namespace BotControlPanel
             }
             textBlockWWTB.Background = inactiveBackground;
             startButtonWWTB.Content = "Starten";
-            startButtonWWTB.Click -= stopButtonWWTB_Click;
-            startButtonWWTB.Click += startButtonWWTB_Click;
+            startButtonWWTB.Click -= StopButtonWWTB_Click;
+            startButtonWWTB.Click += StartButtonWWTB_Click;
         }
         #endregion
         #region Settings WWTB
-        private void settingsButtonWWTB_Click(object sender, RoutedEventArgs e)
+        private void SettingsButtonWWTB_Click(object sender, RoutedEventArgs e)
         {
             if (wwtb.IsRunning)
             {
@@ -269,7 +274,7 @@ namespace BotControlPanel
         #endregion
         #region AchBot
         #region Start AchBot
-        private void buttonStartAchievements_Click(object sender, RoutedEventArgs e)
+        private void ButtonStartAchievements_Click(object sender, RoutedEventArgs e)
         {
             if (textBlockAchv.Background == erroredBackground)
             {
@@ -282,12 +287,12 @@ namespace BotControlPanel
             }
             textBlockAchv.Background = activeBackground;
             buttonStartAchievements.Content = "Stoppen";
-            buttonStartAchievements.Click -= buttonStartAchievements_Click;
-            buttonStartAchievements.Click += buttonStopAchievements_Click;
+            buttonStartAchievements.Click -= ButtonStartAchievements_Click;
+            buttonStartAchievements.Click += ButtonStopAchievements_Click;
         }
         #endregion
         #region Stop AchBot
-        private void buttonStopAchievements_Click(object sender, RoutedEventArgs e)
+        private void ButtonStopAchievements_Click(object sender, RoutedEventArgs e)
         {
             if (achBot.IsRunning)
             {
@@ -295,12 +300,12 @@ namespace BotControlPanel
             }
             textBlockAchv.Background = inactiveBackground;
             buttonStartAchievements.Content = "Starten";
-            buttonStartAchievements.Click -= buttonStopAchievements_Click;
-            buttonStartAchievements.Click += buttonStartAchievements_Click;
+            buttonStartAchievements.Click -= ButtonStopAchievements_Click;
+            buttonStartAchievements.Click += ButtonStartAchievements_Click;
         }
         #endregion
         #region Achievement Settings
-        private void buttonSettingsAchievements_Click(object sender, RoutedEventArgs e)
+        private void ButtonSettingsAchievements_Click(object sender, RoutedEventArgs e)
         {
             if (!achBot.IsRunning)
             {
@@ -317,7 +322,7 @@ namespace BotControlPanel
         #endregion
         #region FlomBot
         #region FlomBot Settings
-        private void setFlomBotToken(FlomBot b, string token)
+        private void SetFlomBotToken(FlomBot b, string token)
         {
             b.Token = token;
             if (!Directory.Exists(tokenBasePath))

@@ -18,10 +18,13 @@ namespace BotControlPanel.Bots.WWTBCustomKeyboards
         public const string RefreshChannelMessageButtonString = "Refresh channel message";
         public static KeyboardButton RefreshChannelMessageButton { get; } =
             new KeyboardButton(RefreshChannelMessageButtonString);
+        public const string EditChangelogString = "Edit changelog";
+        public static KeyboardButton EditChangelogButton = new KeyboardButton(EditChangelogString);
         private static KeyboardButton[] row1 = { ClosedlistButton };
         private static KeyboardButton[] row2 = { UnderdevButton };
         private static KeyboardButton[] row3 = { RefreshChannelMessageButton };
-        private static KeyboardButton[][] array = { row1, row2, row3 };
+        private static KeyboardButton[] row4 = { EditChangelogButton };
+        private static KeyboardButton[][] array = { row1, row2, row3, row4 };
         public static ReplyKeyboardMarkup Markup { get; } = new ReplyKeyboardMarkup(array);
     }
 }

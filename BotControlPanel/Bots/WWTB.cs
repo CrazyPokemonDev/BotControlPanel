@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot.Types.Enums;
@@ -11,61 +8,71 @@ using BotControlPanel.Bots.WWTBCustomKeyboards;
 using System.Net;
 using System.IO;
 using System.Windows;
+using System.Windows.Interop;
+using Telegraph.Net.Models;
+using Telegraph.Net;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace BotControlPanel.Bots
 {
-    public class WWTB : FlomBot
+    public class Wwtb : FlomBot
     {
         #region Constants
         public override string Name { get; } = "Werewolf Translation Bot";
-        private readonly string botApiToken;
-        private const string botUsername = "@werewufftransbot";
-        private const string startMessage = "You've just sucessfully started the WereWuff Tranlation Bot!\n" +
+        private const string BotUsername = "@werewufftransbot";
+        private const string StartMessage = "You've just sucessfully started the WereWuff Tranlation Bot!\n" +
             "It's still under development though xD";
-        private const int flomsId = 267376056;
+        private const string TelegraphToken = "6f903e8307b7e8535ec93352f3f7edab2f5ea3f4c9c72ec1f74d770543e2";
+        private const string TelegraphPagePath = "Changelog-05-22";
         #region Php urls
-        private const string closedlistPhpUrl = "http://88.198.66.60/getClosedlist.php";
-        private const string underdevPhpUrl = "http://88.198.66.60/getUnderdev.php";
-        private const string addClosedlistPhpUrl = "http://88.198.66.60/addClosedlist.php";
-        private const string editClosedlistPhpUrl = "http://88.198.66.60/editClosedlist.php";
-        private const string removeFromClosedlistPhpUrl = "http://88.198.66.60/removeFromClosedlist.php";
-        private const string addUnderdevPhpUrl = "http://88.198.66.60/addUnderdev.php";
-        private const string editUnderdevPhpUrl = "http://88.198.66.60/editUnderdev.php";
-        private const string removeFromUnderdevPhpUrl = "http://88.198.66.60/removeFromUnderdev.php";
+        private const string ClosedlistPhpUrl = "http://88.198.66.60/getClosedlist.php";
+        private const string UnderdevPhpUrl = "http://88.198.66.60/getUnderdev.php";
+        private const string AddClosedlistPhpUrl = "http://88.198.66.60/addClosedlist.php";
+        private const string EditClosedlistPhpUrl = "http://88.198.66.60/editClosedlist.php";
+        private const string RemoveFromClosedlistPhpUrl = "http://88.198.66.60/removeFromClosedlist.php";
+        private const string AddUnderdevPhpUrl = "http://88.198.66.60/addUnderdev.php";
+        private const string EditUnderdevPhpUrl = "http://88.198.66.60/editUnderdev.php";
+        private const string RemoveFromUnderdevPhpUrl = "http://88.198.66.60/removeFromUnderdev.php";
         #endregion
 #if DEBUG
-        private const string channelUsername = "@werewufftranstestchannel";
-        private const int messageIdClosedlist = 4;
-        private const int messageIdUnderdev = 5;
+        private const string ChannelUsername = "@werewufftranstestchannel";
+        private const int MessageIdClosedlist = 4;
+        private const int MessageIdUnderdev = 5;
 #else
-        private const string channelUsername = "@werewolftranslation";
-        private const int messageIdClosedlist = 51;
-        private const int messageIdUnderdev = 52;
+        private const string ChannelUsername = "@werewolftranslation";
+        private const int MessageIdClosedlist = 51;
+        private const int MessageIdUnderdev = 52;
 #endif
-        private const string adminIdsPath = "adminIds.txt";
-        private const string closedlistHeader = "▶️ <b>LIST OF CLOSED LANGFILES</b> ◀️\n" +
+        private const string BasePath = "C:\\Olfi01\\BotControlPanel\\WWTB\\";
+        private const string AdminIdsPath = BasePath + "adminIds.txt";
+        private const string ClosedlistHeader = "▶️ <b>LIST OF CLOSED LANGFILES</b> ◀️\n" +
                                                 "<i>(by alphabetical order)</i>\n" +
                                                 "\n";
-        private const string underdevHeader = "▶️ <b>LANGFILES UNDER DEVELOPMENT</b> ◀️\n" +
+        private const string UnderdevHeader = "▶️ <b>LANGFILES UNDER DEVELOPMENT</b> ◀️\n" +
                                               "\n";
         #endregion
         #region Variables
         private User me;
         private Dictionary<long, string> waitingFor = new Dictionary<long, string>();
         private Dictionary<long, string> chosenElement = new Dictionary<long, string>();
+        private Page changelogPage;
+        private TelegraphClient tClient;
+        private ITokenClient ttClient;
+        private List<string> AdminIds { get; set; } = new List<string>();
         #endregion
 
-        public WWTB(string token) : base(token)
+        public Wwtb(string token) : base(token)
         {
-            botApiToken = token;
-            initialize();
+            Initialize();
         }
 
         #region Control Methods
         #region Init
-        private void initialize()
+        private void Initialize()
         {
             #region Initializing stuff
+            if (!Directory.Exists(BasePath)) Directory.CreateDirectory(BasePath);
             try
             {
                 Task<User> ut = client.GetMeAsync();
@@ -74,13 +81,44 @@ namespace BotControlPanel.Bots
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.ToString() + e.Message + e.StackTrace);
+                MessageBox.Show(e + e.Message + e.StackTrace);
             }
-            //MessageBox.Show("Nullifying offline updates (bug source)");
-            Task<Update[]> t = client.GetUpdatesAsync();
+            /*Task<Update[]> t = client.GetUpdatesAsync();
             t.Wait();
-            if (t.Result.Length > 0) client.GetUpdatesAsync(t.Result[t.Result.Length - 1].Id);
+            if (t.Result.Length > 0) client.GetUpdatesAsync(t.Result[t.Result.Length - 1].Id);*/
+            tClient = new TelegraphClient();
+            ttClient = tClient.GetTokenClient(TelegraphToken);
+            if (System.IO.File.Exists(AdminIdsPath))
+            {
+                foreach (string s in System.IO.File.ReadAllLines(AdminIdsPath))
+                {
+                    AdminIds.Add(s);
+                }
+            }
+            else
+            {
+                AdminIds.Add(Flom.ToString());
+                AdminIds.Add("133748469");
+                System.IO.File.WriteAllLines(AdminIdsPath, AdminIds);
+            }
             #endregion
+        }
+        #endregion
+        #region Get Link Header
+        private NodeElement GetLinkHeader()
+        {
+            var newNode = new NodeElement("p", null);
+            foreach (var node in changelogPage.Content)
+            {
+                if (node.Tag == "h3")
+                {
+                    newNode.Children.Add(new NodeElement("a", 
+                        new Dictionary<string, string>() { { "href", $"#{node.Children[0].Attributes["value"].Replace(" ","-")}" } },
+                        node.Children[0].Attributes["value"]));
+                    newNode.Children.Add(", ");
+                }
+            }
+            return newNode;
         }
         #endregion
         #endregion
@@ -89,11 +127,12 @@ namespace BotControlPanel.Bots
         #region Update Handler
         protected override void Client_OnUpdate(object sender, Telegram.Bot.Args.UpdateEventArgs e)
         {
+            if (!AdminIds.Contains(e.Update.Message.From.Id.ToString())) return;
             try
             {
                 Update u = e.Update;
-                #region Message Updates
-                UpdateType workaround = UpdateType.UnkownUpdate;
+#region Message Updates
+                UpdateType workaround;
                 try
                 {
                     workaround = u.Type;
@@ -101,58 +140,59 @@ namespace BotControlPanel.Bots
                 catch(ArgumentOutOfRangeException)
                 {
                     workaround = UpdateType.UnkownUpdate;
+                    client.GetUpdatesAsync(u.Id + 1).Wait();
                 }
                 if (workaround == UpdateType.MessageUpdate)
                 {
-                    #region Text messages
+#region Text messages
                     if (u.Message.Type == MessageType.TextMessage
                     && u.Message.Chat.Type != ChatType.Channel)
                     {
-                        #region Messages containing entities
+#region Messages containing entities
                         if (u.Message.Entities.Count != 0)
                         {
-                            #region Commands
+#region Commands
                             if (u.Message.Entities[0].Type == MessageEntityType.BotCommand
                                 && u.Message.Entities[0].Offset == 0)
                             {
-                                #region Commands only
+#region Commands only
                                 if (u.Message.Entities[0].Length == u.Message.Text.Length)
                                 {
-                                    handleCommandOnly(msg: u.Message, cmd: u.Message.Text);
+                                    HandleCommandOnly(msg: u.Message, cmd: u.Message.Text);
                                 }
-                                #endregion
-                                #region Commands with arguments
+#endregion
+#region Commands with arguments
                                 else
                                 {
-                                    handleCommandArgs(msg: u.Message, cmd: u.Message.Text.Split(' ')[0]);
+                                    HandleCommandArgs(msg: u.Message, cmd: u.Message.Text.Split(' ')[0]);
                                 }
-                                #endregion
+#endregion
                             }
-                            #endregion
+#endregion
                         }
-                        #endregion
+#endregion
 
-                        #region Text messages handling
-                        handleTextMessage(u.Message);
-                        #endregion
+#region Text messages handling
+                        HandleTextMessage(u.Message);
+#endregion
                     }
-                    #endregion
+#endregion
 
-                    #region System messages
-                    #region New member
+#region System messages
+#region New member
                     if (u.Message.Type == MessageType.ServiceMessage && u.Message.NewChatMember != null)
                     {
-                        #region Bot added to group
+#region Bot added to group
                         if (u.Message.NewChatMember.Id == me.Id)
                         {
-                            handleBotJoinedGroup(u.Message);
+                            HandleBotJoinedGroup(u.Message);
                         }
-                        #endregion
+#endregion
                     }
-                    #endregion
-                    #endregion
+#endregion
+#endregion
                 }
-                #endregion
+#endregion
             }
             catch (Exception ex)
             {
@@ -169,21 +209,21 @@ namespace BotControlPanel.Bots
 
 #region Commands
 #region Commands Only
-        private  void handleCommandOnly(Message msg, string cmd)
+        private  void HandleCommandOnly(Message msg, string cmd)
         {
             switch (cmd)
             {
                 case "/start":
-                case "/start" + botUsername:
+                case "/start" + BotUsername:
                     IReplyMarkup rm = StartKeyboard.Markup;
-                    client.SendTextMessageAsync(msg.Chat.Id, startMessage, replyMarkup: rm);
+                    client.SendTextMessageAsync(msg.Chat.Id, StartMessage, replyMarkup: rm);
                     break;
             }
         }
 #endregion
 
 #region Commands with arguments
-        private  void handleCommandArgs(Message msg, string cmd)
+        private  void HandleCommandArgs(Message msg, string cmd)
         {
             switch (cmd)
             {
@@ -195,7 +235,7 @@ namespace BotControlPanel.Bots
 #endregion
 
 #region Text messages
-        private  void handleTextMessage(Message msg)
+        private  void HandleTextMessage(Message msg)
         {
             if (waitingFor.ContainsKey(msg.Chat.Id))
             {
@@ -209,15 +249,19 @@ namespace BotControlPanel.Bots
                         case ClosedlistKeyboard.ClosedlistEditButtonString:
                         case ClosedlistKeyboard.ClosedlistEditButtonString + "_second":
                         case ClosedlistKeyboard.ClosedlistRemoveButtonString:
-                            client.SendTextMessageAsync(msg.Chat.Id, getCurrentClosedlist(),
+                            client.SendTextMessageAsync(msg.Chat.Id, GetCurrentClosedlist(),
                                 replyMarkup: ClosedlistKeyboard.Markup, parseMode: ParseMode.Html);
                             break;
                         case UnderdevKeyboard.UnderdevAddButtonString:
                         case UnderdevKeyboard.UnderdevEditButtonString:
                         case UnderdevKeyboard.UnderdevEditButtonString + "_second":
                         case UnderdevKeyboard.UnderdevRemoveButtonString:
-                            client.SendTextMessageAsync(msg.Chat.Id, getCurrentUnderdev(),
+                            client.SendTextMessageAsync(msg.Chat.Id, GetCurrentUnderdev(),
                                 replyMarkup: UnderdevKeyboard.Markup, parseMode: ParseMode.Html);
+                            break;
+                        case ChangelogKeyboard.AddPostToChangelogString:
+                            client.SendTextMessageAsync(msg.Chat.Id, "You can edit the changelog here",
+                                replyMarkup: ChangelogKeyboard.Markup);
                             break;
                     }
 #endregion
@@ -227,22 +271,22 @@ namespace BotControlPanel.Bots
                 }
                 switch (waitingFor[msg.Chat.Id])
                 {
-#region Closedlist
+                    #region Closedlist
                     case ClosedlistKeyboard.ClosedlistAddButtonString:
                         string error;
-                        if (addToClosedlist(msg.Text, out error))
+                        if (AddToClosedlist(msg.Text, out error))
                         {
                             client.SendTextMessageAsync(msg.Chat.Id, "Language added.");
-                            client.SendTextMessageAsync(msg.Chat.Id, getCurrentClosedlist(),
+                            client.SendTextMessageAsync(msg.Chat.Id, GetCurrentClosedlist(),
                                 replyMarkup: ClosedlistKeyboard.Markup, parseMode: ParseMode.Html);
                             waitingFor.Remove(msg.Chat.Id);
-                            refreshMessages(msg);
+                            RefreshMessages(msg);
                         }
                         else client.SendTextMessageAsync(msg.Chat.Id,
                             error);
                         break;
                     case ClosedlistKeyboard.ClosedlistEditButtonString:
-                        Dictionary<string, string> dict = getCurrentClosedlistDict();
+                        Dictionary<string, string> dict = GetCurrentClosedlistDict();
                         if (dict.ContainsKey(msg.Text))
                         {
                             chosenElement.Add(msg.Chat.Id, msg.Text);
@@ -260,14 +304,14 @@ namespace BotControlPanel.Bots
                         break;
                     case ClosedlistKeyboard.ClosedlistEditButtonString + "_second":
                         string error2;
-                        if (editClosedlist(chosenElement[msg.Chat.Id], msg.Text, out error2))
+                        if (EditClosedlist(chosenElement[msg.Chat.Id], msg.Text, out error2))
                         {
                             client.SendTextMessageAsync(msg.Chat.Id, "Language sucessfully edited.");
-                            client.SendTextMessageAsync(msg.Chat.Id, getCurrentClosedlist(),
+                            client.SendTextMessageAsync(msg.Chat.Id, GetCurrentClosedlist(),
                                 replyMarkup: ClosedlistKeyboard.Markup, parseMode: ParseMode.Html);
                             waitingFor.Remove(msg.Chat.Id);
                             chosenElement.Remove(msg.Chat.Id);
-                            refreshMessages(msg);
+                            RefreshMessages(msg);
                         }
                         else
                         {
@@ -275,16 +319,15 @@ namespace BotControlPanel.Bots
                         }
                         break;
                     case ClosedlistKeyboard.ClosedlistRemoveButtonString:
-                        if (getCurrentClosedlistDict().ContainsKey(msg.Text))
+                        if (GetCurrentClosedlistDict().ContainsKey(msg.Text))
                         {
-                            string error3;
-                            if (removeFromClosedlist(msg.Text, out error3))
+                            if (RemoveFromClosedlist(msg.Text, out string error3))
                             {
                                 client.SendTextMessageAsync(msg.Chat.Id, "Language sucessfully removed.");
-                                client.SendTextMessageAsync(msg.Chat.Id, getCurrentClosedlist(),
+                                client.SendTextMessageAsync(msg.Chat.Id, GetCurrentClosedlist(),
                                     replyMarkup: ClosedlistKeyboard.Markup, parseMode: ParseMode.Html);
                                 waitingFor.Remove(msg.Chat.Id);
-                                refreshMessages(msg);
+                                RefreshMessages(msg);
                             }
                             else
                             {
@@ -296,24 +339,24 @@ namespace BotControlPanel.Bots
                             client.SendTextMessageAsync(msg.Chat.Id, "That language does't exist. Try again.");
                         }
                         break;
-#endregion
+                    #endregion
 
-#region Underdev
+                    #region Underdev
                     case UnderdevKeyboard.UnderdevAddButtonString:
                         string error4;
-                        if (addToUnderdev(msg.Text, out error4))
+                        if (AddToUnderdev(msg.Text, out error4))
                         {
                             client.SendTextMessageAsync(msg.Chat.Id, "Language added.");
-                            client.SendTextMessageAsync(msg.Chat.Id, getCurrentUnderdev(),
+                            client.SendTextMessageAsync(msg.Chat.Id, GetCurrentUnderdev(),
                                 replyMarkup: UnderdevKeyboard.Markup, parseMode: ParseMode.Html);
                             waitingFor.Remove(msg.Chat.Id);
-                            refreshMessages(msg);
+                            RefreshMessages(msg);
                         }
                         else client.SendTextMessageAsync(msg.Chat.Id,
                             error4);
                         break;
                     case UnderdevKeyboard.UnderdevEditButtonString:
-                        if (getCurrentUnderdevDict().ContainsKey(msg.Text))
+                        if (GetCurrentUnderdevDict().ContainsKey(msg.Text))
                         {
                             client.SendTextMessageAsync(msg.Chat.Id,
                                 "Send me the new information in the following format:\n" +
@@ -329,14 +372,14 @@ namespace BotControlPanel.Bots
                         break;
                     case UnderdevKeyboard.UnderdevEditButtonString + "_second":
                         string error5;
-                        if (editUnderdev(chosenElement[msg.Chat.Id], msg.Text, out error5))
+                        if (EditUnderdev(chosenElement[msg.Chat.Id], msg.Text, out error5))
                         {
                             client.SendTextMessageAsync(msg.Chat.Id, "Language edited.");
-                            client.SendTextMessageAsync(msg.Chat.Id, getCurrentUnderdev(),
+                            client.SendTextMessageAsync(msg.Chat.Id, GetCurrentUnderdev(),
                                 replyMarkup: UnderdevKeyboard.Markup, parseMode: ParseMode.Html);
                             waitingFor.Remove(msg.Chat.Id);
                             chosenElement.Remove(msg.Chat.Id);
-                            refreshMessages(msg);
+                            RefreshMessages(msg);
                         }
                         else
                         {
@@ -344,22 +387,71 @@ namespace BotControlPanel.Bots
                         }
                         break;
                     case UnderdevKeyboard.UnderdevRemoveButtonString:
-                        if (getCurrentUnderdevDict().ContainsKey(msg.Text))
+                        if (GetCurrentUnderdevDict().ContainsKey(msg.Text))
                         {
-                            string error6;
-                            if (removeFromUnderdev(msg.Text, out error6))
+                            if (RemoveFromUnderdev(msg.Text, out string error6))
                             {
                                 client.SendTextMessageAsync(msg.Chat.Id, "Laguage removed.");
-                                client.SendTextMessageAsync(msg.Chat.Id, getCurrentUnderdev(),
+                                client.SendTextMessageAsync(msg.Chat.Id, GetCurrentUnderdev(),
                                 replyMarkup: UnderdevKeyboard.Markup, parseMode: ParseMode.Html);
                                 waitingFor.Remove(msg.Chat.Id);
-                                refreshMessages(msg);
+                                RefreshMessages(msg);
                             }
                             else
                             {
                                 client.SendTextMessageAsync(msg.Chat.Id, error6);
                             }
                         }
+                        break;
+                    #endregion
+
+                    #region Changelog
+                    case ChangelogKeyboard.AddPostToChangelogString:
+#if DEBUG
+                        DateTime now = new DateTime(2017, 5, 21);
+#else
+                        DateTime now = DateTime.Now;
+#endif
+                        var t = tClient.GetPageAsync(TelegraphPagePath, true);
+                        t.Wait();
+                        changelogPage = t.Result;
+                        CultureInfo enUS = new CultureInfo("en-US");
+                        var node = new NodeElement("p", null, $"{now.ToString("MMM dd", enUS)} - ");
+                        Regex regex = new Regex(@"_(\S)+_");
+                        string text = msg.Text;
+                        foreach (var match in regex.Matches(text))
+                        {
+                            int index = text.IndexOf(match.ToString());
+                            node.Children.Add(text.Remove(index));
+                            text = text.Substring(index);
+                            node.Children.Add(new NodeElement("code", null, match.ToString().Trim('_')));
+                            text = text.Substring(match.ToString().Length);
+                        }
+                        node.Children.Add(text);
+                        NodeElement found =
+                            changelogPage.Content.Find(x => x.Tag == "h3"
+                            && x.Children.Find(y => y.Tag == "_text" && y.Attributes.ContainsKey("value") &&
+                            y.Attributes["value"] == $"{now.ToString("MMMM", enUS)} {now.Year}") != null);
+                        if (found != null)
+                        {
+                            changelogPage.Content.Insert(changelogPage.Content.IndexOf(found) + 1,
+                                node);
+                        }
+                        else
+                        {
+                            found = changelogPage.Content.Find(x => x.Tag == "h3");
+                            int index = changelogPage.Content.IndexOf(found);
+                            changelogPage.Content.Insert(index,
+                                new NodeElement("h3", null, $"{now.ToString("MMMM", enUS)} {now.Year}"));
+                            changelogPage.Content.Insert(index + 1,
+                                node);
+                        }
+                        changelogPage.Content.RemoveAt(0);
+                        changelogPage.Content.Insert(0, GetLinkHeader());
+                        ttClient.EditPageAsync(TelegraphPagePath, changelogPage.Title, changelogPage.Content.ToArray(),
+                            changelogPage.AuthorName, changelogPage.AuthorUrl).Wait();
+                        client.SendTextMessageAsync(msg.Chat.Id, "Added.", replyMarkup: ChangelogKeyboard.Markup);
+                        waitingFor.Remove(msg.Chat.Id);
                         break;
 #endregion
                 }
@@ -370,18 +462,23 @@ namespace BotControlPanel.Bots
             {
 #region Start keyboard
                 case StartKeyboard.ClosedlistButtonString:
-                    client.SendTextMessageAsync(msg.Chat.Id, getCurrentClosedlist(),
+                    client.SendTextMessageAsync(msg.Chat.Id, GetCurrentClosedlist(),
                         replyMarkup: ClosedlistKeyboard.Markup, parseMode: ParseMode.Html);
                     break;
                 case StartKeyboard.UnderdevButtonString:
-                    client.SendTextMessageAsync(msg.Chat.Id, getCurrentUnderdev(),
+                    client.SendTextMessageAsync(msg.Chat.Id, GetCurrentUnderdev(),
                         replyMarkup: UnderdevKeyboard.Markup, parseMode: ParseMode.Html);
                     break;
                 case StartKeyboard.RefreshChannelMessageButtonString:
-                    refreshMessages(msg);
+                    RefreshMessages(msg);
                     break;
                 case StartKeyboard.BackToStartKeyboardButtonString:
                     client.SendTextMessageAsync(msg.Chat.Id, "Main menu", replyMarkup: StartKeyboard.Markup);
+                    break;
+                case StartKeyboard.EditChangelogString:
+                    client.SendTextMessageAsync(msg.Chat.Id,
+                        $"You can view the changelog at telegra.ph/{TelegraphPagePath}",
+                        replyMarkup: ChangelogKeyboard.Markup);
                     break;
 #endregion
 
@@ -394,12 +491,12 @@ namespace BotControlPanel.Bots
                     waitingFor.Add(msg.Chat.Id, ClosedlistKeyboard.ClosedlistAddButtonString);
                     break;
                 case ClosedlistKeyboard.ClosedlistEditButtonString:
-                    ReplyKeyboardMarkup rkm = getClosedlistChooselangMarkup();
+                    ReplyKeyboardMarkup rkm = GetClosedlistChooselangMarkup();
                     client.SendTextMessageAsync(msg.Chat.Id, "Choose a language to edit", replyMarkup: rkm);
                     waitingFor.Add(msg.Chat.Id, ClosedlistKeyboard.ClosedlistEditButtonString);
                     break;
                 case ClosedlistKeyboard.ClosedlistRemoveButtonString:
-                    ReplyKeyboardMarkup rkm2 = getClosedlistChooselangMarkup();
+                    ReplyKeyboardMarkup rkm2 = GetClosedlistChooselangMarkup();
                     client.SendTextMessageAsync(msg.Chat.Id, "Choose a language to remove", replyMarkup: rkm2);
                     waitingFor.Add(msg.Chat.Id, ClosedlistKeyboard.ClosedlistRemoveButtonString);
                     break;
@@ -414,14 +511,24 @@ namespace BotControlPanel.Bots
                     waitingFor.Add(msg.Chat.Id, UnderdevKeyboard.UnderdevAddButtonString);
                     break;
                 case UnderdevKeyboard.UnderdevEditButtonString:
-                    ReplyKeyboardMarkup rkm3 = getUnderdevChooselangMarkup();
+                    ReplyKeyboardMarkup rkm3 = GetUnderdevChooselangMarkup();
                     client.SendTextMessageAsync(msg.Chat.Id, "Choose a language to edit", replyMarkup: rkm3);
                     waitingFor.Add(msg.Chat.Id, UnderdevKeyboard.UnderdevEditButtonString);
                     break;
                 case UnderdevKeyboard.UnderdevRemoveButtonString:
-                    ReplyKeyboardMarkup rkm4 = getUnderdevChooselangMarkup();
+                    ReplyKeyboardMarkup rkm4 = GetUnderdevChooselangMarkup();
                     client.SendTextMessageAsync(msg.Chat.Id, "Choose a language to remove", replyMarkup: rkm4);
                     waitingFor.Add(msg.Chat.Id, UnderdevKeyboard.UnderdevRemoveButtonString);
+                    break;
+#endregion
+
+#region Changelog Keyboard
+                case ChangelogKeyboard.AddPostToChangelogString:
+                    client.SendTextMessageAsync(msg.Chat.Id, "Send me the new entry for the changelog.\n"
+                                                             + "Date will be added automatically.",
+                                                             replyMarkup: CancelKeyboard.Markup);
+                    if (waitingFor.ContainsKey(msg.Chat.Id)) waitingFor.Remove(msg.Chat.Id);
+                    waitingFor.Add(msg.Chat.Id, ChangelogKeyboard.AddPostToChangelogString);
                     break;
 #endregion
             }
@@ -430,7 +537,7 @@ namespace BotControlPanel.Bots
 
 #region System messages
 #region Bot joined Group
-        private  void handleBotJoinedGroup(Message msg)
+        private  void HandleBotJoinedGroup(Message msg)
         {
             client.SendTextMessageAsync(msg.Chat.Id, "Please do not add me to any groups!").Wait();
             client.LeaveChatAsync(msg.Chat.Id);
@@ -440,18 +547,18 @@ namespace BotControlPanel.Bots
 #endregion
 
 #region Processing Methods
-        private  void refreshMessages(Message msg)
+        private  void RefreshMessages(Message msg)
         {
-            client.EditMessageTextAsync(channelUsername, messageIdClosedlist, getCurrentClosedlist(),
+            client.EditMessageTextAsync(ChannelUsername, MessageIdClosedlist, GetCurrentClosedlist(),
                         parseMode: ParseMode.Html);
-            client.EditMessageTextAsync(channelUsername, messageIdUnderdev, getCurrentUnderdev(),
+            client.EditMessageTextAsync(ChannelUsername, MessageIdUnderdev, GetCurrentUnderdev(),
                 parseMode: ParseMode.Html);
             client.SendTextMessageAsync(msg.Chat.Id, "Message refreshed");
         }
 
-        private  ReplyKeyboardMarkup getClosedlistChooselangMarkup()
+        private  ReplyKeyboardMarkup GetClosedlistChooselangMarkup()
         {
-            Dictionary<string, string> dict = getCurrentClosedlistDict();
+            Dictionary<string, string> dict = GetCurrentClosedlistDict();
             KeyboardButton[][] arrayarray = new KeyboardButton[dict.Count + 1][];
             int i = 0;
             foreach (KeyValuePair<string, string> kvp in dict)
@@ -467,9 +574,9 @@ namespace BotControlPanel.Bots
             return new ReplyKeyboardMarkup(arrayarray);
         }
 
-        private  ReplyKeyboardMarkup getUnderdevChooselangMarkup()
+        private  ReplyKeyboardMarkup GetUnderdevChooselangMarkup()
         {
-            Dictionary<string, string> dict = getCurrentUnderdevDict();
+            Dictionary<string, string> dict = GetCurrentUnderdevDict();
             KeyboardButton[][] arrayarray = new KeyboardButton[dict.Count + 1][];
             int i = 0;
             foreach (KeyValuePair<string, string> kvp in dict)
@@ -489,12 +596,12 @@ namespace BotControlPanel.Bots
 #region SQL methods
 #region Getters
 #region Dict getters
-        private  Dictionary<string, string> getCurrentClosedlistDict()
+        private  Dictionary<string, string> GetCurrentClosedlistDict()
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(closedlistPhpUrl);
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(ClosedlistPhpUrl);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream))
+            using (StreamReader sr = new StreamReader(resStream??Stream.Null))
             {
                 string[] result = sr.ReadToEnd().Replace("<br>", "\n").Split('\n');
                 Dictionary<string, string> dict = new Dictionary<string, string>();
@@ -508,12 +615,12 @@ namespace BotControlPanel.Bots
             }
         }
 
-        private  Dictionary<string, string> getCurrentUnderdevDict()
+        private  Dictionary<string, string> GetCurrentUnderdevDict()
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(underdevPhpUrl);
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(UnderdevPhpUrl);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream))
+            using (StreamReader sr = new StreamReader(resStream??Stream.Null))
             {
                 string[] result = sr.ReadToEnd().Replace("<br>", "\n").Split('\n');
                 Dictionary<string, string> dict = new Dictionary<string, string>();
@@ -528,32 +635,32 @@ namespace BotControlPanel.Bots
         }
 #endregion
 
-        private  string getCurrentClosedlist()
+        private  string GetCurrentClosedlist()
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(closedlistPhpUrl);
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(ClosedlistPhpUrl);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream))
+            using (StreamReader sr = new StreamReader(resStream??Stream.Null))
             {
                 string result = sr.ReadToEnd().Replace("<br>", "\n");
                 result = result.Replace(":", ": ");
-                result = closedlistHeader + result;
-                if (result != closedlistHeader) return result;
+                result = ClosedlistHeader + result;
+                if (result != ClosedlistHeader) return result;
                 else return "No entries in #closedlist yet";
             }
         }
 
-        private  string getCurrentUnderdev()
+        private  string GetCurrentUnderdev()
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(underdevPhpUrl);
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(UnderdevPhpUrl);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream))
+            using (StreamReader sr = new StreamReader(resStream??Stream.Null))
             {
                 string result = sr.ReadToEnd().Replace("<br>", "\n");
                 result = result.Replace(":", ": ");
-                result = underdevHeader + result;
-                if (result != underdevHeader) return result;
+                result = UnderdevHeader + result;
+                if (result != UnderdevHeader) return result;
                 else return "No entries in #underdev yet";
             }
         }
@@ -561,7 +668,7 @@ namespace BotControlPanel.Bots
 
 #region Closedlist
 #region Add
-        private  bool addToClosedlist(string process, out string error)
+        private  bool AddToClosedlist(string process, out string error)
         {
             string[] proc = process.Split('-');
             if (proc.Length != 2)
@@ -571,11 +678,11 @@ namespace BotControlPanel.Bots
             }
             string lang = proc[0].Trim();
             string info = proc[1].Trim();
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(addClosedlistPhpUrl + "?lang=" + lang
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(AddClosedlistPhpUrl + "?lang=" + lang
                 + "&info=" + info);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream))
+            using (StreamReader sr = new StreamReader(resStream??Stream.Null))
             {
                 string res = sr.ReadToEnd();
                 if (res == "true")
@@ -601,7 +708,7 @@ namespace BotControlPanel.Bots
 #endregion
 
 #region Edit
-        private  bool editClosedlist(string lang, string process, out string error)
+        private  bool EditClosedlist(string lang, string process, out string error)
         {
             string[] proc = process.Split('-');
             if (proc.Length != 2)
@@ -611,11 +718,11 @@ namespace BotControlPanel.Bots
             }
             string newLang = proc[0].Trim();
             string info = proc[1].Trim();
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(editClosedlistPhpUrl + "?lang=" + lang
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(EditClosedlistPhpUrl + "?lang=" + lang
                 + "&newlang=" + newLang + "&info=" + info);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream))
+            using (StreamReader sr = new StreamReader(resStream ?? Stream.Null))
             {
                 string res = sr.ReadToEnd();
                 if (res == "true")
@@ -634,13 +741,13 @@ namespace BotControlPanel.Bots
 #endregion
 
 #region Remove
-        private  bool removeFromClosedlist(string process, out string error)
+        private  bool RemoveFromClosedlist(string process, out string error)
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(removeFromClosedlistPhpUrl
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(RemoveFromClosedlistPhpUrl
                 + "?lang=" + process);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream))
+            using (StreamReader sr = new StreamReader(resStream??Stream.Null))
             {
                 string res = sr.ReadToEnd();
                 if (res == "true")
@@ -661,7 +768,7 @@ namespace BotControlPanel.Bots
 
 #region Underdev
 #region Add
-        private  bool addToUnderdev(string process, out string error)
+        private  bool AddToUnderdev(string process, out string error)
         {
             string[] proc = process.Split('-');
             if (proc.Length != 2)
@@ -671,11 +778,11 @@ namespace BotControlPanel.Bots
             }
             string lang = proc[0].Trim();
             string info = proc[1].Trim();
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(addUnderdevPhpUrl + "?lang=" + lang
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(AddUnderdevPhpUrl + "?lang=" + lang
                 + "&info=" + info);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream))
+            using (StreamReader sr = new StreamReader(resStream??Stream.Null))
             {
                 string res = sr.ReadToEnd();
                 if (res == "true")
@@ -701,7 +808,7 @@ namespace BotControlPanel.Bots
 #endregion
 
 #region Edit
-        private  bool editUnderdev(string lang, string process, out string error)
+        private  bool EditUnderdev(string lang, string process, out string error)
         {
             string[] proc = process.Split('-');
             if (proc.Length != 2)
@@ -711,11 +818,11 @@ namespace BotControlPanel.Bots
             }
             string newLang = proc[0].Trim();
             string info = proc[1].Trim();
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(editUnderdevPhpUrl + "?lang=" + lang
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(EditUnderdevPhpUrl + "?lang=" + lang
                 + "&newlang=" + newLang + "&info=" + info);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream))
+            using (StreamReader sr = new StreamReader(resStream??Stream.Null))
             {
                 string res = sr.ReadToEnd();
                 if (res == "true")
@@ -734,13 +841,13 @@ namespace BotControlPanel.Bots
 #endregion
 
 #region Remove
-        private  bool removeFromUnderdev(string process, out string error)
+        private  bool RemoveFromUnderdev(string process, out string error)
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(removeFromUnderdevPhpUrl
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(RemoveFromUnderdevPhpUrl
                 + "?lang=" + process);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream))
+            using (StreamReader sr = new StreamReader(resStream??Stream.Null))
             {
                 string res = sr.ReadToEnd();
                 if (res == "true")
