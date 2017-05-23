@@ -39,7 +39,6 @@ namespace BotControlPanel.Bots
             public state gamestate { get; set; }
             private TelegramBotClient client;
             public Dictionary<roles, string> rolestring = getRolestringDict();
-            public long GroupId { get; }
 
             public string lynchorder = "";
             
@@ -49,10 +48,9 @@ namespace BotControlPanel.Bots
             private const string stoppedMessageText = "<b>This game is finished!</b>";
             private string playerlist;
 
-            public Game(TelegramBotClient cl, long groupid, Message pin)
+            public Game(TelegramBotClient cl, Message pin)
             {
                 client = cl;
-                GroupId = groupid;
                 pinmessage = pin;
                 UpdatePlayerlist();
             }
@@ -531,11 +529,11 @@ namespace BotControlPanel.Bots
                 if (gamestate == state.Running)
                     client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, runMessageText
                         + "\n\n" + playerlist, parseMode: ParseMode.Html,
-                        replyMarkup: InlineKeyboardStop.Get(GroupId)).Wait();
+                        replyMarkup: InlineKeyboardStop.Get(pinmessage.Chat.Id)).Wait();
                 else if (gamestate == state.Joining)
                     client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, joinMessageText
                         + "\n\n" + playerlist, parseMode: ParseMode.Html,
-                        replyMarkup: InlineKeyboardStart.Get(GroupId)).Wait();
+                        replyMarkup: InlineKeyboardStart.Get(pinmessage.Chat.Id)).Wait();
                 else if (gamestate == state.Stopped)
                     client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, stoppedMessageText,
                         parseMode: ParseMode.Html).Wait();
@@ -780,7 +778,7 @@ namespace BotControlPanel.Bots
                                             m = ReplyToMessage("Initializing new game...", u);
                                         }
                                         if (m == null) return;
-                                        var game = new Game(client, msg.Chat.Id, m);
+                                        var game = new Game(client, m);
                                         games.Add(msg.Chat.Id, game);
                                     }
                                     return;
