@@ -15,31 +15,134 @@ namespace BotControlPanel.Bots
 {
     public class WerewolfAchievementsBotPlus : FlomBot
     {
+
+        class Player
+        {
+            public string name { get; set; }
+            public int id { get; set; }
+            public Game.roles role { get; set; }
+            public bool love { get; set; }
+
+            public Player(int id, string name)
+            {
+                this.id = id;
+                this.name = name;
+            }
+        }
+
+
         class Game
         {
+            public Dictionary<int, Player> players = new Dictionary<int, Player>();
+
             public Message pinmessage { get; set; }
             public state gamestate { get; set; }
             private TelegramBotClient client;
-            public Dictionary<roles, string> rolestring = getRolestringDict();
-            public long GroupId { get; }
 
-            public Dictionary<long, string> names = new Dictionary<long, string>();
-            public Dictionary<long, roles> role = new Dictionary<long, roles>();
-            public Dictionary<long, bool> love = new Dictionary<long, bool>();
             public string lynchorder = "";
-            
 
-            private const string joinMessageText = "<b>Join this game!</b>\n\nJoin using the button and remember to use /addplayer after joining. Click the start button below as soon as the roles are assigned and the game begins. <b>DON'T PRESS START BEFORE THE ROLES ARE ASSIGNED!</b>";
-            private const string runMessageText = "<b>Game running!</b>\n\nPress stop <b>ONCE THE GAME STOPPED!</b>";
-            private const string stoppedMessageText = "<b>This game is finished!</b>";
-            private string playerlist;
-
-            public Game(TelegramBotClient cl, long groupid, Message pin)
+            public Game(TelegramBotClient cl, Message pin)
             {
                 client = cl;
-                GroupId = groupid;
                 pinmessage = pin;
                 UpdatePlayerlist();
+            }
+
+            public bool AddPlayer(User newplayer)
+            {
+                if (!players.ContainsKey(newplayer.Id) && gamestate == state.Joining)
+                {
+                    try
+                    {
+                        players.Add(newplayer.Id, new Player(newplayer.Id, newplayer.FirstName));
+                        players[newplayer.Id].role = roles.Unknown;
+                        players[newplayer.Id].love = false;
+                        UpdatePlayerlist();
+                        return true;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                }
+                return false;
+            }
+
+            public bool RemovePlayer(User oldplayer)
+            {
+                if (players.ContainsKey(oldplayer.Id))
+                {
+                    try
+                    {
+                        players.Remove(oldplayer.Id);
+                        UpdatePlayerlist();
+                        return true;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                }
+                return false;
+            }
+
+            public void Start()
+            {
+                gamestate = state.Running;
+            }
+
+            public void Stop()
+            {
+                gamestate = state.Stopped;
+            }
+
+            public void UpdatePlayerlist()
+            {
+                string playerlist = gamestate == state.Running
+                    ? $"<b>LYNCHORDER ({players.Count(x => x.Value.role != roles.Dead)} of {players.Count}):</b>\n"
+                    : $"<b>Players ({players.Count}):</b>\n";
+
+                foreach (var p in players.Values.Where(x => x.role != roles.Dead))
+                {
+                    if (gamestate == state.Joining) playerlist += p.name + "\n";
+                    else if (gamestate == state.Running)
+                    {
+                        if (p.role != roles.Unknown) playerlist += "<b>" + p.name + "</b>: " + rolestring[p.role];
+                        else playerlist += "<b>" + p.name + "</b>: " + rolestring[roles.Unknown];
+
+                        if (p.love) playerlist += " ❤️";
+                        playerlist += "\n";
+                    }
+                }
+
+                if (gamestate == state.Running)
+                {
+                    playerlist += "\n\n<b>DEAD PLAYERS 💀:</b>";
+
+                    foreach (var p in players.Values.Where(x => x.role == roles.Dead))
+                    {
+                        playerlist += "\n" + p.name;
+                    }
+                }
+
+                switch (gamestate)
+                {
+
+                    case state.Joining:
+                        client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, $"<b>Join this game!</b>\n\nJoin using the button and remember to use /addplayer after joining. Click the start button below as soon as the roles are assigned and the game begins. <b>DON'T PRESS START BEFORE THE ROLES ARE ASSIGNED!</b>\n\n{playerlist}", parseMode: ParseMode.Html, replyMarkup: InlineKeyboardStart.Get(pinmessage.Chat.Id)).Wait();
+                        break;
+
+                    case state.Running:
+                        client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, $"<b>Game running!</b>\n\nPress stop <b>ONCE THE GAME STOPPED!</b>\n\n{playerlist}", parseMode: ParseMode.Html, replyMarkup: InlineKeyboardStop.Get(pinmessage.Chat.Id)).Wait();
+                        break;
+
+                    case state.Stopped:
+                        client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, "<b>This game is finished!</b>", parseMode: ParseMode.Html).Wait();
+                        break;
+
+                    default: // fucked
+                        return;
+                }
             }
 
             public enum state
@@ -106,7 +209,7 @@ namespace BotControlPanel.Bots
                 Linguist,
                 Developer,
 
-                
+
                 // NEW ACHIEVEMENTS
                 NoSorcery,
                 CultistTracker,
@@ -118,21 +221,26 @@ namespace BotControlPanel.Bots
                 President,
                 IHelped,
                 ItWasABusyNight,
-                
-                
-                
+
+
+
             }
 
             public bool isAchievable(achievements achv)
             {
-                var gameroles = role.Values;
+                List<roles> gameroles = new List<roles>();
+
+                foreach (var p in players.Values)
+                {
+                    gameroles.Add(p.role);
+                }
 
                 int wolves = 0;
                 wolves += gameroles.Count(x => x == roles.AlphaWolf);
                 wolves += gameroles.Count(x => x == roles.Werewolf);
                 wolves += gameroles.Count(x => x == roles.WolfCub);
 
-                int spawnableWolves = wolves;                
+                int spawnableWolves = wolves;
                 spawnableWolves += gameroles.Count(x => x == roles.WildChild);
                 spawnableWolves += spawnableWolves > 0 ? gameroles.Count(x => x == roles.Cursed) : 0;
                 spawnableWolves += spawnableWolves > 0 ? gameroles.Count(x => x == roles.Doppelgänger) : 0;
@@ -176,13 +284,13 @@ namespace BotControlPanel.Bots
                         return gameroles.Contains(roles.Hunter);
 
                     case achievements.Inconspicuous:
-                        return names.Count >= 20;
+                        return players.Count >= 20;
 
                     case achievements.ISeeALackOfTrust:
                         return gameroles.Contains(roles.Seer) || gameroles.Contains(roles.SeerFool) || gameroles.Contains(roles.ApprenticeSeer);
 
                     case achievements.LoneWolf:
-                        return wolves == 1 && !gameroles.Contains(roles.Traitor) && names.Count >= 10;
+                        return wolves == 1 && !gameroles.Contains(roles.Traitor) && players.Count >= 10;
 
                     case achievements.Masochist:
                         return gameroles.Contains(roles.Tanner);
@@ -238,7 +346,7 @@ namespace BotControlPanel.Bots
                     case achievements.WobbleWobble:
                         return gameroles.Contains(roles.Drunk) && gameroles.Count >= 10;
 
-                    
+
                     // NEW ACHIEVEMENTS
                     case achievements.NoSorcery:
                         return spawnableWolves >= 1 && gameroles.Contains(roles.Sorcerer);
@@ -263,14 +371,14 @@ namespace BotControlPanel.Bots
 
                     case achievements.President:
                         return gameroles.Contains(roles.Mayor);
-                    
+
                     case achievements.IHelped:
                         return gameroles.Contains(roles.WolfCub) && spawnableWolves >= 2;
 
                     case achievements.ItWasABusyNight:
                         return visitcount >= 3;
-                      
-                     
+
+
 
                     default:
                         // UNATTAINABLE ONES AND ONES BOT CAN'T KNOW:
@@ -335,194 +443,110 @@ namespace BotControlPanel.Bots
                 Unknown
             }
 
-            public static Dictionary<roles, string> getRolestringDict()
+            public static Dictionary<roles, string> rolestring = new Dictionary<roles, string>()
             {
-                Dictionary<roles, string> dict = new Dictionary<roles, string>();
-                dict.Add(roles.AlphaWolf, "Alpha Wolf 🐺⚡️");
-                dict.Add(roles.ApprenticeSeer, "App Seer 🙇");
-                dict.Add(roles.Beholder, "Beholder 👁");
-                dict.Add(roles.Blacksmith, "Blacksmith ⚒");
-                dict.Add(roles.ClumsyGuy, "Clumsy Guy 🤕");
-                dict.Add(roles.Cultist, "Cultist 👤");
-                dict.Add(roles.CultistHunter, "Cult Hunter 💂");
-                dict.Add(roles.Cupid, "Cupid 🏹");
-                dict.Add(roles.Cursed, "Cursed 😾");
-                dict.Add(roles.Detective, "Detective 🕵️");
-                dict.Add(roles.Doppelgänger, "Doppelgänger 🎭");
-                dict.Add(roles.Drunk, "Drunk 🍻");
-                dict.Add(roles.Fool, "Fool 🃏");
-                dict.Add(roles.GuardianAngel, "Guardian Angel 👼");
-                dict.Add(roles.Gunner, "Gunner 🔫");
-                dict.Add(roles.Harlot, "Harlot 💋");
-                dict.Add(roles.Hunter, "Hunter 🎯");
-                dict.Add(roles.Mason, "Mason 👷");
-                dict.Add(roles.Mayor, "Mayor 🎖");
-                dict.Add(roles.Prince, "Prince 👑");
-                dict.Add(roles.Seer, "Seer 👳");
-                dict.Add(roles.SerialKiller, "Serial Killer 🔪");
-                dict.Add(roles.Sorcerer, "Sorcerer 🔮");
-                dict.Add(roles.Tanner, "Tanner 👺");
-                dict.Add(roles.Traitor, "Traitor 🖕");
-                dict.Add(roles.Villager, "Villager 👱");
-                dict.Add(roles.Werewolf, "Werewolf 🐺");
-                dict.Add(roles.WildChild, "Wild Child 👶");
-                dict.Add(roles.WolfCub, "Wolf Cub 🐶");
-                dict.Add(roles.SeerFool, "Seer OR Fool 👳🃏");
+                { roles.AlphaWolf, "Alpha Wolf 🐺⚡️" },
+                { roles.ApprenticeSeer, "App Seer 🙇" },
+                { roles.Beholder, "Beholder 👁" },
+                { roles.Blacksmith, "Blacksmith ⚒" },
+                { roles.ClumsyGuy, "Clumsy Guy 🤕" },
+                { roles.Cultist, "Cultist 👤" },
+                { roles.CultistHunter, "Cult Hunter 💂" },
+                { roles.Cupid, "Cupid 🏹" },
+                { roles.Cursed, "Cursed 😾" },
+                { roles.Detective, "Detective 🕵️" },
+                { roles.Doppelgänger, "Doppelgänger 🎭" },
+                { roles.Drunk, "Drunk 🍻" },
+                { roles.Fool, "Fool 🃏" },
+                { roles.GuardianAngel, "Guardian Angel 👼" },
+                { roles.Gunner, "Gunner 🔫" },
+                { roles.Harlot, "Harlot 💋" },
+                { roles.Hunter, "Hunter 🎯" },
+                { roles.Mason, "Mason 👷" },
+                { roles.Mayor, "Mayor 🎖" },
+                { roles.Prince, "Prince 👑" },
+                { roles.Seer, "Seer 👳" },
+                { roles.SerialKiller, "Serial Killer 🔪" },
+                { roles.Sorcerer, "Sorcerer 🔮" },
+                { roles.Tanner, "Tanner 👺" },
+                { roles.Traitor, "Traitor 🖕" },
+                { roles.Villager, "Villager 👱" },
+                { roles.Werewolf, "Werewolf 🐺" },
+                { roles.WildChild, "Wild Child 👶" },
+                { roles.WolfCub, "Wolf Cub 🐶" },
+                { roles.SeerFool, "Seer OR Fool 👳🃏" },
+                { roles.Dead, "DEAD 💀" },
+                { roles.Unknown, "No role detected yet" },
+            };
 
-                dict.Add(roles.Dead, "DEAD 💀");
-                dict.Add(roles.Unknown, "No role detected yet");
-                return dict;
-            }
-
-            public static Dictionary<achievements, string> getAchvDict()
+            public static Dictionary<achievements, string> achv = new Dictionary<achievements, string>()
             {
-                var dict = new Dictionary<achievements, string>();
-                dict.Add(achievements.AlzheimersPatient, "Alzheimer's Patient");
-                dict.Add(achievements.BlackSheep, "Black Sheep");
-                dict.Add(achievements.ChangeSidesWorks, "Change Sides Works");
-                dict.Add(achievements.CultistConvention, "Cultist Convention");
-                dict.Add(achievements.CultistFodder, "Cultist Fodder");
-                dict.Add(achievements.Dedicated, "Dedicated");
-                dict.Add(achievements.Developer, "Developer");
-                dict.Add(achievements.DoubleKill, "Double Kill");
-                dict.Add(achievements.DoubleShifter, "Double Shifter");
-                dict.Add(achievements.DoubleVision, "Double Vision");
-                dict.Add(achievements.Enochlophobia, "Enochlophobia");
-                dict.Add(achievements.EvenAStoppedClockIsRightTwiceADay, "Even A Stopped Clock Is Right Twice A Day");
-                dict.Add(achievements.Explorer, "Explorer");
-                dict.Add(achievements.ForbiddenLove, "Forbidden Love");
-                dict.Add(achievements.HeresJohnny, "Here's Johnny");
-                dict.Add(achievements.HeyManNiceShot, "Hey Man, Nice Shot!");
-                dict.Add(achievements.IHaveNoIdeaWhatImDoing, "I Have No Idea What I'm Doing");
-                dict.Add(achievements.Inconspicuous, "Inconspicuous");
-                dict.Add(achievements.InForTheLongHaul, "In For The Long Haul");
-                dict.Add(achievements.Introvert, "Introvert");
-                dict.Add(achievements.ISeeALackOfTrust, "I See A Lack Of Trust");
-                dict.Add(achievements.IveGotYourBack, "I've Got Your Back");
-                dict.Add(achievements.Linguist, "Linguist");
-                dict.Add(achievements.LoneWolf, "Lone Wolf");
-                dict.Add(achievements.Masochist, "Masochist");
-                dict.Add(achievements.MasonBrother, "Mason Brother");
-                dict.Add(achievements.Naughty, "Naughty");
-                dict.Add(achievements.Obsessed, "Obsessed");
-                dict.Add(achievements.OHAIDER, "O HAI DER");
-                dict.Add(achievements.OHSHI, "OH SHI-");
-                dict.Add(achievements.PackHunter, "Pack Hunter");
-                dict.Add(achievements.Promiscuous, "Promiscuous");
-                dict.Add(achievements.SavedByTheBullet, "Saved By The Bullet");
-                dict.Add(achievements.SelfLoving, "Self Loving");
-                dict.Add(achievements.SerialSamaritan, "Serial Samaritan");
-                dict.Add(achievements.ShouldHaveKnown, "Should Have Known");
-                dict.Add(achievements.ShouldveSaidSomething, "Should've Said Something");
-                dict.Add(achievements.SmartGunner, "Smart Gunner");
-                dict.Add(achievements.SoClose, "So Close");
-                dict.Add(achievements.SpeedDating, "Speed Dating");
-                dict.Add(achievements.SpyVsSpy, "Spy Vs Spy");
-                dict.Add(achievements.Streetwise, "Streetwise");
-                dict.Add(achievements.SundayBloodySunday, "Sunday Bloody Sunday");
-                dict.Add(achievements.Survivalist, "Survivalist");
-                dict.Add(achievements.TannerOverkill, "Tanner Overkill");
-                dict.Add(achievements.ThatsWhyYouDontStayHome, "That's Why You Don't Stay Home");
-                dict.Add(achievements.TheFirstStone, "The First Stone");
-                dict.Add(achievements.Veteran, "Veteran");
-                dict.Add(achievements.WelcomeToHell, "Welcome To Hell");
-                dict.Add(achievements.WelcomeToTheAsylum, "Welcome To The Asylum");
-                dict.Add(achievements.WobbleWobble, "Wobble Wobble");
+                { achievements.AlzheimersPatient, "Alzheimer's Patient" },
+                { achievements.BlackSheep, "Black Sheep" },
+                { achievements.ChangeSidesWorks, "Change Sides Works" },
+                { achievements.CultistConvention, "Cultist Convention" },
+                { achievements.CultistFodder, "Cultist Fodder" },
+                { achievements.Dedicated, "Dedicated" },
+                { achievements.Developer, "Developer" },
+                { achievements.DoubleKill, "Double Kill" },
+                { achievements.DoubleShifter, "Double Shifter" },
+                { achievements.DoubleVision, "Double Vision" },
+                { achievements.Enochlophobia, "Enochlophobia" },
+                { achievements.EvenAStoppedClockIsRightTwiceADay, "Even A Stopped Clock Is Right Twice A Day" },
+                { achievements.Explorer, "Explorer" },
+                { achievements.ForbiddenLove, "Forbidden Love" },
+                { achievements.HeresJohnny, "Here's Johnny" },
+                { achievements.HeyManNiceShot, "Hey Man, Nice Shot!" },
+                { achievements.IHaveNoIdeaWhatImDoing, "I Have No Idea What I'm Doing" },
+                { achievements.Inconspicuous, "Inconspicuous" },
+                { achievements.InForTheLongHaul, "In For The Long Haul" },
+                { achievements.Introvert, "Introvert" },
+                { achievements.ISeeALackOfTrust, "I See A Lack Of Trust" },
+                { achievements.IveGotYourBack, "I've Got Your Back" },
+                { achievements.Linguist, "Linguist" },
+                { achievements.LoneWolf, "Lone Wolf" },
+                { achievements.Masochist, "Masochist" },
+                { achievements.MasonBrother, "Mason Brother" },
+                { achievements.Naughty, "Naughty" },
+                { achievements.Obsessed, "Obsessed" },
+                { achievements.OHAIDER, "O HAI DER" },
+                { achievements.OHSHI, "OH SHI-" },
+                { achievements.PackHunter, "Pack Hunter" },
+                { achievements.Promiscuous, "Promiscuous" },
+                { achievements.SavedByTheBullet, "Saved By The Bullet" },
+                { achievements.SelfLoving, "Self Loving" },
+                { achievements.SerialSamaritan, "Serial Samaritan" },
+                { achievements.ShouldHaveKnown, "Should Have Known" },
+                { achievements.ShouldveSaidSomething, "Should've Said Something" },
+                { achievements.SmartGunner, "Smart Gunner" },
+                { achievements.SoClose, "So Close" },
+                { achievements.SpeedDating, "Speed Dating" },
+                { achievements.SpyVsSpy, "Spy Vs Spy" },
+                { achievements.Streetwise, "Streetwise" },
+                { achievements.SundayBloodySunday, "Sunday Bloody Sunday" },
+                { achievements.Survivalist, "Survivalist" },
+                { achievements.TannerOverkill, "Tanner Overkill" },
+                { achievements.ThatsWhyYouDontStayHome, "That's Why You Don't Stay Home" },
+                { achievements.TheFirstStone, "The First Stone" },
+                { achievements.Veteran, "Veteran" },
+                { achievements.WelcomeToHell, "Welcome To Hell" },
+                { achievements.WelcomeToTheAsylum, "Welcome To The Asylum" },
+                { achievements.WobbleWobble, "Wobble Wobble" },
 
-                
+
                 // NEW ACHIEVEMENTS
-                dict.Add(achievements.NoSorcery, "No Sorcery!");
-                dict.Add(achievements.WuffieCult, "Wuffie-Cult");
-                dict.Add(achievements.ThreeLittleWolvesAndABigBadPig, "Three Little Wolves And A Big Bad Pig");
-                dict.Add(achievements.IHelped, "I Helped!");
-                dict.Add(achievements.CultistTracker, "Cultist Tracker");
-                dict.Add(achievements.ImNotDrunBurppp, "I'M NOT DRUN-- *BURPPP*");
-                dict.Add(achievements.DidYouGuardYourself, "Did You Guard Yourself?");
-                dict.Add(achievements.SpoiledRichBrat, "Spoiled Rich Brat");
-                dict.Add(achievements.President, "President");
-                dict.Add(achievements.ItWasABusyNight, "It Was A Busy Night!");
-                
-                return dict;
-            }
-
-            public bool AddPlayer(User newplayer)
-            {
-                if (!names.ContainsKey(newplayer.Id) && gamestate == state.Joining)
-                {
-                    names.Add(newplayer.Id, newplayer.FirstName.Length > 15 ? newplayer.FirstName.Remove(15) : newplayer.FirstName);
-                    role.Add(newplayer.Id, roles.Unknown);
-                    love.Add(newplayer.Id, false);
-                    UpdatePlayerlist();
-                    return true;                    
-                }
-                return false;
-            }
-
-            public void Start()
-            {
-                gamestate = state.Running;
-            }
-
-            public void Stop()
-            {
-                gamestate = state.Stopped;
-            }
-
-            public bool RemovePlayer(User oldplayer)
-            {
-                if(names.ContainsKey(oldplayer.Id))
-                {
-                    names.Remove(oldplayer.Id);
-                    role.Remove(oldplayer.Id);
-                    love.Remove(oldplayer.Id);
-                    UpdatePlayerlist();
-                    return true;
-                }
-                return false;
-            }
-
-            public void UpdatePlayerlist()
-            {
-                playerlist = gamestate == state.Running
-                    ? $"<b>LYNCHORDER ({names.Keys.Count(x => role[x] != roles.Dead)} of {names.Keys.Count}):</b>\n"
-                    : $"<b>Players ({names.Keys.Count}):</b>\n";
-
-                foreach(var p in names.Keys.Where(x => role[x] != roles.Dead))
-                {
-                    if(gamestate == state.Joining) playerlist += names[p] + "\n";
-                    else if (gamestate == state.Running)
-                    {
-                        if (role[p] != roles.Unknown) playerlist += "<b>" + names[p] + "</b>: " + rolestring[role[p]];
-                        else playerlist += "<b>" + names[p] + "</b>: " + rolestring[roles.Unknown];
-
-                        if (love[p]) playerlist += " ❤️";
-                        playerlist += "\n";
-                    }
-                }
-                
-                if (gamestate == state.Running)
-                {
-                    playerlist += "\n\n<b>DEAD PLAYERS 💀:</b>";
-
-                    foreach (var p in names.Keys.Where(x => role[x] == roles.Dead))
-                    {
-                        playerlist += "\n" + names[p];
-                    }
-                }
-
-                if (gamestate == state.Running)
-                    client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, runMessageText
-                        + "\n\n" + playerlist, parseMode: ParseMode.Html,
-                        replyMarkup: InlineKeyboardStop.Get(GroupId)).Wait();
-                else if (gamestate == state.Joining)
-                    client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, joinMessageText
-                        + "\n\n" + playerlist, parseMode: ParseMode.Html,
-                        replyMarkup: InlineKeyboardStart.Get(GroupId)).Wait();
-                else if (gamestate == state.Stopped)
-                    client.EditMessageTextAsync(pinmessage.Chat.Id, pinmessage.MessageId, stoppedMessageText,
-                        parseMode: ParseMode.Html).Wait();
-            }
-        } // End of class Group
+                { achievements.NoSorcery, "No Sorcery!" },
+                { achievements.WuffieCult, "Wuffie-Cult" },
+                { achievements.ThreeLittleWolvesAndABigBadPig, "Three Little Wolves And A Big Bad Pig" },
+                { achievements.IHelped, "I Helped!" },
+                { achievements.CultistTracker, "Cultist Tracker" },
+                { achievements.ImNotDrunBurppp, "I'M NOT DRUN-- *BURPPP*" },
+                { achievements.DidYouGuardYourself, "Did You Guard Yourself?" },
+                { achievements.SpoiledRichBrat, "Spoiled Rich Brat" },
+                { achievements.President, "President" },
+                { achievements.ItWasABusyNight, "It Was A Busy Night!" },
+            };
+        } // End of class Game
 
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
@@ -591,7 +615,7 @@ namespace BotControlPanel.Bots
                     long id = Convert.ToInt64(data.Substring(6));
                     if (games.ContainsKey(id))
                     {
-                        if (games[id].names.Count >= 5 || id == allowedgroups[0]) // player limit disabled for test group
+                        if (games[id].players.Count >= 5 || id == allowedgroups[0]) // player limit disabled for test group
                         {
                             games[id].Start();
                             games[id].UpdatePlayerlist();
@@ -623,7 +647,7 @@ namespace BotControlPanel.Bots
                                 "The game is now considered stopped.").Wait();
                             client.SendTextMessageAsync(id, $"<b>{e.CallbackQuery.From.FirstName}</b> has considered the game stopped!", parseMode: ParseMode.Html);
                             justCalledStop.Remove(e.CallbackQuery.From.Id);
-                            if (maint)
+                            if (maint && id != allowedgroups[0])
                             {
                                 client.SendTextMessageAsync(id, "<b>The bot is in maintenance mode, so you can't start any further games for now!</b>", parseMode: ParseMode.Html);
                                 client.SendTextMessageAsync(allowedgroups[0], $"1 Game just finished. There are {games.Count} more games running.");
@@ -651,10 +675,7 @@ namespace BotControlPanel.Bots
             }
             catch (Exception ex)
             {
-                client.SendTextMessageAsync(adminIds[0], "Error in achievements callback: " + ex.Message
-                    + "\n" + ex.StackTrace);
-                client.SendTextMessageAsync(adminIds[1], "Error in achievements callback: " + ex.Message
-                    + "\n" + ex.StackTrace);
+                client.SendTextMessageAsync(allowedgroups[0], $"Error in achievements callback: {ex.Message}\n{ex.StackTrace}").Wait();
             }
         }
 
@@ -674,10 +695,9 @@ namespace BotControlPanel.Bots
                         var msg = task.Result;
                         return msg;
                     }
-                    catch (Exception e)
+                    catch (Exception ex)
                     {
-                        client.SendTextMessageAsync(adminIds[0], e.Message).Wait();
-                        client.SendTextMessageAsync(adminIds[1], e.Message).Wait();
+                        client.SendTextMessageAsync(allowedgroups[0], $"Error in ReplyToMessage Method: {ex.Message}\n{ex.StackTrace}").Wait();
                         client.SendTextMessageAsync(u.Message.Chat.Id, "Tried to send something to this chat but failed! The devs were informed! Sorry!").Wait();
                         return null;
                     }
@@ -697,13 +717,11 @@ namespace BotControlPanel.Bots
                 }
                 if (e.Update.Type == UpdateType.MessageUpdate)
                 {
-                    if (e.Update.Message.Type == MessageType.TextMessage &&
-                        (e.Update.Message.Chat.Type == ChatType.Group ||
-                        e.Update.Message.Chat.Type == ChatType.Supergroup))
+                    if (e.Update.Message.Type == MessageType.TextMessage && (e.Update.Message.Chat.Type == ChatType.Group || e.Update.Message.Chat.Type == ChatType.Supergroup))
                     {
-                        var text = e.Update.Message.Text;
-                        var msg = e.Update.Message;
                         var u = e.Update;
+                        var msg = u.Message;
+                        var text = msg.Text;
 
                         if (!maint || msg.Chat.Id == allowedgroups[0] || games.ContainsKey(msg.Chat.Id))
                         {
@@ -752,8 +770,7 @@ namespace BotControlPanel.Bots
                                             {
                                                 m = ReplyToMessage("Initializing new game...", u);
                                                 pinmessages.Remove(msg.Chat.Id);
-                                                client.SendTextMessageAsync(adminIds[0], $"Removed pinmessage of group {msg.Chat.Title} ({msg.Chat.Id}) because it seems it is deleted");
-                                                client.SendTextMessageAsync(adminIds[1], $"Removed pinmessage of group {msg.Chat.Title} ({msg.Chat.Id}) because it seems it is deleted");
+                                                client.SendTextMessageAsync(allowedgroups[0], $"Removed pinmessage of group {msg.Chat.Title} ({msg.Chat.Id}) because it seems it is deleted").Wait();
                                             }
 
                                         }
@@ -762,7 +779,7 @@ namespace BotControlPanel.Bots
                                             m = ReplyToMessage("Initializing new game...", u);
                                         }
                                         if (m == null) return;
-                                        var game = new Game(client, msg.Chat.Id, m);
+                                        var game = new Game(client, m);
                                         games.Add(msg.Chat.Id, game);
                                     }
                                     return;
@@ -794,7 +811,7 @@ namespace BotControlPanel.Bots
                                             games.Remove(msg.Chat.Id);
                                             ReplyToMessage($"<b>{msg.From.FirstName}</b> has considered the game stopped!", u);
                                             justCalledStop.Remove(msg.From.Id);
-                                            if (maint)
+                                            if (maint && msg.Chat.Id != allowedgroups[0])
                                             {
                                                 client.SendTextMessageAsync(msg.Chat.Id, "<b>The bot is in maintenance mode, so you can't start any further games for now!</b>", parseMode: ParseMode.Html);
                                                 client.SendTextMessageAsync(allowedgroups[0], $"1 Game just finished. There are {games.Count} more games running.");
@@ -821,14 +838,14 @@ namespace BotControlPanel.Bots
                                     {
                                         Game g = games[msg.Chat.Id];
 
-                                        User dead = msg.ReplyToMessage != null && g.names.Keys.Contains(msg.ReplyToMessage.From.Id)
+                                        User dead = msg.ReplyToMessage != null && g.players.ContainsKey(msg.ReplyToMessage.From.Id)
                                                 ? msg.ReplyToMessage.From
                                                 : (
-                                                    g.names.Keys.Contains(msg.From.Id)
+                                                    g.players.ContainsKey(msg.From.Id)
                                                         ? msg.From
                                                         : null
                                                   );
-                                        if (dead == null || !g.names.ContainsKey(dead.Id) || g.role[dead.Id] == Game.roles.Dead) return;
+                                        if (dead == null || !g.players.ContainsKey(dead.Id) || g.players[dead.Id].role == Game.roles.Dead) return;
 
                                         switch (g.gamestate)
                                         {
@@ -841,8 +858,7 @@ namespace BotControlPanel.Bots
                                                 break;
 
                                             case Game.state.Running:
-                                                g.role.Remove(dead.Id);
-                                                g.role.Add(dead.Id, Game.roles.Dead);
+                                                g.players[dead.Id].role = Game.roles.Dead;
                                                 g.UpdatePlayerlist();
                                                 ReplyToMessage($"Player <b>{dead.FirstName}</b> was marked as dead.", u);
                                                 break;
@@ -860,7 +876,7 @@ namespace BotControlPanel.Bots
                                     return;
 
                                 case "/listalias":
-                                    var rolestrings = Game.getRolestringDict();
+                                    var rolestrings = Game.rolestring;
                                     var listalias = "<b>ALL ALIASSES OF ALL ROLES:</b>\n";
                                     foreach (var thisrole in rolestrings.Keys)
                                     {
@@ -880,10 +896,10 @@ namespace BotControlPanel.Bots
                                         Game g = games[msg.Chat.Id];
                                         string possible = "<b>POSSIBLE ACHIEVEMENTS:</b>\n";
 
-                                        foreach (var achv in Game.getAchvDict().Keys)
+                                        foreach (var achv in Game.achv.Keys)
                                         {
                                             possible += g.isAchievable(achv)
-                                                ? Game.getAchvDict()[achv] + "\n"
+                                                ? Game.achv[achv] + "\n"
                                                 : "";
                                         }
                                         ReplyToMessage(possible, u);
@@ -895,16 +911,16 @@ namespace BotControlPanel.Bots
                                     {
                                         Game g = games[msg.Chat.Id];
 
-                                        User lover = msg.ReplyToMessage != null && g.names.Keys.Contains(msg.ReplyToMessage.From.Id)
+                                        User lover = msg.ReplyToMessage != null && g.players.Keys.Contains(msg.ReplyToMessage.From.Id)
                                                 ? msg.ReplyToMessage.From
                                                 : (
-                                                    g.names.Keys.Contains(msg.From.Id)
+                                                    g.players.Keys.Contains(msg.From.Id)
                                                         ? msg.From
                                                         : null
                                                   );
-                                        if (lover == null || !g.names.ContainsKey(lover.Id)) return;
+                                        if (lover == null || !g.players.ContainsKey(lover.Id)) return;
 
-                                        g.love[lover.Id] = !g.love[lover.Id] ? true : false;
+                                        g.players[lover.Id].love = !g.players[lover.Id].love;
                                         ReplyToMessage($"The love status of <b>{lover.FirstName}</b> was updated.", u);
                                         g.UpdatePlayerlist();
                                     }
@@ -1039,9 +1055,9 @@ namespace BotControlPanel.Bots
 
                                             List<string> alives = new List<string>();
 
-                                            foreach (var x in g.names)
+                                            foreach (var x in g.players.Values)
                                             {
-                                                if (g.role[x.Key] != Game.roles.Dead) alives.Add(x.Value);
+                                                if (x.role != Game.roles.Dead) alives.Add(x.name);
                                             }
 
                                             foreach (var n in alives)
@@ -1151,12 +1167,12 @@ namespace BotControlPanel.Bots
                                 {
                                     Game g = games[msg.Chat.Id];
 
-                                    long player = 0;
+                                    int player = 0;
                                     if (msg.ReplyToMessage != null)
                                     {
-                                        if (g.names.Keys.Contains(msg.ReplyToMessage.From.Id)) player = msg.ReplyToMessage.From.Id;
+                                        if (g.players.Keys.Contains(msg.ReplyToMessage.From.Id)) player = msg.ReplyToMessage.From.Id;
                                     }
-                                    else if (g.names.Keys.Contains(msg.From.Id))
+                                    else if (g.players.Keys.Contains(msg.From.Id))
                                     {
                                         player = msg.From.Id;
                                     }
@@ -1169,15 +1185,14 @@ namespace BotControlPanel.Bots
                                         Keys.Add(s);
                                     }
 
-                                    if (g.role[player] == Game.roles.Unknown && Keys.Contains(text.ToLower()))
+                                    if (g.players[player].role == Game.roles.Unknown && Keys.Contains(text.ToLower()))
                                     {
                                         var role = GetRoleByAlias(text.ToLower());
                                         if (role != Game.roles.Unknown)
                                         {
-                                            g.role.Remove(player);
-                                            g.role.Add(player, role);
+                                            g.players[player].role = role;
                                             g.UpdatePlayerlist();
-                                            ReplyToMessage($"Role was set to: <b>{g.rolestring[role]}</b>", u);
+                                            ReplyToMessage($"Role was set to: <b>{Game.rolestring[role]}</b>", u);
                                         }
                                     }
                                     if (text.ToLower().StartsWith("now ") && Keys.Contains(text.ToLower().Substring(4)))
@@ -1185,14 +1200,14 @@ namespace BotControlPanel.Bots
                                         var role = GetRoleByAlias(text.ToLower().Substring(4));
                                         if (role != Game.roles.Unknown)
                                         {
-                                            var oldRole = g.role[player];
+                                            var oldRole = g.players[player].role;
                                             if (oldRole != role)
                                             {
-                                                g.role[player] = role;
+                                                g.players[player].role = role;
                                                 g.UpdatePlayerlist();
-                                                ReplyToMessage($"Role was updated to: <b>{g.rolestring[role]}</b>.", u);
+                                                ReplyToMessage($"Role was updated to: <b>{Game.rolestring[role]}</b>.", u);
                                             }
-                                            else ReplyToMessage($"The role was already <b>{g.rolestring[role]}</b>!", u);
+                                            else ReplyToMessage($"The role was already <b>{Game.rolestring[role]}</b>!", u);
                                         }
                                     }
                                 }
@@ -1208,10 +1223,7 @@ namespace BotControlPanel.Bots
             }
             catch (Exception ex)
             {
-                client.SendTextMessageAsync(adminIds[0], "Error in Achievements Bot: " +
-                    ex.InnerException + "\n" + ex.Message + "\n" + ex.StackTrace).Wait();
-                client.SendTextMessageAsync(adminIds[1], "Error in Achievements Bot: " +
-                    ex.InnerException + "\n" + ex.Message + "\n" + ex.StackTrace).Wait();
+                client.SendTextMessageAsync(allowedgroups[0], $"Error in Achievements Bot: {ex.InnerException}\n{ex.Message}\n{ex.StackTrace}").Wait();
             }
         }
 
