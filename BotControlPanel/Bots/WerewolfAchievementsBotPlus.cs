@@ -717,13 +717,11 @@ namespace BotControlPanel.Bots
                 }
                 if (e.Update.Type == UpdateType.MessageUpdate)
                 {
-                    if (e.Update.Message.Type == MessageType.TextMessage &&
-                        (e.Update.Message.Chat.Type == ChatType.Group ||
-                        e.Update.Message.Chat.Type == ChatType.Supergroup))
+                    if (e.Update.Message.Type == MessageType.TextMessage && (e.Update.Message.Chat.Type == ChatType.Group || e.Update.Message.Chat.Type == ChatType.Supergroup))
                     {
-                        var text = e.Update.Message.Text;
-                        var msg = e.Update.Message;
                         var u = e.Update;
+                        var msg = u.Message;
+                        var text = msg.Text;
 
                         if (!maint || msg.Chat.Id == allowedgroups[0] || games.ContainsKey(msg.Chat.Id))
                         {
