@@ -112,8 +112,8 @@ namespace BotControlPanel.Bots
             {
                 if (node.Tag == "h3")
                 {
-                    newNode.Children.Add(new NodeElement("a", 
-                        new Dictionary<string, string>() { { "href", $"#{node.Children[0].Attributes["value"].Replace(" ","-")}" } },
+                    newNode.Children.Add(new NodeElement("a",
+                        new Dictionary<string, string>() { { "href", $"#{node.Children[0].Attributes["value"].Replace(" ", "-")}" } },
                         node.Children[0].Attributes["value"]));
                     newNode.Children.Add(", ");
                 }
@@ -131,68 +131,68 @@ namespace BotControlPanel.Bots
             try
             {
                 Update u = e.Update;
-#region Message Updates
+                #region Message Updates
                 UpdateType workaround;
                 try
                 {
                     workaround = u.Type;
                 }
-                catch(ArgumentOutOfRangeException)
+                catch (ArgumentOutOfRangeException)
                 {
                     workaround = UpdateType.UnkownUpdate;
                     client.GetUpdatesAsync(u.Id + 1).Wait();
                 }
                 if (workaround == UpdateType.MessageUpdate)
                 {
-#region Text messages
+                    #region Text messages
                     if (u.Message.Type == MessageType.TextMessage
                     && u.Message.Chat.Type != ChatType.Channel)
                     {
-#region Messages containing entities
+                        #region Messages containing entities
                         if (u.Message.Entities.Count != 0)
                         {
-#region Commands
+                            #region Commands
                             if (u.Message.Entities[0].Type == MessageEntityType.BotCommand
                                 && u.Message.Entities[0].Offset == 0)
                             {
-#region Commands only
+                                #region Commands only
                                 if (u.Message.Entities[0].Length == u.Message.Text.Length)
                                 {
                                     HandleCommandOnly(msg: u.Message, cmd: u.Message.Text);
                                 }
-#endregion
-#region Commands with arguments
+                                #endregion
+                                #region Commands with arguments
                                 else
                                 {
                                     HandleCommandArgs(msg: u.Message, cmd: u.Message.Text.Split(' ')[0]);
                                 }
-#endregion
+                                #endregion
                             }
-#endregion
+                            #endregion
                         }
-#endregion
+                        #endregion
 
-#region Text messages handling
+                        #region Text messages handling
                         HandleTextMessage(u.Message);
-#endregion
+                        #endregion
                     }
-#endregion
+                    #endregion
 
-#region System messages
-#region New member
+                    #region System messages
+                    #region New member
                     if (u.Message.Type == MessageType.ServiceMessage && u.Message.NewChatMember != null)
                     {
-#region Bot added to group
+                        #region Bot added to group
                         if (u.Message.NewChatMember.Id == me.Id)
                         {
                             HandleBotJoinedGroup(u.Message);
                         }
-#endregion
+                        #endregion
                     }
-#endregion
-#endregion
+                    #endregion
+                    #endregion
                 }
-#endregion
+                #endregion
             }
             catch (Exception ex)
             {
@@ -205,11 +205,11 @@ namespace BotControlPanel.Bots
 #endif
             }
         }
-#endregion
+        #endregion
 
-#region Commands
-#region Commands Only
-        private  void HandleCommandOnly(Message msg, string cmd)
+        #region Commands
+        #region Commands Only
+        private void HandleCommandOnly(Message msg, string cmd)
         {
             switch (cmd)
             {
@@ -220,10 +220,10 @@ namespace BotControlPanel.Bots
                     break;
             }
         }
-#endregion
+        #endregion
 
-#region Commands with arguments
-        private  void HandleCommandArgs(Message msg, string cmd)
+        #region Commands with arguments
+        private void HandleCommandArgs(Message msg, string cmd)
         {
             switch (cmd)
             {
@@ -231,18 +231,18 @@ namespace BotControlPanel.Bots
                     break;
             }
         }
-#endregion
-#endregion
+        #endregion
+        #endregion
 
-#region Text messages
-        private  void HandleTextMessage(Message msg)
+        #region Text messages
+        private void HandleTextMessage(Message msg)
         {
             if (waitingFor.ContainsKey(msg.Chat.Id))
             {
-#region Waiting for something
+                #region Waiting for something
                 if (msg.Text == CancelKeyboard.CancelButtonString)
                 {
-#region Return to old keyboard
+                    #region Return to old keyboard
                     switch (waitingFor[msg.Chat.Id])
                     {
                         case ClosedlistKeyboard.ClosedlistAddButtonString:
@@ -264,7 +264,7 @@ namespace BotControlPanel.Bots
                                 replyMarkup: ChangelogKeyboard.Markup);
                             break;
                     }
-#endregion
+                    #endregion
                     waitingFor.Remove(msg.Chat.Id);
                     if (chosenElement.ContainsKey(msg.Chat.Id)) chosenElement.Remove(msg.Chat.Id);
                     return;
@@ -410,13 +410,13 @@ namespace BotControlPanel.Bots
 #if DEBUG
                         DateTime now = new DateTime(2017, 5, 21);
 #else
-                        DateTime now = DateTime.Now;
+                                DateTime now = DateTime.Now;
 #endif
                         var t = tClient.GetPageAsync(TelegraphPagePath, true);
                         t.Wait();
                         changelogPage = t.Result;
                         CultureInfo enUS = new CultureInfo("en-US");
-                        var node = new NodeElement("p", null, $"{now.ToString("MMM dd", enUS)} - ");
+                        var node = new NodeElement("p", null, $"{now.ToString("dd MMM", enUS)} - ");
                         Regex regex = new Regex(@"_(\S)+_");
                         string text = msg.Text;
                         foreach (var match in regex.Matches(text))
@@ -453,14 +453,14 @@ namespace BotControlPanel.Bots
                         client.SendTextMessageAsync(msg.Chat.Id, "Added.", replyMarkup: ChangelogKeyboard.Markup);
                         waitingFor.Remove(msg.Chat.Id);
                         break;
-#endregion
+                        #endregion
                 }
                 return;
-#endregion
+                #endregion
             }
             switch (msg.Text)
             {
-#region Start keyboard
+                #region Start keyboard
                 case StartKeyboard.ClosedlistButtonString:
                     client.SendTextMessageAsync(msg.Chat.Id, GetCurrentClosedlist(),
                         replyMarkup: ClosedlistKeyboard.Markup, parseMode: ParseMode.Html);
@@ -480,9 +480,9 @@ namespace BotControlPanel.Bots
                         $"You can view the changelog at telegra.ph/{TelegraphPagePath}",
                         replyMarkup: ChangelogKeyboard.Markup);
                     break;
-#endregion
+                #endregion
 
-#region Closedlist keyboard
+                #region Closedlist keyboard
                 case ClosedlistKeyboard.ClosedlistAddButtonString:
                     client.SendTextMessageAsync(msg.Chat.Id,
                         "Send me the language you want to add in the following format: \n" +
@@ -500,9 +500,9 @@ namespace BotControlPanel.Bots
                     client.SendTextMessageAsync(msg.Chat.Id, "Choose a language to remove", replyMarkup: rkm2);
                     waitingFor.Add(msg.Chat.Id, ClosedlistKeyboard.ClosedlistRemoveButtonString);
                     break;
-#endregion
+                #endregion
 
-#region Underdev keyboard
+                #region Underdev keyboard
                 case UnderdevKeyboard.UnderdevAddButtonString:
                     client.SendTextMessageAsync(msg.Chat.Id,
                         "Send me the language you want to add in the following format: \n" +
@@ -520,9 +520,9 @@ namespace BotControlPanel.Bots
                     client.SendTextMessageAsync(msg.Chat.Id, "Choose a language to remove", replyMarkup: rkm4);
                     waitingFor.Add(msg.Chat.Id, UnderdevKeyboard.UnderdevRemoveButtonString);
                     break;
-#endregion
+                #endregion
 
-#region Changelog Keyboard
+                #region Changelog Keyboard
                 case ChangelogKeyboard.AddPostToChangelogString:
                     client.SendTextMessageAsync(msg.Chat.Id, "Send me the new entry for the changelog.\n"
                                                              + "Date will be added automatically.",
@@ -530,24 +530,24 @@ namespace BotControlPanel.Bots
                     if (waitingFor.ContainsKey(msg.Chat.Id)) waitingFor.Remove(msg.Chat.Id);
                     waitingFor.Add(msg.Chat.Id, ChangelogKeyboard.AddPostToChangelogString);
                     break;
-#endregion
+                    #endregion
             }
         }
-#endregion
+        #endregion
 
-#region System messages
-#region Bot joined Group
-        private  void HandleBotJoinedGroup(Message msg)
+        #region System messages
+        #region Bot joined Group
+        private void HandleBotJoinedGroup(Message msg)
         {
             client.SendTextMessageAsync(msg.Chat.Id, "Please do not add me to any groups!").Wait();
             client.LeaveChatAsync(msg.Chat.Id);
         }
-#endregion
-#endregion
-#endregion
+        #endregion
+        #endregion
+        #endregion
 
-#region Processing Methods
-        private  void RefreshMessages(Message msg)
+        #region Processing Methods
+        private void RefreshMessages(Message msg)
         {
             client.EditMessageTextAsync(ChannelUsername, MessageIdClosedlist, GetCurrentClosedlist(),
                         parseMode: ParseMode.Html);
@@ -556,7 +556,7 @@ namespace BotControlPanel.Bots
             client.SendTextMessageAsync(msg.Chat.Id, "Message refreshed");
         }
 
-        private  ReplyKeyboardMarkup GetClosedlistChooselangMarkup()
+        private ReplyKeyboardMarkup GetClosedlistChooselangMarkup()
         {
             Dictionary<string, string> dict = GetCurrentClosedlistDict();
             KeyboardButton[][] arrayarray = new KeyboardButton[dict.Count + 1][];
@@ -574,7 +574,7 @@ namespace BotControlPanel.Bots
             return new ReplyKeyboardMarkup(arrayarray);
         }
 
-        private  ReplyKeyboardMarkup GetUnderdevChooselangMarkup()
+        private ReplyKeyboardMarkup GetUnderdevChooselangMarkup()
         {
             Dictionary<string, string> dict = GetCurrentUnderdevDict();
             KeyboardButton[][] arrayarray = new KeyboardButton[dict.Count + 1][];
@@ -591,17 +591,17 @@ namespace BotControlPanel.Bots
             arrayarray[i] = row2;
             return new ReplyKeyboardMarkup(arrayarray);
         }
-#endregion
+        #endregion
 
-#region SQL methods
-#region Getters
-#region Dict getters
-        private  Dictionary<string, string> GetCurrentClosedlistDict()
+        #region SQL methods
+        #region Getters
+        #region Dict getters
+        private Dictionary<string, string> GetCurrentClosedlistDict()
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(ClosedlistPhpUrl);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream??Stream.Null))
+            using (StreamReader sr = new StreamReader(resStream ?? Stream.Null))
             {
                 string[] result = sr.ReadToEnd().Replace("<br>", "\n").Split('\n');
                 Dictionary<string, string> dict = new Dictionary<string, string>();
@@ -615,12 +615,12 @@ namespace BotControlPanel.Bots
             }
         }
 
-        private  Dictionary<string, string> GetCurrentUnderdevDict()
+        private Dictionary<string, string> GetCurrentUnderdevDict()
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(UnderdevPhpUrl);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream??Stream.Null))
+            using (StreamReader sr = new StreamReader(resStream ?? Stream.Null))
             {
                 string[] result = sr.ReadToEnd().Replace("<br>", "\n").Split('\n');
                 Dictionary<string, string> dict = new Dictionary<string, string>();
@@ -633,14 +633,14 @@ namespace BotControlPanel.Bots
                 return dict;
             }
         }
-#endregion
+        #endregion
 
-        private  string GetCurrentClosedlist()
+        private string GetCurrentClosedlist()
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(ClosedlistPhpUrl);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream??Stream.Null))
+            using (StreamReader sr = new StreamReader(resStream ?? Stream.Null))
             {
                 string result = sr.ReadToEnd().Replace("<br>", "\n");
                 result = result.Replace(":", ": ");
@@ -650,12 +650,12 @@ namespace BotControlPanel.Bots
             }
         }
 
-        private  string GetCurrentUnderdev()
+        private string GetCurrentUnderdev()
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(UnderdevPhpUrl);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream??Stream.Null))
+            using (StreamReader sr = new StreamReader(resStream ?? Stream.Null))
             {
                 string result = sr.ReadToEnd().Replace("<br>", "\n");
                 result = result.Replace(":", ": ");
@@ -664,11 +664,11 @@ namespace BotControlPanel.Bots
                 else return "No entries in #underdev yet";
             }
         }
-#endregion
+        #endregion
 
-#region Closedlist
-#region Add
-        private  bool AddToClosedlist(string process, out string error)
+        #region Closedlist
+        #region Add
+        private bool AddToClosedlist(string process, out string error)
         {
             string[] proc = process.Split('-');
             if (proc.Length != 2)
@@ -682,7 +682,7 @@ namespace BotControlPanel.Bots
                 + "&info=" + info);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream??Stream.Null))
+            using (StreamReader sr = new StreamReader(resStream ?? Stream.Null))
             {
                 string res = sr.ReadToEnd();
                 if (res == "true")
@@ -705,10 +705,10 @@ namespace BotControlPanel.Bots
                 }
             }
         }
-#endregion
+        #endregion
 
-#region Edit
-        private  bool EditClosedlist(string lang, string process, out string error)
+        #region Edit
+        private bool EditClosedlist(string lang, string process, out string error)
         {
             string[] proc = process.Split('-');
             if (proc.Length != 2)
@@ -738,16 +738,16 @@ namespace BotControlPanel.Bots
                 }
             }
         }
-#endregion
+        #endregion
 
-#region Remove
-        private  bool RemoveFromClosedlist(string process, out string error)
+        #region Remove
+        private bool RemoveFromClosedlist(string process, out string error)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(RemoveFromClosedlistPhpUrl
                 + "?lang=" + process);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream??Stream.Null))
+            using (StreamReader sr = new StreamReader(resStream ?? Stream.Null))
             {
                 string res = sr.ReadToEnd();
                 if (res == "true")
@@ -763,12 +763,12 @@ namespace BotControlPanel.Bots
                 }
             }
         }
-#endregion
-#endregion
+        #endregion
+        #endregion
 
-#region Underdev
-#region Add
-        private  bool AddToUnderdev(string process, out string error)
+        #region Underdev
+        #region Add
+        private bool AddToUnderdev(string process, out string error)
         {
             string[] proc = process.Split('-');
             if (proc.Length != 2)
@@ -782,7 +782,7 @@ namespace BotControlPanel.Bots
                 + "&info=" + info);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream??Stream.Null))
+            using (StreamReader sr = new StreamReader(resStream ?? Stream.Null))
             {
                 string res = sr.ReadToEnd();
                 if (res == "true")
@@ -805,10 +805,10 @@ namespace BotControlPanel.Bots
                 }
             }
         }
-#endregion
+        #endregion
 
-#region Edit
-        private  bool EditUnderdev(string lang, string process, out string error)
+        #region Edit
+        private bool EditUnderdev(string lang, string process, out string error)
         {
             string[] proc = process.Split('-');
             if (proc.Length != 2)
@@ -822,7 +822,7 @@ namespace BotControlPanel.Bots
                 + "&newlang=" + newLang + "&info=" + info);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream??Stream.Null))
+            using (StreamReader sr = new StreamReader(resStream ?? Stream.Null))
             {
                 string res = sr.ReadToEnd();
                 if (res == "true")
@@ -838,16 +838,16 @@ namespace BotControlPanel.Bots
                 }
             }
         }
-#endregion
+        #endregion
 
-#region Remove
-        private  bool RemoveFromUnderdev(string process, out string error)
+        #region Remove
+        private bool RemoveFromUnderdev(string process, out string error)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(RemoveFromUnderdevPhpUrl
                 + "?lang=" + process);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream resStream = response.GetResponseStream();
-            using (StreamReader sr = new StreamReader(resStream??Stream.Null))
+            using (StreamReader sr = new StreamReader(resStream ?? Stream.Null))
             {
                 string res = sr.ReadToEnd();
                 if (res == "true")
@@ -863,8 +863,8 @@ namespace BotControlPanel.Bots
                 }
             }
         }
-#endregion
-#endregion
-#endregion
+        #endregion
+        #endregion
+        #endregion
     }
 }
