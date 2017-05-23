@@ -41,8 +41,8 @@ namespace BotControlPanel.Bots
         private const int MessageIdUnderdev = 5;
 #else
         private const string ChannelUsername = "@werewolftranslation";
-        private const int MessageIdClosedlist = 51;
-        private const int MessageIdUnderdev = 52;
+        private const int MessageIdClosedlist = 15;
+        private const int MessageIdUnderdev = 16;
 #endif
         private const string BasePath = "C:\\Olfi01\\BotControlPanel\\WWTB\\";
         private const string AdminIdsPath = BasePath + "adminIds.txt";
