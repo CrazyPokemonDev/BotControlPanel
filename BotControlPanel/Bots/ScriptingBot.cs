@@ -25,7 +25,7 @@ namespace BotControlPanel.Bots
         private static readonly string scriptPath = Path.Combine(basePath, "Start.cs");
         private static readonly string scriptSecondPath = Path.Combine(basePath, "StartCopy.cs");
         private static readonly string execPath = Path.Combine(basePath, "Start.exe");
-        private static readonly string dllPath1 = Path.Combine(startPath, "Telegram.Bot.dll");
+        private static readonly string dllPath3 = Path.Combine(startPath, "Telegram.Bot.dll");
         private static readonly string dllPath2 = Path.Combine(startPath, "Newtonsoft.Json.dll");
         private const string tokenBasePath = "C:\\Olfi01\\BotControlPanel\\ScriptingBot\\";
         private const string tokenPath = tokenBasePath + "scriptedToken.token";
@@ -74,8 +74,7 @@ namespace BotControlPanel.Bots
                                 string code = msg.ReplyToMessage == null
                                     ? text.Substring(text.IndexOf(' ') + 1)
                                     : msg.ReplyToMessage.Text;
-                                string error;
-                                if (NewCommand(code, out error))
+                                if (NewCommand(code, out string error))
                                 {
                                     client.SendTextMessageAsync(msg.Chat.Id, "Command successfully added");
                                 }
@@ -102,8 +101,7 @@ namespace BotControlPanel.Bots
                                 string code = msg.ReplyToMessage == null
                                     ? text.Substring(text.IndexOf(' ') + 1)
                                     : msg.ReplyToMessage.Text;
-                                string error;
-                                if (AddUsing(code, out error))
+                                if (AddUsing(code, out string error))
                                 {
                                     client.SendTextMessageAsync(msg.Chat.Id,
                                         "Using-directive successfully added");
@@ -125,8 +123,7 @@ namespace BotControlPanel.Bots
                                 string code = msg.ReplyToMessage == null
                                     ? text.Substring(text.IndexOf(' ') + 1)
                                     : msg.ReplyToMessage.Text;
-                                string error;
-                                if (AddDefinition(code, out error))
+                                if (AddDefinition(code, out string error))
                                 {
                                     client.SendTextMessageAsync(msg.Chat.Id,
                                         "Definition successfully added");
@@ -148,8 +145,7 @@ namespace BotControlPanel.Bots
                                 string code = msg.ReplyToMessage == null
                                     ? text.Substring(text.IndexOf(' ') + 1)
                                     : msg.ReplyToMessage.Text;
-                                string error;
-                                if (AddMethod(code, out error))
+                                if (AddMethod(code, out string error))
                                 {
                                     client.SendTextMessageAsync(msg.Chat.Id, "Method successfully added");
                                 }
@@ -221,7 +217,7 @@ namespace BotControlPanel.Bots
         {
             CSharpCodeProvider provider = new CSharpCodeProvider();
             CompilerParameters parameters = new CompilerParameters();
-            parameters.ReferencedAssemblies.Add(dllPath1);
+            parameters.ReferencedAssemblies.Add(dllPath3);
             parameters.ReferencedAssemblies.Add(dllPath2);
             parameters.ReferencedAssemblies.Add("System.dll");
             parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
@@ -258,7 +254,7 @@ namespace BotControlPanel.Bots
                 string newFile = oldFile.Replace("//newcommand", args + "\n//end\n//newcommand");
                 CSharpCodeProvider provider = new CSharpCodeProvider();
                 CompilerParameters parameters = new CompilerParameters();
-                parameters.ReferencedAssemblies.Add(dllPath1);
+                parameters.ReferencedAssemblies.Add(dllPath3);
                 parameters.ReferencedAssemblies.Add(dllPath2);
                 parameters.ReferencedAssemblies.Add("System.dll");
                 parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
@@ -318,7 +314,7 @@ namespace BotControlPanel.Bots
             string newFile = oldFile.Replace("//addusing", code + "\n//addusing");
             CSharpCodeProvider provider = new CSharpCodeProvider();
             CompilerParameters parameters = new CompilerParameters();
-            parameters.ReferencedAssemblies.Add(dllPath1);
+            parameters.ReferencedAssemblies.Add(dllPath3);
             parameters.ReferencedAssemblies.Add(dllPath2);
             parameters.ReferencedAssemblies.Add("System.dll");
             parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
@@ -360,7 +356,7 @@ namespace BotControlPanel.Bots
             newFile = AutoCodeCompletion(newFile);
             CSharpCodeProvider provider = new CSharpCodeProvider();
             CompilerParameters parameters = new CompilerParameters();
-            parameters.ReferencedAssemblies.Add(dllPath1);
+            parameters.ReferencedAssemblies.Add(dllPath3);
             parameters.ReferencedAssemblies.Add(dllPath2);
             parameters.ReferencedAssemblies.Add("System.dll");
             parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
@@ -402,7 +398,7 @@ namespace BotControlPanel.Bots
             newFile = AutoCodeCompletion(newFile);
             CSharpCodeProvider provider = new CSharpCodeProvider();
             CompilerParameters parameters = new CompilerParameters();
-            parameters.ReferencedAssemblies.Add(dllPath1);
+            parameters.ReferencedAssemblies.Add(dllPath3);
             parameters.ReferencedAssemblies.Add(dllPath2);
             parameters.ReferencedAssemblies.Add("System.dll");
             parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
