@@ -74,7 +74,8 @@ namespace BotControlPanel.Bots
                                 string code = msg.ReplyToMessage == null
                                     ? text.Substring(text.IndexOf(' ') + 1)
                                     : msg.ReplyToMessage.Text;
-                                if (NewCommand(code, out string error))
+                                string error;
+                                if (NewCommand(code, out error))
                                 {
                                     client.SendTextMessageAsync(msg.Chat.Id, "Command successfully added");
                                 }
@@ -101,7 +102,8 @@ namespace BotControlPanel.Bots
                                 string code = msg.ReplyToMessage == null
                                     ? text.Substring(text.IndexOf(' ') + 1)
                                     : msg.ReplyToMessage.Text;
-                                if (AddUsing(code, out string error))
+                                string error;
+                                if (AddUsing(code, out error))
                                 {
                                     client.SendTextMessageAsync(msg.Chat.Id,
                                         "Using-directive successfully added");
@@ -123,7 +125,8 @@ namespace BotControlPanel.Bots
                                 string code = msg.ReplyToMessage == null
                                     ? text.Substring(text.IndexOf(' ') + 1)
                                     : msg.ReplyToMessage.Text;
-                                if (AddDefinition(code, out string error))
+                                string error;
+                                if (AddDefinition(code, out error))
                                 {
                                     client.SendTextMessageAsync(msg.Chat.Id,
                                         "Definition successfully added");
@@ -145,7 +148,8 @@ namespace BotControlPanel.Bots
                                 string code = msg.ReplyToMessage == null
                                     ? text.Substring(text.IndexOf(' ') + 1)
                                     : msg.ReplyToMessage.Text;
-                                if (AddMethod(code, out string error))
+                                string error;
+                                if (AddMethod(code, out error))
                                 {
                                     client.SendTextMessageAsync(msg.Chat.Id, "Method successfully added");
                                 }
