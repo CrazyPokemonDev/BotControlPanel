@@ -675,10 +675,7 @@ namespace BotControlPanel.Bots
             }
             catch (Exception ex)
             {
-                client.SendTextMessageAsync(adminIds[0], "Error in achievements callback: " + ex.Message
-                    + "\n" + ex.StackTrace);
-                client.SendTextMessageAsync(adminIds[1], "Error in achievements callback: " + ex.Message
-                    + "\n" + ex.StackTrace);
+                client.SendTextMessageAsync(allowedgroups[0], $"Error in achievements callback: {ex.Message}\n{ex.StackTrace}").Wait();
             }
         }
 
@@ -698,10 +695,9 @@ namespace BotControlPanel.Bots
                         var msg = task.Result;
                         return msg;
                     }
-                    catch (Exception e)
+                    catch (Exception ex)
                     {
-                        client.SendTextMessageAsync(adminIds[0], e.Message).Wait();
-                        client.SendTextMessageAsync(adminIds[1], e.Message).Wait();
+                        client.SendTextMessageAsync(allowedgroups[0], $"Error in ReplyToMessage Method: {ex.Message}\n{ex.StackTrace}").Wait();
                         client.SendTextMessageAsync(u.Message.Chat.Id, "Tried to send something to this chat but failed! The devs were informed! Sorry!").Wait();
                         return null;
                     }
@@ -776,8 +772,7 @@ namespace BotControlPanel.Bots
                                             {
                                                 m = ReplyToMessage("Initializing new game...", u);
                                                 pinmessages.Remove(msg.Chat.Id);
-                                                client.SendTextMessageAsync(adminIds[0], $"Removed pinmessage of group {msg.Chat.Title} ({msg.Chat.Id}) because it seems it is deleted");
-                                                client.SendTextMessageAsync(adminIds[1], $"Removed pinmessage of group {msg.Chat.Title} ({msg.Chat.Id}) because it seems it is deleted");
+                                                client.SendTextMessageAsync(allowedgroups[0], $"Removed pinmessage of group {msg.Chat.Title} ({msg.Chat.Id}) because it seems it is deleted").Wait();
                                             }
 
                                         }
@@ -1230,10 +1225,7 @@ namespace BotControlPanel.Bots
             }
             catch (Exception ex)
             {
-                client.SendTextMessageAsync(adminIds[0], "Error in Achievements Bot: " +
-                    ex.InnerException + "\n" + ex.Message + "\n" + ex.StackTrace).Wait();
-                client.SendTextMessageAsync(adminIds[1], "Error in Achievements Bot: " +
-                    ex.InnerException + "\n" + ex.Message + "\n" + ex.StackTrace).Wait();
+                client.SendTextMessageAsync(allowedgroups[0], $"Error in Achievements Bot: {ex.InnerException}\n{ex.Message}\n{ex.StackTrace}").Wait();
             }
         }
 
