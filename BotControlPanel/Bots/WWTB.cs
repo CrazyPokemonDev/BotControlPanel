@@ -127,7 +127,7 @@ namespace BotControlPanel.Bots
         #region Update Handler
         protected override void Client_OnUpdate(object sender, Telegram.Bot.Args.UpdateEventArgs e)
         {
-            if (!AdminIds.Contains(e.Update.Message.From.Id.ToString())) return;
+            //if (!AdminIds.Contains(e.Update.Message.From.Id.ToString())) return;
             try
             {
                 Update u = e.Update;
