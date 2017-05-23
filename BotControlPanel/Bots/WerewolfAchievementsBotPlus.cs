@@ -903,10 +903,10 @@ namespace BotControlPanel.Bots
                                         Game g = games[msg.Chat.Id];
                                         string possible = "<b>POSSIBLE ACHIEVEMENTS:</b>\n";
 
-                                        foreach (var achv in Game.getAchvDict().Keys)
+                                        foreach (var achv in Game.achv.Keys)
                                         {
                                             possible += g.isAchievable(achv)
-                                                ? Game.getAchvDict()[achv] + "\n"
+                                                ? Game.achv[achv] + "\n"
                                                 : "";
                                         }
                                         ReplyToMessage(possible, u);
