@@ -321,7 +321,8 @@ namespace BotControlPanel.Bots
                     case ClosedlistKeyboard.ClosedlistRemoveButtonString:
                         if (GetCurrentClosedlistDict().ContainsKey(msg.Text))
                         {
-                            if (RemoveFromClosedlist(msg.Text, out string error3))
+                            string error3;
+                            if (RemoveFromClosedlist(msg.Text, out error3))
                             {
                                 client.SendTextMessageAsync(msg.Chat.Id, "Language sucessfully removed.");
                                 client.SendTextMessageAsync(msg.Chat.Id, GetCurrentClosedlist(),
@@ -389,7 +390,8 @@ namespace BotControlPanel.Bots
                     case UnderdevKeyboard.UnderdevRemoveButtonString:
                         if (GetCurrentUnderdevDict().ContainsKey(msg.Text))
                         {
-                            if (RemoveFromUnderdev(msg.Text, out string error6))
+                            string error6;
+                            if (RemoveFromUnderdev(msg.Text, out error6))
                             {
                                 client.SendTextMessageAsync(msg.Chat.Id, "Laguage removed.");
                                 client.SendTextMessageAsync(msg.Chat.Id, GetCurrentUnderdev(),
