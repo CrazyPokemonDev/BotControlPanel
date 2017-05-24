@@ -248,11 +248,20 @@ namespace BotControlPanel.Bots
 
                 int visitcount = 0;
                 visitcount += spawnableWolves >= 1 ? 1 : 0;
-                visitcount += gameroles.Contains(roles.SerialKiller) ? 1 : 0;
                 visitcount += gameroles.Contains(roles.Cultist) ? 1 : 0;
-                visitcount += gameroles.Contains(roles.CultistHunter) ? 1 : 0;
-                visitcount += gameroles.Contains(roles.Harlot) ? 1 : 0;
-                visitcount += gameroles.Contains(roles.GuardianAngel) ? 1 : 0;
+                visitcount += gameroles.Count(x => x == roles.SerialKiller);
+                visitcount += gameroles.Count(x => x == roles.CultistHunter);
+                visitcount += gameroles.Count(x => x == roles.Harlot);
+                visitcount += gameroles.Count(x => x == roles.GuardianAngel);
+
+                int maxkill = 0;
+                maxkill += spawnableWolves >= 1 ? 1 : 0; // Wolves eat one person
+                maxkill += gameroles.Contains(roles.WolfCub) && spawnableWolves >= 2 ? 1 : 0; // If there is a cub and at least one more wolf to spawn, they can eat two persons
+                maxkill += gameroles.Count(x => x == roles.SerialKiller); // Serialkiller kills one person
+                maxkill += gameroles.Contains(roles.CultistHunter) && (gameroles.Contains(roles.Cultist) || gameroles.Contains(roles.SerialKiller)) ? 1 : 0; // Cultist hunter visits one cult or the sk
+                maxkill += gameroles.Contains(roles.Cultist) && (gameroles.Contains(roles.CultistHunter) || gameroles.Contains(roles.SerialKiller)) ? 1 : 0; // Cult visit the ch or sk
+                maxkill += gameroles.Contains(roles.Cupid) ? 1 : 0; // If there is a couple, both can die the same night
+                maxkill += gameroles.Contains(roles.Harlot) && (gameroles.Contains(roles.SerialKiller) || spawnableWolves >= 1) ? 1 : 0; // Harlot visit sk or wolf (or wolf/sk victim)
 
                 switch (achv)
                 {
@@ -335,7 +344,7 @@ namespace BotControlPanel.Bots
                         return gameroles.Contains(roles.Detective) && (spawnableWolves + gameroles.Count(x => x == roles.SerialKiller || x == roles.Cultist) >= 4);
 
                     case achievements.SundayBloodySunday:
-                        return false; // TOO HARD YET, GOTTA BE FIXED!
+                        return maxkill >= 4;
 
                     case achievements.TannerOverkill:
                         return gameroles.Contains(roles.Tanner);
