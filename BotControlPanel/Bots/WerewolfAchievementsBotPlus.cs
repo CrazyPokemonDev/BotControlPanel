@@ -15,6 +15,20 @@ namespace BotControlPanel.Bots
 {
     public class WerewolfAchievementsBotPlus : FlomBot
     {
+        class BotUser
+        {
+            public string name { get; set; }
+            public int id { get; }
+            public string username { get; set; }
+
+            public BotUser(string name, int id, string username)
+            {
+                this.name = name;
+                this.id = id;
+                this.username = username;
+            }
+        }
+
 
         class Player
         {
@@ -560,9 +574,11 @@ namespace BotControlPanel.Bots
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
+        private const string usersPath = basePath + "users.dict";
         private const string version = "3.3.9";
         private readonly DateTime starttime = DateTime.UtcNow;
 
+        private Dictionary<int, BotUser> users = new Dictionary<int, BotUser>();
         private Dictionary<long, Game> games = new Dictionary<long, Game>();
         private Dictionary<long, Message> pinmessages = new Dictionary<long, Message>();
         private Dictionary<string, Game.roles> roleAliases = new Dictionary<string, Game.roles>();
@@ -760,6 +776,13 @@ namespace BotControlPanel.Bots
 
                         if (!maint || msg.Chat.Id == allowedgroups[0] || games.ContainsKey(msg.Chat.Id))
                         {
+                            if (!users.ContainsKey(msg.From.Id)) AddUser(msg.From);
+                            else if (!users[msg.From.Id].Equals(new BotUser(msg.From.FirstName, msg.From.Id, msg.From.Username)))
+                            {
+                                RemoveUser(msg.From.Id);
+                                AddUser(msg.From);
+                            }
+
                             switch (text.Split(' ')[0].ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
                             {
                                 case "/announce":
@@ -1258,6 +1281,34 @@ namespace BotControlPanel.Bots
             }
         }
 
+        private void AddUser(User u)
+        {
+            users.Add(u.Id, new BotUser(u.FirstName, u.Id, u.Username));
+            if (!System.IO.Directory.Exists(basePath)) System.IO.Directory.CreateDirectory(basePath);
+            System.IO.File.WriteAllText(usersPath, JsonConvert.SerializeObject(users));
+        }
+
+        private void RemoveUser(int id)
+        {
+            users.Remove(id);
+            if (!System.IO.Directory.Exists(basePath)) System.IO.Directory.CreateDirectory(basePath);
+            System.IO.File.WriteAllText(usersPath, JsonConvert.SerializeObject(users));
+        }
+
+        private void ReadUsers()
+        {
+            users = null;
+            if (System.IO.File.Exists(usersPath))
+            {
+                users = JsonConvert.DeserializeObject<Dictionary<int, BotUser>>(System.IO.File.ReadAllText(aliasesPath));
+            }
+            else
+            {
+                if (!System.IO.Directory.Exists(basePath)) System.IO.Directory.CreateDirectory(basePath);
+                System.IO.File.Create(aliasesPath);
+            }
+            if (users == null) roleAliases = new Dictionary<string, Game.roles>();
+        }
 
         private Game.roles GetRoleByAlias(string alias)
         {
@@ -1388,6 +1439,7 @@ namespace BotControlPanel.Bots
         public override bool StartBot()
         {
             getAliasesFromFile();
+            ReadUsers();
             return base.StartBot();
         }
 
