@@ -1321,7 +1321,7 @@ namespace BotControlPanel.Bots
             users = new Dictionary<int, BotUser>();
             if (System.IO.File.Exists(usersPath))
             {
-                users = JsonConvert.DeserializeObject<Dictionary<int, BotUser>>(System.IO.File.ReadAllText(aliasesPath));
+                users = JsonConvert.DeserializeObject<Dictionary<int, BotUser>>(System.IO.File.ReadAllText(usersPath));
             }
             else
             {
