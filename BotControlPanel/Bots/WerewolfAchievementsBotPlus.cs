@@ -1326,7 +1326,7 @@ namespace BotControlPanel.Bots
             else
             {
                 if (!System.IO.Directory.Exists(basePath)) System.IO.Directory.CreateDirectory(basePath);
-                System.IO.File.Create(aliasesPath);
+                System.IO.File.Create(usersPath);
             }
             if (users == null) roleAliases = new Dictionary<string, Game.roles>();
         }
