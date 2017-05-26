@@ -26,7 +26,7 @@ namespace BotControlPanel.Bots
             public Player(int id, string name)
             {
                 this.id = id;
-                this.name = name;
+                this.name = name.Length <= 15 ? name : name.Remove(15);
             }
         }
 
