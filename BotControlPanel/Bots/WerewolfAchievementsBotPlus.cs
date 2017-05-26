@@ -1318,7 +1318,7 @@ namespace BotControlPanel.Bots
 
         private void ReadUsers()
         {
-            users = null;
+            users = new Dictionary<int, BotUser>();
             if (System.IO.File.Exists(usersPath))
             {
                 users = JsonConvert.DeserializeObject<Dictionary<int, BotUser>>(System.IO.File.ReadAllText(aliasesPath));
@@ -1328,7 +1328,6 @@ namespace BotControlPanel.Bots
                 if (!System.IO.Directory.Exists(basePath)) System.IO.Directory.CreateDirectory(basePath);
                 System.IO.File.Create(usersPath);
             }
-            if (users == null) users = new Dictionary<int, BotUser>();
         }
 
         private Game.roles GetRoleByAlias(string alias)
