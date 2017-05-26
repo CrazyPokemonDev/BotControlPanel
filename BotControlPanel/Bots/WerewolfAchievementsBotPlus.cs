@@ -15,6 +15,20 @@ namespace BotControlPanel.Bots
 {
     public class WerewolfAchievementsBotPlus : FlomBot
     {
+        class BotUser
+        {
+            public string name { get; set; }
+            public int id { get; }
+            public string username { get; set; }
+
+            public BotUser(string name, int id, string username)
+            {
+                this.name = name;
+                this.id = id;
+                this.username = username;
+            }
+        }
+
 
         class Player
         {
@@ -26,7 +40,7 @@ namespace BotControlPanel.Bots
             public Player(int id, string name)
             {
                 this.id = id;
-                this.name = name;
+                this.name = name.Length <= 15 ? name : name.Remove(15);
             }
         }
 
@@ -560,11 +574,13 @@ namespace BotControlPanel.Bots
         public override string Name { get; } = "Werewolf Achievements Bot";
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
-        private const string version = "3.3.9";
+        private const string usersPath = basePath + "users.dict";
+        private const string version = "3.4.0";
         private readonly DateTime starttime = DateTime.UtcNow;
 
+        private Dictionary<int, BotUser> users = new Dictionary<int, BotUser>();
         private Dictionary<long, Game> games = new Dictionary<long, Game>();
-        private Dictionary<long, int> pinmessages = new Dictionary<long, int>();
+        private Dictionary<long, Message> pinmessages = new Dictionary<long, Message>();
         private Dictionary<string, Game.roles> roleAliases = new Dictionary<string, Game.roles>();
 
         List<long> justCalledStop = new List<long>();
@@ -715,6 +731,32 @@ namespace BotControlPanel.Bots
             return null;
         }
 
+        private Message EditMessage(string newtext, Message m, IReplyMarkup replyMarkup = null)
+        {
+            if (!m.Text.Equals(newtext))
+            {
+                return EditMessage(newtext, m.Chat.Id, m.MessageId, replyMarkup);
+            }
+            else return m;
+        }
+
+        private Message EditMessage(string newtext, long chatid, int messageid, IReplyMarkup replyMarkup = null)
+        {
+            
+            try
+            {
+                var t = client.EditMessageTextAsync(chatid, messageid, newtext, ParseMode.Html, replyMarkup: replyMarkup);
+                t.Wait();
+                return t.Result;
+            }
+            catch (Exception e)
+            {
+                client.SendTextMessageAsync(chatid, "Tried to edit a message in this chat but failed! Sorry! The devs were informed.");
+                client.SendTextMessageAsync(allowedgroups[0], $"{e.StackTrace}\n{e.Message}\n{e.InnerException?.Message}");
+                return null;
+            }
+        }
+
         protected override void Client_OnUpdate(object sender, Telegram.Bot.Args.UpdateEventArgs e)
         {
             try
@@ -734,6 +776,13 @@ namespace BotControlPanel.Bots
 
                         if (!maint || msg.Chat.Id == allowedgroups[0] || games.ContainsKey(msg.Chat.Id))
                         {
+                            if (!users.ContainsKey(msg.From.Id)) AddUser(msg.From);
+                            else if (!users[msg.From.Id].Equals(new BotUser(msg.From.FirstName, msg.From.Id, msg.From.Username)))
+                            {
+                                RemoveUser(msg.From.Id);
+                                AddUser(msg.From);
+                            }
+
                             switch (text.Split(' ')[0].ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
                             {
                                 case "/announce":
@@ -770,9 +819,7 @@ namespace BotControlPanel.Bots
                                         {
                                             try
                                             {
-                                                var t = client.EditMessageTextAsync(msg.Chat.Id, pinmessages[msg.Chat.Id], "Initializing new game...");
-                                                t.Wait();
-                                                m = t.Result;
+                                                m = EditMessage("Initializing new game...", pinmessages[msg.Chat.Id]);
                                                 ReplyToMessage($"The new game starts in the pin message! If there is none, please ask an admin for help.", u);
                                             }
                                             catch
@@ -992,12 +1039,12 @@ namespace BotControlPanel.Bots
                                 case "/genpin":
                                     if (adminIds.Contains(msg.From.Id))
                                     {
-                                        var m = client.SendTextMessageAsync(msg.Chat.Id, $"This is a pinmessage generated by {msg.From.FirstName}");
-                                        m.Wait();
-                                        var mID = m.Result.MessageId;
+                                        var t = client.SendTextMessageAsync(msg.Chat.Id, $"This is a pinmessage generated by {msg.From.FirstName}");
+                                        t.Wait();
+                                        var m = t.Result;
 
                                         if (pinmessages.ContainsKey(msg.Chat.Id)) pinmessages.Remove(msg.Chat.Id);
-                                        pinmessages.Add(msg.Chat.Id, mID);
+                                        pinmessages.Add(msg.Chat.Id, m);
                                     }
                                     else ReplyToMessage("You are not a bot admin!", u);
                                     return;
@@ -1007,12 +1054,10 @@ namespace BotControlPanel.Bots
                                     {
                                         if (msg.ReplyToMessage != null && msg.ReplyToMessage.From.Id == 245445220)
                                         {
-                                            var m = client.EditMessageTextAsync(msg.Chat.Id, msg.ReplyToMessage.MessageId, $"This is a pinmessage generated by {msg.From.FirstName}");
-                                            m.Wait();
-                                            var mID = m.Result.MessageId;
+                                            var m = EditMessage($"This is a pinmessage generated by <b>{msg.From.FirstName}</b>.", msg.ReplyToMessage);
 
                                             if (pinmessages.ContainsKey(msg.Chat.Id)) pinmessages.Remove(msg.Chat.Id);
-                                            pinmessages.Add(msg.Chat.Id, mID);
+                                            pinmessages.Add(msg.Chat.Id, m);
                                             ReplyToMessage("That message was successfully set as pin message!", u);
                                         }
                                         else ReplyToMessage("You need to reply to a message of mine!", u);
@@ -1036,7 +1081,7 @@ namespace BotControlPanel.Bots
                                 case "/getpin":
                                     if (pinmessages.ContainsKey(msg.Chat.Id))
                                     {
-                                        client.SendTextMessageAsync(msg.Chat.Id, "Here is the pin message.", replyToMessageId: pinmessages[msg.Chat.Id]);
+                                        client.SendTextMessageAsync(msg.Chat.Id, "Here is the pin message.", replyToMessageId: pinmessages[msg.Chat.Id].MessageId);
                                     }
                                     else if (games.ContainsKey(msg.Chat.Id))
                                     {
@@ -1168,6 +1213,27 @@ namespace BotControlPanel.Bots
                                     infomessage += "Running games: <b>" + games.Count + "</b>\n";
                                     ReplyToMessage(infomessage, u);
                                     return;
+
+                                case "/knownusers": // this command will be removed again, just for testing purposes
+                                    if (adminIds.Contains(msg.From.Id))
+                                    {
+                                        string knownusers = JsonConvert.SerializeObject(users);
+                                        List<string> knownuserlist = new List<string>();
+
+                                        while (knownusers.Length >= 2000)
+                                        {
+                                            knownuserlist.Add(knownusers.Substring(0, 2000));
+                                            knownusers = knownusers.Remove(0, 2000);
+                                        }
+                                        if (!string.IsNullOrEmpty(knownusers)) knownuserlist.Add(knownusers);
+
+                                        foreach (string s in knownuserlist)
+                                        {
+                                            client.SendTextMessageAsync(msg.Chat.Id, s).Wait();
+                                            ReplyToMessage("Finished!", u);
+                                        }
+                                    }
+                                    return;
                             }
 
                             if (games.ContainsKey(msg.Chat.Id))
@@ -1236,6 +1302,34 @@ namespace BotControlPanel.Bots
             }
         }
 
+        private void AddUser(User u)
+        {
+            users.Add(u.Id, new BotUser(u.FirstName, u.Id, u.Username));
+            if (!System.IO.Directory.Exists(basePath)) System.IO.Directory.CreateDirectory(basePath);
+            System.IO.File.WriteAllText(usersPath, JsonConvert.SerializeObject(users));
+        }
+
+        private void RemoveUser(int id)
+        {
+            users.Remove(id);
+            if (!System.IO.Directory.Exists(basePath)) System.IO.Directory.CreateDirectory(basePath);
+            System.IO.File.WriteAllText(usersPath, JsonConvert.SerializeObject(users));
+        }
+
+        private void ReadUsers()
+        {
+            users = null;
+            if (System.IO.File.Exists(usersPath))
+            {
+                users = JsonConvert.DeserializeObject<Dictionary<int, BotUser>>(System.IO.File.ReadAllText(aliasesPath));
+            }
+            else
+            {
+                if (!System.IO.Directory.Exists(basePath)) System.IO.Directory.CreateDirectory(basePath);
+                System.IO.File.Create(aliasesPath);
+            }
+            if (users == null) roleAliases = new Dictionary<string, Game.roles>();
+        }
 
         private Game.roles GetRoleByAlias(string alias)
         {
@@ -1366,6 +1460,7 @@ namespace BotControlPanel.Bots
         public override bool StartBot()
         {
             getAliasesFromFile();
+            ReadUsers();
             return base.StartBot();
         }
 
