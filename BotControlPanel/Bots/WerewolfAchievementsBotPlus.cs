@@ -1213,6 +1213,27 @@ namespace BotControlPanel.Bots
                                     infomessage += "Running games: <b>" + games.Count + "</b>\n";
                                     ReplyToMessage(infomessage, u);
                                     return;
+
+                                case "/knownusers": // this command will be removed again, just for testing purposes
+                                    if (adminIds.Contains(msg.From.Id))
+                                    {
+                                        string knownusers = JsonConvert.SerializeObject(users);
+                                        List<string> knownuserlist = new List<string>();
+
+                                        while (knownusers.Length >= 2000)
+                                        {
+                                            knownuserlist.Add(knownusers.Substring(0, 2000));
+                                            knownusers = knownusers.Remove(0, 2000);
+                                        }
+                                        if (!string.IsNullOrEmpty(knownusers)) knownuserlist.Add(knownusers);
+
+                                        foreach (string s in knownuserlist)
+                                        {
+                                            client.SendTextMessageAsync(msg.Chat.Id, s).Wait();
+                                            ReplyToMessage("Finished!", u);
+                                        }
+                                    }
+                                    return;
                             }
 
                             if (games.ContainsKey(msg.Chat.Id))
