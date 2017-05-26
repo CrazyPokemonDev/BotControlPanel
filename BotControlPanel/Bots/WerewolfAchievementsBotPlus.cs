@@ -1217,7 +1217,7 @@ namespace BotControlPanel.Bots
                                 case "/knownusers": // this command will be removed again, just for testing purposes
                                     if (adminIds.Contains(msg.From.Id))
                                     {
-                                        string knownusers = JsonConvert.SerializeObject(users);
+                                        string knownusers = JsonConvert.SerializeObject(users.Values.ToList());
                                         List<string> knownuserlist = new List<string>();
 
                                         while (knownusers.Length >= 2000)
