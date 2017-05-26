@@ -578,7 +578,7 @@ namespace BotControlPanel.Bots
         private const string version = "3.4.0";
         private readonly DateTime starttime = DateTime.UtcNow;
 
-        private static Dictionary<int, BotUser> users = new Dictionary<int, BotUser>();
+        private Dictionary<int, BotUser> users = new Dictionary<int, BotUser>();
         private Dictionary<long, Game> games = new Dictionary<long, Game>();
         private Dictionary<long, Message> pinmessages = new Dictionary<long, Message>();
         private Dictionary<string, Game.roles> roleAliases = new Dictionary<string, Game.roles>();
@@ -1318,7 +1318,6 @@ namespace BotControlPanel.Bots
 
         private void ReadUsers()
         {
-            users = null;
             if (System.IO.File.Exists(usersPath))
             {
                 users = JsonConvert.DeserializeObject<Dictionary<int, BotUser>>(System.IO.File.ReadAllText(usersPath));
