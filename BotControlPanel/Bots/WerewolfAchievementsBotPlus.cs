@@ -1234,6 +1234,40 @@ namespace BotControlPanel.Bots
                                         }
                                     }
                                     return;
+
+                                case "/backup":
+                                    if (adminIds.Contains(msg.From.Id))
+                                    {
+                                        if (!System.IO.File.Exists(aliasesPath)) System.IO.File.Create(aliasesPath);
+                                        if (!System.IO.File.Exists(aliasesPath)) System.IO.File.Create(usersPath);
+                                        client.SendDocumentAsync(msg.Chat.Id, aliasesPath, "#backup");
+                                        client.SendDocumentAsync(msg.Chat.Id, usersPath, "#backup");
+                                    }
+                                    return;
+
+                                case "/import":
+                                    if (adminIds.Contains(msg.From.Id))
+                                    {
+                                        if (msg.ReplyToMessage != null && msg.ReplyToMessage.Document != null && new List<string> { "users.dict", "aliases.dict" }.Contains(msg.ReplyToMessage.Document.FileName))
+                                        {
+                                            var t = client.GetFileAsync(msg.ReplyToMessage.Document.FileId);
+                                            t.Wait();
+                                            var file = t.Result;
+
+                                            string content;
+                                            using (var sr = new System.IO.StreamReader(file.FileStream))
+                                            {
+                                                content = sr.ReadToEnd();
+                                            }
+
+                                            System.IO.File.WriteAllText(basePath + msg.ReplyToMessage.Document.FileName, content);
+                                            ReadUsers();
+                                            getAliasesFromFile();
+                                            ReplyToMessage($"{msg.ReplyToMessage.Document.FileName} was successfully updated!", u);
+                                        }
+                                        else ReplyToMessage($"You need to reply to the backup file!", u);
+                                    }
+                                    return;
                             }
 
                             if (games.ContainsKey(msg.Chat.Id))
