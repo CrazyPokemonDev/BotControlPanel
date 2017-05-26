@@ -1240,8 +1240,8 @@ namespace BotControlPanel.Bots
                                     {
                                         if (!System.IO.File.Exists(aliasesPath)) System.IO.File.Create(aliasesPath);
                                         if (!System.IO.File.Exists(aliasesPath)) System.IO.File.Create(usersPath);
-                                        client.SendDocumentAsync(msg.Chat.Id, aliasesPath, "#backup");
-                                        client.SendDocumentAsync(msg.Chat.Id, usersPath, "#backup");
+                                        client.SendDocumentAsync(msg.Chat.Id, aliasesPath, "#backup").Wait();
+                                        client.SendDocumentAsync(msg.Chat.Id, usersPath, "#backup").Wait();
                                     }
                                     return;
 
