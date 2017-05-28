@@ -1107,7 +1107,7 @@ namespace BotControlPanel.Bots
                                     else
                                     {
                                         var waittime = TimeSpan.FromMinutes(10) - difference;
-                                        ReplyToMessage($"Only one ping in ten minutes is allowed! You need to wait {waittime.Minutes}:{waittime.Seconds} minutes until you can ping again!", u);
+                                        client.SendTextMessageAsync(msg.Chat.Id, $"Only one ping in ten minutes is allowed! You need to wait {waittime.Minutes}:{waittime.Seconds} minutes until you can ping again! To subscribe (or unsubscribe) to the pinglist, you can use the following buttons:", replyMarkup: InlineKeyboardSubscribe.Get());
                                     }
                                     return;
                                 }
@@ -1266,6 +1266,7 @@ namespace BotControlPanel.Bots
                                             client.SendTextMessageAsync(msg.Chat.Id, s).Wait();
                                         ReplyToMessage("Finished!", u);
                                         }
+                                        ReplyToMessage("Finished!", u);
                                     }
                                     return;
                             }
