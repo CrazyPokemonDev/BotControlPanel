@@ -1269,7 +1269,7 @@ namespace BotControlPanel.Bots
                                             if (!users[msg.From.Id].subscribing)
                                             {
                                                 users[msg.From.Id].subscribing = true;
-                                                ReplyToMessage("You successfully subscribed the ping list! Once someone sends #ping in the achievement group, I'll inform you.", u);
+                                                ReplyToMessage("You successfully subscribed to the ping list! Once someone sends #ping in the achievement group, I'll inform you.", u);
                                             }
                                             else ReplyToMessage("You were already subscribed to the ping list!", u);
                                             return;
@@ -1280,6 +1280,7 @@ namespace BotControlPanel.Bots
                                                 users[msg.From.Id].subscribing = false;
                                                 ReplyToMessage("You successfully stopped subscribing to the ping list!", u);
                                             }
+                                            else ReplyToMessage("You weren't even subscribing!", u);
                                             return;
                                     }
                                 }
