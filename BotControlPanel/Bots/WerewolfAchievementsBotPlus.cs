@@ -1259,20 +1259,20 @@ namespace BotControlPanel.Bots
                                         string knownusers = "☝️ Bot admins:\n\n";
                                         foreach (BotUser user in users.Values.Where(x => adminIds.Contains(x.id)))
                                         {
-                                            knownusers += $"{user.name}\n  -{user.username}\n  -{user.id}\n  -Subscribing:" + (user.Subscribing  ? " ✅" : " ❌") + "\n\n";
+                                            knownusers += $"{user.name}\n  - @{user.username}\n  - {user.id}\n  -Subscribing:" + (user.Subscribing  ? " ✅" : " ❌") + "\n\n";
                                         }
 
 
                                         knownusers += "\n\n👮‍♀️ Group admins:\n\n";
                                         foreach (BotUser user in users.Values.Where(y => admins.Count(x => x.User.Id == y.id) == 1 && !adminIds.Contains(y.id)))
                                         {
-                                            knownusers += $"{user.name}\n  -{user.username}\n  -{user.id}\n  -Subscribing:" + (user.Subscribing ? " ✅" : " ❌") + "\n\n";
+                                            knownusers += $"{user.name}\n  - @{user.username}\n  - {user.id}\n  -Subscribing:" + (user.Subscribing ? " ✅" : " ❌") + "\n\n";
                                         }
 
                                         knownusers += "\n\n👨‍ Members:\n\n";
                                         foreach (BotUser user in users.Values.Where(x => admins.Count(y => y.User.Id == x.id) == 0))
                                         {
-                                            knownusers += $"{user.name}\n  -{user.username}\n  -{user.id}\n  -Subscribing:" + (user.Subscribing ? " ✅" : " ❌") + "\n\n";
+                                            knownusers += $"{user.name}\n  - @{user.username}\n  - {user.id}\n  -Subscribing:" + (user.Subscribing ? " ✅" : " ❌") + "\n\n";
                                         }
 
                                         
