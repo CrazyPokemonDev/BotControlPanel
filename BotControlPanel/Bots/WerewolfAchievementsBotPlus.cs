@@ -1256,23 +1256,23 @@ namespace BotControlPanel.Bots
                                         var admins = adminsT.Result;
 
 
-                                        string knownusers = "<b>☝️ Bot admins:</b>\n\n";
+                                        string knownusers = "☝️ Bot admins:\n\n";
                                         foreach (BotUser user in users.Values.Where(x => adminIds.Contains(x.id)))
                                         {
-                                            knownusers += $"<b>{user.name}</b>\n  -{user.username}\n  -{user.id}\n  -Subscribing:" + (user.Subscribing  ? "✅" : "❌") + "\n\n";
+                                            knownusers += $"{user.name}\n  -{user.username}\n  -{user.id}\n  -Subscribing:" + (user.Subscribing  ? " ✅" : " ❌") + "\n\n";
                                         }
 
 
-                                        knownusers += "\n\n<b>👮‍♀️ Group admins:</b>\n\n";
+                                        knownusers += "\n\n👮‍♀️ Group admins:\n\n";
                                         foreach (BotUser user in users.Values.Where(y => admins.Count(x => x.User.Id == y.id) == 1 && !adminIds.Contains(y.id)))
                                         {
-                                            knownusers += $"<b>{user.name}</b>\n  -{user.username}\n  -{user.id}\n  -Subscribing:" + (user.Subscribing ? "✅" : "❌") + "\n\n";
+                                            knownusers += $"{user.name}\n  -{user.username}\n  -{user.id}\n  -Subscribing:" + (user.Subscribing ? " ✅" : " ❌") + "\n\n";
                                         }
 
-                                        knownusers += "\n\n<b>👨‍ Members:</b>\n\n";
+                                        knownusers += "\n\n👨‍ Members:\n\n";
                                         foreach (BotUser user in users.Values.Where(x => admins.Count(y => y.User.Id == x.id) == 0))
                                         {
-                                            knownusers += $"<b>{user.name}</b>\n  -{user.username}\n  -{user.id}\n  -Subscribing:" + (user.Subscribing ? "✅" : "❌") + "\n\n";
+                                            knownusers += $"{user.name}\n  -{user.username}\n  -{user.id}\n  -Subscribing:" + (user.Subscribing ? " ✅" : " ❌") + "\n\n";
                                         }
 
                                         
