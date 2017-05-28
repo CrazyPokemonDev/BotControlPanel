@@ -1264,7 +1264,6 @@ namespace BotControlPanel.Bots
                                         foreach (string s in knownuserlist)
                                         {
                                             client.SendTextMessageAsync(msg.Chat.Id, s).Wait();
-                                        ReplyToMessage("Finished!", u);
                                         }
                                         ReplyToMessage("Finished!", u);
                                     }
