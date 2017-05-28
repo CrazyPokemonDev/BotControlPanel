@@ -20,12 +20,14 @@ namespace BotControlPanel.Bots
             public string name { get; set; }
             public int id { get; }
             public string username { get; set; }
+            public bool subscribing { get; set; }
 
-            public BotUser(string name, int id, string username)
+            public BotUser(string name, int id, string username, bool subscribing = false)
             {
                 this.name = name;
                 this.id = id;
                 this.username = username;
+                this.subscribing = subscribing;
             }
         }
 
@@ -582,11 +584,13 @@ namespace BotControlPanel.Bots
         private Dictionary<long, Game> games = new Dictionary<long, Game>();
         private Dictionary<long, Message> pinmessages = new Dictionary<long, Message>();
         private Dictionary<string, Game.roles> roleAliases = new Dictionary<string, Game.roles>();
+        private DateTime lastping = DateTime.MinValue;
 
         List<long> justCalledStop = new List<long>();
         public bool maint = true;
 
         private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 }; // [0] is testing group, [1] is achv group
+        private const string achvLink = "https://t.me/joinchat/AAAAAEBJi2uYsVBF2fVwBg";
         private readonly List<long> adminIds = new List<long>() { 267376056, 295152997 }; // [0] is Florian, [1] is Ludwig
 
         private readonly List<string> defaultAliases = new List<string>()
@@ -768,13 +772,13 @@ namespace BotControlPanel.Bots
                 }
                 if (e.Update.Type == UpdateType.MessageUpdate)
                 {
-                    if (e.Update.Message.Type == MessageType.TextMessage && (e.Update.Message.Chat.Type == ChatType.Group || e.Update.Message.Chat.Type == ChatType.Supergroup))
+                    if (e.Update.Message.Type == MessageType.TextMessage)
                     {
                         var u = e.Update;
                         var msg = u.Message;
                         var text = msg.Text;
 
-                        if (!maint || msg.Chat.Id == allowedgroups[0] || games.ContainsKey(msg.Chat.Id))
+                        if (!maint || msg.Chat.Id == allowedgroups[0] || games.ContainsKey(msg.Chat.Id) || adminIds.Contains(msg.From.Id))
                         {
                             if (!users.ContainsKey(msg.From.Id)) AddUser(msg.From);
                             else if (!users[msg.From.Id].Equals(new BotUser(msg.From.FirstName, msg.From.Id, msg.From.Username)))
@@ -783,18 +787,8 @@ namespace BotControlPanel.Bots
                                 AddUser(msg.From);
                             }
 
-                            switch (text.Split(' ')[0].ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
+                            if (msg.Chat.Type != ChatType.Private) switch (text.Split(' ')[0].ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
                             {
-                                case "/announce":
-                                    if (adminIds.Contains(msg.From.Id))
-                                    {
-                                        client.SendTextMessageAsync(allowedgroups[1], text.Remove(0, text.IndexOf(' ')), parseMode: ParseMode.Html).Wait();
-                                        ReplyToMessage("Successfully announced!", u);
-                                    }
-                                    else ReplyToMessage("You are not a bot admin!", u);
-
-                                    return;
-
                                 case "/startgame":
                                 case "/startchaos":
                                     if (games.ContainsKey(msg.Chat.Id))
@@ -923,29 +917,6 @@ namespace BotControlPanel.Bots
                                     }
                                     return;
 
-                                case "/ping":
-                                    ReplyToMessage("<b>PENG!</b>", u);
-                                    return;
-
-                                case "/version":
-                                    ReplyToMessage($"Werewolf Achievements Manager.\n <b>Version {version}.</b>", u);
-                                    return;
-
-                                case "/listalias":
-                                    var rolestrings = Game.rolestring;
-                                    var listalias = "<b>ALL ALIASSES OF ALL ROLES:</b>\n";
-                                    foreach (var thisrole in rolestrings.Keys)
-                                    {
-                                        listalias += "\n\n<b>" + rolestrings[thisrole] + "</b>";
-
-                                        foreach (var alias in roleAliases.Where(x => x.Value == thisrole))
-                                        {
-                                            listalias += "\n" + alias.Key;
-                                        }
-                                    }
-                                    ReplyToMessage(listalias, u);
-                                    return;
-
                                 case "/listachv":
                                     if (games.ContainsKey(msg.Chat.Id))
                                     {
@@ -980,60 +951,6 @@ namespace BotControlPanel.Bots
                                         ReplyToMessage($"The love status of <b>{lover.FirstName}</b> was updated.", u);
                                         g.UpdatePlayerlist();
                                     }
-                                    return;
-
-                                case "/addalias":
-                                    if (adminIds.Contains(msg.From.Id))
-                                    {
-                                        if (text.Split(' ').Count() == 3)
-                                        {
-                                            string alias = text.Split(' ')[1].ToLower();
-                                            string roleS = text.Split(' ')[2];
-                                            Game.roles role = GetRoleByAlias(roleS);
-                                            if (role == Game.roles.Unknown)
-                                            {
-                                                ReplyToMessage("The role was not recognized! Adding alias failed!", u);
-                                            }
-                                            else if (!roleAliases.Keys.Contains(alias))
-                                            {
-                                                roleAliases.Add(alias, role);
-                                                writeAliasesFile();
-                                                ReplyToMessage($"Alias <i>{alias}</i> successfully added for role <b>{role}</b>.", u);
-                                            }
-                                            else
-                                            {
-                                                roleAliases[alias] = role;
-                                                writeAliasesFile();
-                                                ReplyToMessage($"Alias <i>{alias}</i> successfully updated for role <b>{role}</b>.", u);
-                                            }
-
-                                        }
-                                        else ReplyToMessage("Failed: Wrong command syntax. Syntax: /addalias <alias>", u);
-                                    }
-                                    else ReplyToMessage("You are not a bot admin!", u);
-                                    return;
-
-                                case "/delalias":
-                                    if (adminIds.Contains(msg.From.Id))
-                                    {
-                                        if (text.Split(' ').Count() == 2)
-                                        {
-                                            string alias = text.Split(' ')[1].ToLower();
-
-                                            if (roleAliases.ContainsKey(alias))
-                                            {
-                                                roleAliases.Remove(alias);
-                                                writeAliasesFile();
-                                                ReplyToMessage($"Alias <i>{alias}</i> was successfully removed!", u);
-                                            }
-                                            else
-                                            {
-                                                ReplyToMessage($"Couldn't find Alias <i>{alias}</i>!", u);
-                                            }
-                                        }
-                                        else ReplyToMessage("Failed: Wrong command syntax. Syntax: /delalias <alias>", u);
-                                    }
-                                    else ReplyToMessage("You are not a bot admin!", u);
                                     return;
 
                                 case "/genpin":
@@ -1167,6 +1084,112 @@ namespace BotControlPanel.Bots
                                     else ReplyToMessage("This command can only be used while a game is running.", u);
                                     return;
 
+                                case "#ping":
+                                    var difference = DateTime.UtcNow - lastping;
+                                    if (difference.TotalMinutes >= 10)
+                                    {
+                                        client.SendTextMessageAsync(msg.Chat.Id, "<b>🔔 Ping! 🔔</b>\n\nAchievement hunters are called!\n\nIf you want to be notified by this command, use the subscribe button below! To no longer be notified, use the unsubscribe button. You will be sent to our private chat, where you need to start me, and we are done :D\n\n<b>Have fun hunting achievements!</b>", replyMarkup: InlineKeyboardSubscribe.Get(), parseMode: ParseMode.Html, replyToMessageId: msg.MessageId);
+                                        string group = msg.Chat.Id == allowedgroups[1] ? $"<a href=\"{achvLink}\">{msg.Chat.Title}</a>" : $"<b>{msg.Chat.Title}</b>";
+                                        foreach (var pinguser in users.Values.Where(x => x.subscribing)) client.SendTextMessageAsync(pinguser.id, $"<b>🔔 Ping! 🔔</b>\n\nAchievement hunters are called in {group}!", parseMode: ParseMode.Html);
+                                        lastping = DateTime.UtcNow;
+                                    }
+                                    else
+                                    {
+                                        var waittime = TimeSpan.FromMinutes(10) - difference;
+                                        ReplyToMessage($"Only one ping in ten minutes is allowed! You need to wait {waittime.Minutes}:{waittime.Seconds} minutes until you can ping again!", u);
+                                    }
+                                    return;
+                                }
+
+
+                            switch (text.Split(' ')[0].ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
+                            {
+                                case "/announce":
+                                    if (adminIds.Contains(msg.From.Id))
+                                    {
+                                        client.SendTextMessageAsync(allowedgroups[1], text.Remove(0, text.IndexOf(' ')), parseMode: ParseMode.Html).Wait();
+                                        ReplyToMessage("Successfully announced!", u);
+                                    }
+                                    else ReplyToMessage("You are not a bot admin!", u);
+                                    return;
+
+                                case "/ping":
+                                    ReplyToMessage("<b>PENG!</b>", u);
+                                    return;
+
+                                case "/version":
+                                    ReplyToMessage($"Werewolf Achievements Manager.\n <b>Version {version}.</b>", u);
+                                    return;
+
+                                case "/listalias":
+                                    var rolestrings = Game.rolestring;
+                                    var listalias = "<b>ALL ALIASSES OF ALL ROLES:</b>\n";
+                                    foreach (var thisrole in rolestrings.Keys)
+                                    {
+                                        listalias += "\n\n<b>" + rolestrings[thisrole] + "</b>";
+
+                                        foreach (var alias in roleAliases.Where(x => x.Value == thisrole))
+                                        {
+                                            listalias += "\n" + alias.Key;
+                                        }
+                                    }
+                                    ReplyToMessage(listalias, u);
+                                    return;
+
+                                case "/addalias":
+                                    if (adminIds.Contains(msg.From.Id))
+                                    {
+                                        if (text.Split(' ').Count() == 3)
+                                        {
+                                            string alias = text.Split(' ')[1].ToLower();
+                                            string roleS = text.Split(' ')[2];
+                                            Game.roles role = GetRoleByAlias(roleS);
+                                            if (role == Game.roles.Unknown)
+                                            {
+                                                ReplyToMessage("The role was not recognized! Adding alias failed!", u);
+                                            }
+                                            else if (!roleAliases.Keys.Contains(alias))
+                                            {
+                                                roleAliases.Add(alias, role);
+                                                writeAliasesFile();
+                                                ReplyToMessage($"Alias <i>{alias}</i> successfully added for role <b>{role}</b>.", u);
+                                            }
+                                            else
+                                            {
+                                                roleAliases[alias] = role;
+                                                writeAliasesFile();
+                                                ReplyToMessage($"Alias <i>{alias}</i> successfully updated for role <b>{role}</b>.", u);
+                                            }
+
+                                        }
+                                        else ReplyToMessage("Failed: Wrong command syntax. Syntax: /addalias <alias>", u);
+                                    }
+                                    else ReplyToMessage("You are not a bot admin!", u);
+                                    return;
+
+                                case "/delalias":
+                                    if (adminIds.Contains(msg.From.Id))
+                                    {
+                                        if (text.Split(' ').Count() == 2)
+                                        {
+                                            string alias = text.Split(' ')[1].ToLower();
+
+                                            if (roleAliases.ContainsKey(alias))
+                                            {
+                                                roleAliases.Remove(alias);
+                                                writeAliasesFile();
+                                                ReplyToMessage($"Alias <i>{alias}</i> was successfully removed!", u);
+                                            }
+                                            else
+                                            {
+                                                ReplyToMessage($"Couldn't find Alias <i>{alias}</i>!", u);
+                                            }
+                                        }
+                                        else ReplyToMessage("Failed: Wrong command syntax. Syntax: /delalias <alias>", u);
+                                    }
+                                    else ReplyToMessage("You are not a bot admin!", u);
+                                    return;
+
                                 case "/maint":
                                     if (adminIds.Contains(msg.From.Id))
                                     {
@@ -1234,40 +1257,32 @@ namespace BotControlPanel.Bots
                                         }
                                     }
                                     return;
+                            }
 
-                                case "/backup":
-                                    if (adminIds.Contains(msg.From.Id))
+                            if (msg.Chat.Type == ChatType.Private)
+                            {
+                                if (msg.Text?.Split(' ')[0] == "/start" && msg.Text?.Split(' ').Length == 2)
+                                {
+                                    switch (msg.Text.Split(' ')[1])
                                     {
-                                        if (!System.IO.File.Exists(aliasesPath)) System.IO.File.Create(aliasesPath);
-                                        if (!System.IO.File.Exists(aliasesPath)) System.IO.File.Create(usersPath);
-                                        client.SendDocumentAsync(msg.Chat.Id, aliasesPath, "#backup").Wait();
-                                        client.SendDocumentAsync(msg.Chat.Id, usersPath, "#backup").Wait();
-                                    }
-                                    return;
-
-                                case "/import":
-                                    if (adminIds.Contains(msg.From.Id))
-                                    {
-                                        if (msg.ReplyToMessage != null && msg.ReplyToMessage.Document != null && new List<string> { "users.dict", "aliases.dict" }.Contains(msg.ReplyToMessage.Document.FileName))
-                                        {
-                                            var t = client.GetFileAsync(msg.ReplyToMessage.Document.FileId);
-                                            t.Wait();
-                                            var file = t.Result;
-
-                                            string content;
-                                            using (var sr = new System.IO.StreamReader(file.FileStream))
+                                        case "subscribe":
+                                            if (!users[msg.From.Id].subscribing)
                                             {
-                                                content = sr.ReadToEnd();
+                                                users[msg.From.Id].subscribing = true;
+                                                ReplyToMessage("You successfully subscribed the ping list! Once someone sends #ping in the achievement group, I'll inform you.", u);
                                             }
+                                            else ReplyToMessage("You were already subscribed to the ping list!", u);
+                                            return;
 
-                                            System.IO.File.WriteAllText(basePath + msg.ReplyToMessage.Document.FileName, content);
-                                            ReadUsers();
-                                            getAliasesFromFile();
-                                            ReplyToMessage($"{msg.ReplyToMessage.Document.FileName} was successfully updated!", u);
-                                        }
-                                        else ReplyToMessage($"You need to reply to the backup file!", u);
+                                        case "unsubscribe":
+                                            if (users[msg.From.Id].subscribing)
+                                            {
+                                                users[msg.From.Id].subscribing = false;
+                                                ReplyToMessage("You successfully stopped subscribing to the ping list!", u);
+                                            }
+                                            return;
                                     }
-                                    return;
+                                }
                             }
 
                             if (games.ContainsKey(msg.Chat.Id))

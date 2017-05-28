@@ -133,6 +133,7 @@
     </Compile>
     <Compile Include="Bots\AchBotInlineKeyboards\InlineKeyboardStop.cs" />
     <Compile Include="Bots\AchBotInlineKeyboards\InlineKeyboardStart.cs" />
+    <Compile Include="Bots\AchBotInlineKeyboards\InlineKeyboardSubscribe.cs" />
     <Compile Include="Bots\AchBotInlineKeyboards\InlineKeyboardTellRole.cs" />
     <Compile Include="Bots\FlomBot.cs" />
     <Compile Include="Bots\ScriptingBot.cs" />
