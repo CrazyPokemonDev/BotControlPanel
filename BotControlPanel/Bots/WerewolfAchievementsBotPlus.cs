@@ -1287,7 +1287,7 @@ namespace BotControlPanel.Bots
 
                                         foreach (string s in knownuserlist)
                                         {
-                                            client.SendTextMessageAsync(msg.Chat.Id, s).Wait();
+                                            client.SendTextMessageAsync(msg.Chat.Id, s, parseMode: ParseMode.Html).Wait();
                                         }
                                         ReplyToMessage("Finished!", u);
                                     }
