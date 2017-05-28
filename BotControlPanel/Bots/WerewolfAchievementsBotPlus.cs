@@ -1251,7 +1251,31 @@ namespace BotControlPanel.Bots
                                 case "/knownusers": // this command will be removed again, just for testing purposes
                                     if (adminIds.Contains(msg.From.Id))
                                     {
-                                        string knownusers = JsonConvert.SerializeObject(users.Values.ToList());
+                                        var adminsT = client.GetChatAdministratorsAsync(allowedgroups[1]);
+                                        adminsT.Wait();
+                                        var admins = adminsT.Result;
+
+
+                                        string knownusers = "<b>☝️ Bot admins:</b>\n\n";
+                                        foreach (BotUser user in users.Values.Where(x => adminIds.Contains(x.id)))
+                                        {
+                                            knownusers += $"<b>{user.name}</b>\n  -{user.username}\n  -{user.id}\n  -Subscribing:" + (user.Subscribing  ? "✅" : "❌") + "\n\n";
+                                        }
+
+
+                                        knownusers += "\n\n<b>👮‍♀️ Group admins:</b>\n\n";
+                                        foreach (BotUser user in users.Values.Where(y => admins.Count(x => x.User.Id == y.id) == 1 && !adminIds.Contains(y.id)))
+                                        {
+                                            knownusers += $"<b>{user.name}</b>\n  -{user.username}\n  -{user.id}\n  -Subscribing:" + (user.Subscribing ? "✅" : "❌") + "\n\n";
+                                        }
+
+                                        knownusers += "\n\n<b>👨‍ Members:</b>\n\n";
+                                        foreach (BotUser user in users.Values.Where(x => admins.Count(y => y.User.Id == x.id) == 0))
+                                        {
+                                            knownusers += $"<b>{user.name}</b>\n  -{user.username}\n  -{user.id}\n  -Subscribing:" + (user.Subscribing ? "✅" : "❌") + "\n\n";
+                                        }
+
+                                        
                                         List<string> knownuserlist = new List<string>();
 
                                         while (knownusers.Length >= 2000)
