@@ -23,7 +23,7 @@ namespace BotControlPanel.Bots
             private bool subscribing { get; set; }
             public bool Subscribing { get { return subscribing; } }
 
-            public BotUser(string name, int id, string username, bool subscribing = false)
+            public BotUser(string name, int id, string username = null, bool subscribing = false)
             {
                 this.name = name;
                 this.id = id;
