@@ -20,7 +20,8 @@ namespace BotControlPanel.Bots
             public string name { get; set; }
             public int id { get; }
             public string username { get; set; }
-            public bool subscribing { get; set; }
+            private bool subscribing { get; set; }
+            public bool Subscribing { get { return subscribing; } }
 
             public BotUser(string name, int id, string username, bool subscribing = false)
             {
@@ -28,6 +29,16 @@ namespace BotControlPanel.Bots
                 this.id = id;
                 this.username = username;
                 this.subscribing = subscribing;
+            }
+
+            public void StartSubscribing()
+            {
+                subscribing = true;
+            }
+
+            public void StopSubscribing()
+            {
+                subscribing = false;
             }
         }
 
@@ -591,7 +602,7 @@ namespace BotControlPanel.Bots
 
         private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 }; // [0] is testing group, [1] is achv group
         private const string achvLink = "https://t.me/joinchat/AAAAAEBJi2uYsVBF2fVwBg";
-        private readonly List<long> adminIds = new List<long>() { 267376056, 295152997 }; // [0] is Florian, [1] is Ludwig
+        private readonly List<int> adminIds = new List<int>() { 267376056, 295152997 }; // [0] is Florian, [1] is Ludwig
 
         private readonly List<string> defaultAliases = new List<string>()
         {
@@ -781,7 +792,7 @@ namespace BotControlPanel.Bots
                         if (!maint || msg.Chat.Id == allowedgroups[0] || games.ContainsKey(msg.Chat.Id) || adminIds.Contains(msg.From.Id))
                         {
                             if (!users.ContainsKey(msg.From.Id)) AddUser(msg.From);
-                            else if (!users[msg.From.Id].Equals(new BotUser(msg.From.FirstName, msg.From.Id, msg.From.Username)))
+                            else if (users[msg.From.Id].name != msg.From.FirstName || users[msg.From.Id].username != msg.From.Username)
                             {
                                 RemoveUser(msg.From.Id);
                                 AddUser(msg.From);
@@ -1090,7 +1101,7 @@ namespace BotControlPanel.Bots
                                     {
                                         client.SendTextMessageAsync(msg.Chat.Id, "<b>🔔 Ping! 🔔</b>\n\nAchievement hunters are called!\n\nIf you want to be notified by this command, use the subscribe button below! To no longer be notified, use the unsubscribe button. You will be sent to our private chat, where you need to start me, and we are done :D\n\n<b>Have fun hunting achievements!</b>", replyMarkup: InlineKeyboardSubscribe.Get(), parseMode: ParseMode.Html, replyToMessageId: msg.MessageId);
                                         string group = msg.Chat.Id == allowedgroups[1] ? $"<a href=\"{achvLink}\">{msg.Chat.Title}</a>" : $"<b>{msg.Chat.Title}</b>";
-                                        foreach (var pinguser in users.Values.Where(x => x.subscribing)) client.SendTextMessageAsync(pinguser.id, $"<b>🔔 Ping! 🔔</b>\n\nAchievement hunters are called in {group}!", parseMode: ParseMode.Html);
+                                        foreach (var pinguser in users.Values.Where(x => x.Subscribing)) client.SendTextMessageAsync(pinguser.id, $"<b>🔔 Ping! 🔔</b>\n\nAchievement hunters are called in {group}!", parseMode: ParseMode.Html);
                                         lastping = DateTime.UtcNow;
                                     }
                                     else
@@ -1266,18 +1277,18 @@ namespace BotControlPanel.Bots
                                     switch (msg.Text.Split(' ')[1])
                                     {
                                         case "subscribe":
-                                            if (!users[msg.From.Id].subscribing)
+                                            if (!users[msg.From.Id].Subscribing)
                                             {
-                                                users[msg.From.Id].subscribing = true;
+                                                users[msg.From.Id].StartSubscribing();
                                                 ReplyToMessage("You successfully subscribed to the ping list! Once someone sends #ping in the achievement group, I'll inform you.", u);
                                             }
                                             else ReplyToMessage("You were already subscribed to the ping list!", u);
                                             return;
 
                                         case "unsubscribe":
-                                            if (users[msg.From.Id].subscribing)
+                                            if (users[msg.From.Id].Subscribing)
                                             {
-                                                users[msg.From.Id].subscribing = false;
+                                                users[msg.From.Id].StopSubscribing();
                                                 ReplyToMessage("You successfully stopped subscribing to the ping list!", u);
                                             }
                                             else ReplyToMessage("You weren't even subscribing!", u);
