@@ -1289,28 +1289,36 @@ namespace BotControlPanel.Bots
 
                             if (msg.Chat.Type == ChatType.Private)
                             {
-                                if (msg.Text?.Split(' ')[0] == "/start" && msg.Text?.Split(' ').Length == 2)
+                                if (msg.Text?.Split(' ')[0] == "/start")
                                 {
-                                    switch (msg.Text.Split(' ')[1])
+                                    bool subscriber = false;
+                                    if (msg.Text.Split(' ').Length == 2)
                                     {
-                                        case "subscribe":
-                                            if (!users[msg.From.Id].Subscribing)
-                                            {
-                                                users[msg.From.Id].Subscribing = true;
-                                                ReplyToMessage("You successfully subscribed to the ping list! Once someone sends #ping in the achievement group, I'll inform you.", u);
-                                            }
-                                            else ReplyToMessage("You were already subscribed to the ping list!", u);
-                                            return;
+                                        switch (msg.Text.Split(' ')[1])
+                                        {
+                                            case "subscribe":
+                                                subscriber = true;
+                                                if (!users[msg.From.Id].Subscribing)
+                                                {
+                                                    users[msg.From.Id].Subscribing = true;
+                                                    ReplyToMessage("You successfully subscribed to the ping list! Once someone sends #ping in the achievement group, I'll inform you.", u);
+                                                }
+                                                else ReplyToMessage("You were already subscribed to the ping list!", u);
+                                                return;
 
-                                        case "unsubscribe":
-                                            if (users[msg.From.Id].Subscribing)
-                                            {
-                                                users[msg.From.Id].Subscribing = false;
-                                                ReplyToMessage("You successfully stopped subscribing to the ping list!", u);
-                                            }
-                                            else ReplyToMessage("You weren't even subscribing!", u);
-                                            return;
+                                            case "unsubscribe":
+                                                subscriber = true;
+                                                if (users[msg.From.Id].Subscribing)
+                                                {
+                                                    users[msg.From.Id].Subscribing = false;
+                                                    ReplyToMessage("You successfully stopped subscribing to the ping list!", u);
+                                                }
+                                                else ReplyToMessage("You weren't even subscribing!", u);
+                                                return;
+                                        }
                                     }
+
+                                    if (!subscriber) ReplyToMessage("Hi! I am <b>Achievement Manager Bot</b>, the bot to make it easy to farm achievements in the telegram werewolf game.\n\nI was designed by @Olgabrezel and @Olfi01 and I am especially made for the @wwachievement group - I won't work anywhere else.\n\n<b>My features:</b>\n - /startgame: I will listen when a game is started so I can manage it for you.\n - /addplayer: You can use this command to tell me that you joined the game. I can't know any other way.\n - /dead: Mark yourself as dead\n - /love: Mark yourself as lover\n - [your role]: Send a message that contains only your role and I will show it in the pinned message.\n - Now [your role]: If your role changes, use this to tell me.", u);
                                 }
                             }
 
