@@ -20,25 +20,14 @@ namespace BotControlPanel.Bots
             public string name { get; set; }
             public int id { get; }
             public string username { get; set; }
-            private bool subscribing { get; set; }
-            public bool Subscribing { get { return subscribing; } }
+            public bool Subscribing { get; set; }
 
-            public BotUser(string name, int id, string username = null, bool subscribing = false)
+            public BotUser(string name, int id, string username = null, bool Subscribing = false)
             {
                 this.name = name;
                 this.id = id;
                 this.username = username;
-                this.subscribing = subscribing;
-            }
-
-            public void StartSubscribing()
-            {
-                subscribing = true;
-            }
-
-            public void StopSubscribing()
-            {
-                subscribing = false;
+                this.Subscribing = Subscribing;
             }
         }
 
@@ -794,8 +783,8 @@ namespace BotControlPanel.Bots
                             if (!users.ContainsKey(msg.From.Id)) AddUser(msg.From);
                             else if (users[msg.From.Id].name != msg.From.FirstName || users[msg.From.Id].username != msg.From.Username)
                             {
-                                RemoveUser(msg.From.Id);
-                                AddUser(msg.From);
+                                users[msg.From.Id].name = msg.From.FirstName;
+                                users[msg.From.Id].username = msg.From.Username;
                             }
 
                             if (msg.Chat.Type != ChatType.Private) switch (text.Split(' ')[0].ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
@@ -1303,7 +1292,7 @@ namespace BotControlPanel.Bots
                                         case "subscribe":
                                             if (!users[msg.From.Id].Subscribing)
                                             {
-                                                users[msg.From.Id].StartSubscribing();
+                                                users[msg.From.Id].Subscribing = true;
                                                 ReplyToMessage("You successfully subscribed to the ping list! Once someone sends #ping in the achievement group, I'll inform you.", u);
                                             }
                                             else ReplyToMessage("You were already subscribed to the ping list!", u);
@@ -1312,7 +1301,7 @@ namespace BotControlPanel.Bots
                                         case "unsubscribe":
                                             if (users[msg.From.Id].Subscribing)
                                             {
-                                                users[msg.From.Id].StopSubscribing();
+                                                users[msg.From.Id].Subscribing = false;
                                                 ReplyToMessage("You successfully stopped subscribing to the ping list!", u);
                                             }
                                             else ReplyToMessage("You weren't even subscribing!", u);
