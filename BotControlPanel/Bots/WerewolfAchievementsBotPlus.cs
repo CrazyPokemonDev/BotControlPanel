@@ -593,41 +593,7 @@ namespace BotControlPanel.Bots
         private const string achvLink = "https://t.me/joinchat/AAAAAEBJi2uYsVBF2fVwBg";
         private readonly List<int> adminIds = new List<int>() { 267376056, 295152997 }; // [0] is Florian, [1] is Ludwig
 
-        private readonly List<string> defaultAliases = new List<string>()
-        {
-            "alphawolf",
-            "apprenticeseer",
-            "beholder",
-            "blacksmith",
-            "clumsyguy",
-            "cultist",
-            "cultisthunter",
-            "cupid",
-            "cursed",
-            "detective",
-            "doppelgänger",
-            "drunk",
-            "fool",
-            "guardianangel",
-            "gunner",
-            "harlot",
-            "hunter",
-            "mason",
-            "mayor",
-            "prince",
-            "seer",
-            "seerfool",
-            "serialkiller",
-            "sorcerer",
-            "tanner",
-            "traitor",
-            "villager",
-            "werewolf",
-            "wildchild",
-            "wolfcub"
-        };
-
-    public WerewolfAchievementsBotPlus(string token) : base(token)
+        public WerewolfAchievementsBotPlus(string token) : base(token)
         {
             try
             {
@@ -1341,13 +1307,7 @@ namespace BotControlPanel.Bots
 
                                     if (player == 0) return;
 
-                                    List<string> Keys = roleAliases.Keys.ToList();
-                                    foreach (string s in defaultAliases)
-                                    {
-                                        Keys.Add(s);
-                                    }
-
-                                    if (g.players[player].role == Game.roles.Unknown && Keys.Contains(text.ToLower()))
+                                    if (g.players[player].role == Game.roles.Unknown && roleAliases.Keys.Contains(text.ToLower()))
                                     {
                                         var role = GetRoleByAlias(text.ToLower());
                                         if (role != Game.roles.Unknown)
@@ -1357,7 +1317,7 @@ namespace BotControlPanel.Bots
                                             ReplyToMessage($"Role was set to: <b>{Game.rolestring[role]}</b>", u);
                                         }
                                     }
-                                    if (text.ToLower().StartsWith("now ") && Keys.Contains(text.ToLower().Substring(4)))
+                                    if (text.ToLower().StartsWith("now ") && roleAliases.Keys.Contains(text.ToLower().Substring(4)))
                                     {
                                         var role = GetRoleByAlias(text.ToLower().Substring(4));
                                         if (role != Game.roles.Unknown)
@@ -1420,117 +1380,90 @@ namespace BotControlPanel.Bots
         private Game.roles GetRoleByAlias(string alias)
         {
             if (roleAliases.ContainsKey(alias)) return roleAliases[alias];
-            else
-            {
-                switch (alias)
-                {
-                    case "alphawolf":
-                        return Game.roles.AlphaWolf;
-                    
-                    case "apprenticeseer":
-                        return Game.roles.ApprenticeSeer;
-                    
-                    case "beholder":
-                        return Game.roles.Beholder;
-                    
-                    case "blacksmith":
-                        return Game.roles.Blacksmith;
-                    
-                    case "clumsyguy":
-                        return Game.roles.ClumsyGuy;
-                    
-                    case "cultist":
-                        return Game.roles.Cultist;
-                    
-                    case "cultisthunter":
-                        return Game.roles.CultistHunter;
-                    
-                    case "cupid":
-                        return Game.roles.Cupid;
-                    
-                    case "cursed":
-                        return Game.roles.Cursed;
-                    
-                    case "detective":
-                        return Game.roles.Detective;
-                    
-                    case "doppelgänger":
-                        return Game.roles.Doppelgänger;
-                    
-                    case "drunk":
-                        return Game.roles.Drunk;
-                    
-                    case "fool":
-                        return Game.roles.Fool;
-                    
-                    case "guardianangel":
-                        return Game.roles.GuardianAngel;
-                    
-                    case "gunner":
-                        return Game.roles.Gunner;
-                    
-                    case "harlot":
-                        return Game.roles.Harlot;
-                    
-                    case "hunter":
-                        return Game.roles.Hunter;
-                    
-                    case "mason":
-                        return Game.roles.Mason;
-                    
-                    case "mayor":
-                        return Game.roles.Mayor;
-                    
-                    case "prince":
-                        return Game.roles.Prince;
-                    
-                    case "seer":
-                        return Game.roles.Seer;
-                    
-                    case "seerfool":
-                        return Game.roles.SeerFool;
-                    
-                    case "serialkiller":
-                        return Game.roles.SerialKiller;
-                    
-                    case "sorcerer":
-                        return Game.roles.Sorcerer;
-                    
-                    case "tanner":
-                        return Game.roles.Tanner;
-                    
-                    case "traitor":
-                        return Game.roles.Traitor;
-                    
-                    case "villager":
-                        return Game.roles.Villager;
-                    
-                    case "werewolf":
-                        return Game.roles.Werewolf;
-                    
-                    case "wildchild":
-                        return Game.roles.WildChild;
-                    
-                    case "wolfcub":
-                        return Game.roles.WolfCub;
-                    
-                    default:
-                        return Game.roles.Unknown;
-
-                }
-
-            }
+            return Game.roles.Unknown;
         }
 
 
         private void writeAliasesFile()
         {
+            Dictionary<string, Game.roles> defaultaliasses = new Dictionary<string, Game.roles>()
+            {
+                { "alphawolf", Game.roles.AlphaWolf },
+                { "apprenticeseer", Game.roles.ApprenticeSeer },
+                { "beholder", Game.roles.Beholder },
+                { "blacksmith", Game.roles.Blacksmith },
+                { "clumsyguy", Game.roles.ClumsyGuy },
+                { "cultist", Game.roles.Cultist },
+                { "cultisthunter", Game.roles.CultistHunter },
+                { "cupid", Game.roles.Cupid },
+                { "cursed", Game.roles.Cursed },
+                { "detective", Game.roles.Detective },
+                { "doppelgänger", Game.roles.Doppelgänger },
+                { "drunk", Game.roles.Drunk },
+                { "fool", Game.roles.Fool },
+                { "guardianangel", Game.roles.GuardianAngel },
+                { "gunner", Game.roles.Gunner },
+                { "harlot", Game.roles.Harlot },
+                { "hunter", Game.roles.Hunter },
+                { "mason", Game.roles.Mason },
+                { "mayor", Game.roles.Mayor },
+                { "prince", Game.roles.Prince },
+                { "seer", Game.roles.Seer },
+                { "seerfool", Game.roles.SeerFool },
+                { "serialkiller", Game.roles.SerialKiller },
+                { "sorcerer", Game.roles.Sorcerer },
+                { "tanner", Game.roles.Tanner },
+                { "traitor", Game.roles.Traitor },
+                { "villager", Game.roles.Villager },
+                { "werewolf", Game.roles.Werewolf },
+                { "wildchild", Game.roles.WildChild },
+                { "wolfcub", Game.roles.WolfCub },
+            };
+
+            foreach (var r in defaultaliasses) roleAliases.Remove(r.Key);
+
             if (!System.IO.Directory.Exists(basePath)) System.IO.Directory.CreateDirectory(basePath);
             System.IO.File.WriteAllText(aliasesPath, JsonConvert.SerializeObject(roleAliases));
+
+            foreach (var r in defaultaliasses) roleAliases.Add(r.Key, r.Value);
         }
 
         private void getAliasesFromFile()
         {
+            Dictionary<string, Game.roles> defaultaliasses = new Dictionary<string, Game.roles>()
+            {
+                { "alphawolf", Game.roles.AlphaWolf },
+                { "apprenticeseer", Game.roles.ApprenticeSeer },
+                { "beholder", Game.roles.Beholder },
+                { "blacksmith", Game.roles.Blacksmith },
+                { "clumsyguy", Game.roles.ClumsyGuy },
+                { "cultist", Game.roles.Cultist },
+                { "cultisthunter", Game.roles.CultistHunter },
+                { "cupid", Game.roles.Cupid },
+                { "cursed", Game.roles.Cursed },
+                { "detective", Game.roles.Detective },
+                { "doppelgänger", Game.roles.Doppelgänger },
+                { "drunk", Game.roles.Drunk },
+                { "fool", Game.roles.Fool },
+                { "guardianangel", Game.roles.GuardianAngel },
+                { "gunner", Game.roles.Gunner },
+                { "harlot", Game.roles.Harlot },
+                { "hunter", Game.roles.Hunter },
+                { "mason", Game.roles.Mason },
+                { "mayor", Game.roles.Mayor },
+                { "prince", Game.roles.Prince },
+                { "seer", Game.roles.Seer },
+                { "seerfool", Game.roles.SeerFool },
+                { "serialkiller", Game.roles.SerialKiller },
+                { "sorcerer", Game.roles.Sorcerer },
+                { "tanner", Game.roles.Tanner },
+                { "traitor", Game.roles.Traitor },
+                { "villager", Game.roles.Villager },
+                { "werewolf", Game.roles.Werewolf },
+                { "wildchild", Game.roles.WildChild },
+                { "wolfcub", Game.roles.WolfCub },
+            };
+
             if (System.IO.File.Exists(aliasesPath))
             {
                 roleAliases = JsonConvert.DeserializeObject<Dictionary<string, Game.roles>>(
@@ -1542,6 +1475,11 @@ namespace BotControlPanel.Bots
                 System.IO.File.Create(aliasesPath);
             }
             if (roleAliases == null) roleAliases = new Dictionary<string, Game.roles>();
+
+            foreach (KeyValuePair<string, Game.roles> r in defaultaliasses)
+            {
+                roleAliases.Add(r.Key, r.Value);
+            }
         }
 
 
