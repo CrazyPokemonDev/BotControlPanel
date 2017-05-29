@@ -708,7 +708,7 @@ namespace BotControlPanel.Bots
             }
         }
 
-        private Message ReplyToMessage(string text, Update u)
+        private Message ReplyToMessage(string text, Update u, IReplyMarkup replyMarkup = null)
         {
             if (!string.IsNullOrWhiteSpace(text))
             {
@@ -719,7 +719,7 @@ namespace BotControlPanel.Bots
 
                     try
                     {
-                        var task = client.SendTextMessageAsync(chatid, text, replyToMessageId: messageid, parseMode: ParseMode.Html);
+                        var task = client.SendTextMessageAsync(chatid, text, replyToMessageId: messageid, parseMode: ParseMode.Html, replyMarkup: replyMarkup);
                         task.Wait();
                         var msg = task.Result;
                         return msg;
@@ -1088,15 +1088,19 @@ namespace BotControlPanel.Bots
                                     var difference = DateTime.UtcNow - lastping;
                                     if (difference.TotalMinutes >= 10)
                                     {
-                                        client.SendTextMessageAsync(msg.Chat.Id, "<b>🔔 Ping! 🔔</b>\n\nAchievement hunters are called!\n\nIf you want to be notified by this command, use the subscribe button below! To no longer be notified, use the unsubscribe button. You will be sent to our private chat, where you need to start me, and we are done :D\n\n<b>Have fun hunting achievements!</b>", replyMarkup: InlineKeyboardSubscribe.Get(), parseMode: ParseMode.Html, replyToMessageId: msg.MessageId);
-                                        string group = msg.Chat.Id == allowedgroups[1] ? $"<a href=\"{achvLink}\">{msg.Chat.Title}</a>" : $"<b>{msg.Chat.Title}</b>";
-                                        foreach (var pinguser in users.Values.Where(x => x.Subscribing)) client.SendTextMessageAsync(pinguser.id, $"<b>🔔 Ping! 🔔</b>\n\nAchievement hunters are called in {group}!", parseMode: ParseMode.Html);
-                                        lastping = DateTime.UtcNow;
+                                        if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Joining)
+                                        {
+                                            ReplyToMessage("<b>🔔 Ping! 🔔</b>\n\nAchievement hunters are called!\n\nIf you want to be notified by this command, use the subscribe button below! To no longer be notified, use the unsubscribe button. You will be sent to our private chat, where you need to start me, and we are done :D\n\n<b>Have fun hunting achievements!</b>", u, InlineKeyboardSubscribe.Get());
+                                            string group = msg.Chat.Id == allowedgroups[1] ? $"<a href=\"{achvLink}\">{msg.Chat.Title}</a>" : $"<b>{msg.Chat.Title}</b>";
+                                            foreach (var pinguser in users.Values.Where(x => x.Subscribing && msg.From.Id != x.id && !games[msg.Chat.Id].players.ContainsKey(x.id))) client.SendTextMessageAsync(pinguser.id, $"<b>🔔 Ping! 🔔</b>\n\nAchievement hunters are called in {group}!", parseMode: ParseMode.Html);
+                                            lastping = DateTime.UtcNow;
+                                        }
+                                            else ReplyToMessage("You can only ping while a game is in joining phase! To subscribe (or unsubscribe) to the pinglist, you can use the following buttons:", u, InlineKeyboardSubscribe.Get());
                                     }
                                     else
                                     {
                                         var waittime = TimeSpan.FromMinutes(10) - difference;
-                                        client.SendTextMessageAsync(msg.Chat.Id, $"Only one ping in ten minutes is allowed! You need to wait {waittime.Minutes}:{waittime.Seconds} minutes until you can ping again! To subscribe (or unsubscribe) to the pinglist, you can use the following buttons:", replyMarkup: InlineKeyboardSubscribe.Get());
+                                        ReplyToMessage($"Only one ping in ten minutes is allowed! You need to wait {waittime.Minutes}:{waittime.Seconds} minutes until you can ping again! To subscribe (or unsubscribe) to the pinglist, you can use the following buttons:", u, InlineKeyboardSubscribe.Get());
                                     }
                                     return;
                                 }
