@@ -1386,8 +1386,46 @@ namespace BotControlPanel.Bots
 
         private void writeAliasesFile()
         {
+            Dictionary<string, Game.roles> defaultaliasses = new Dictionary<string, Game.roles>()
+            {
+                { "alphawolf", Game.roles.AlphaWolf },
+                { "apprenticeseer", Game.roles.ApprenticeSeer },
+                { "beholder", Game.roles.Beholder },
+                { "blacksmith", Game.roles.Blacksmith },
+                { "clumsyguy", Game.roles.ClumsyGuy },
+                { "cultist", Game.roles.Cultist },
+                { "cultisthunter", Game.roles.CultistHunter },
+                { "cupid", Game.roles.Cupid },
+                { "cursed", Game.roles.Cursed },
+                { "detective", Game.roles.Detective },
+                { "doppelgänger", Game.roles.Doppelgänger },
+                { "drunk", Game.roles.Drunk },
+                { "fool", Game.roles.Fool },
+                { "guardianangel", Game.roles.GuardianAngel },
+                { "gunner", Game.roles.Gunner },
+                { "harlot", Game.roles.Harlot },
+                { "hunter", Game.roles.Hunter },
+                { "mason", Game.roles.Mason },
+                { "mayor", Game.roles.Mayor },
+                { "prince", Game.roles.Prince },
+                { "seer", Game.roles.Seer },
+                { "seerfool", Game.roles.SeerFool },
+                { "serialkiller", Game.roles.SerialKiller },
+                { "sorcerer", Game.roles.Sorcerer },
+                { "tanner", Game.roles.Tanner },
+                { "traitor", Game.roles.Traitor },
+                { "villager", Game.roles.Villager },
+                { "werewolf", Game.roles.Werewolf },
+                { "wildchild", Game.roles.WildChild },
+                { "wolfcub", Game.roles.WolfCub },
+            };
+
+            foreach (var r in defaultaliasses) roleAliases.Remove(r.Key);
+
             if (!System.IO.Directory.Exists(basePath)) System.IO.Directory.CreateDirectory(basePath);
             System.IO.File.WriteAllText(aliasesPath, JsonConvert.SerializeObject(roleAliases));
+
+            foreach (var r in defaultaliasses) roleAliases.Add(r.Key, r.Value);
         }
 
         private void getAliasesFromFile()
