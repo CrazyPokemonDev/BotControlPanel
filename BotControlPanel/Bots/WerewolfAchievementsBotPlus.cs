@@ -1059,7 +1059,7 @@ namespace BotControlPanel.Bots
                                         {
                                             ReplyToMessage("<b>🔔 Ping! 🔔</b>\n\nAchievement hunters are called!\n\nIf you want to be notified by this command, use the subscribe button below! To no longer be notified, use the unsubscribe button. You will be sent to our private chat, where you need to start me, and we are done :D\n\n<b>Have fun hunting achievements!</b>", u, InlineKeyboardSubscribe.Get());
                                             string group = msg.Chat.Id == allowedgroups[1] ? $"<a href=\"{achvLink}\">{msg.Chat.Title}</a>" : $"<b>{msg.Chat.Title}</b>";
-                                            foreach (var pinguser in users.Values.Where(x => x.Subscribing && msg.From.Id != x.id && !games[msg.Chat.Id].players.ContainsKey(x.id))) client.SendTextMessageAsync(pinguser.id, $"<b>🔔 Ping! 🔔</b>\n\nAchievement hunters are called in {group}!", parseMode: ParseMode.Html);
+                                            foreach (var pinguser in users.Values.Where(x => x.Subscribing && msg.From.Id != x.id && !games[msg.Chat.Id].players.ContainsKey(x.id))) client.SendTextMessageAsync(pinguser.id, $"<b>🔔 Ping! 🔔</b>\n\nAchievement hunters are called in {group}!", parseMode: ParseMode.Html, disableWebPagePreview: true);
                                             lastping = DateTime.UtcNow;
                                         }
                                             else ReplyToMessage("You can only ping while a game is in joining phase! To subscribe (or unsubscribe) to the pinglist, you can use the following buttons:", u, InlineKeyboardSubscribe.Get());
