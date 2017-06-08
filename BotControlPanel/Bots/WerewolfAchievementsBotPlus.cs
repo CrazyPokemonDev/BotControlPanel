@@ -64,15 +64,15 @@ namespace BotControlPanel.Bots
                 UpdatePlayerlist();
             }
 
-            public bool AddPlayer(User newplayer)
+            public bool AddPlayer(int newplayer, string name)
             {
-                if (!players.ContainsKey(newplayer.Id) && gamestate == state.Joining)
+                if (!players.ContainsKey(newplayer) && gamestate == state.Joining)
                 {
                     try
                     {
-                        players.Add(newplayer.Id, new Player(newplayer.Id, newplayer.FirstName));
-                        players[newplayer.Id].role = roles.Unknown;
-                        players[newplayer.Id].love = false;
+                        players.Add(newplayer, new Player(newplayer, name));
+                        players[newplayer].role = roles.Unknown;
+                        players[newplayer].love = false;
                         UpdatePlayerlist();
                         return true;
                     }
@@ -84,13 +84,13 @@ namespace BotControlPanel.Bots
                 return false;
             }
 
-            public bool RemovePlayer(User oldplayer)
+            public bool RemovePlayer(int oldplayer)
             {
-                if (players.ContainsKey(oldplayer.Id))
+                if (players.ContainsKey(oldplayer))
                 {
                     try
                     {
-                        players.Remove(oldplayer.Id);
+                        players.Remove(oldplayer);
                         UpdatePlayerlist();
                         return true;
                     }
@@ -804,13 +804,19 @@ namespace BotControlPanel.Bots
                                 case "/addplayer":
                                     if (games.ContainsKey(msg.Chat.Id) && games[msg.Chat.Id].gamestate == Game.state.Joining)
                                     {
-                                        User newplayer = msg.ReplyToMessage == null ? msg.From : msg.ReplyToMessage.From;
-
-                                        if (!games[msg.Chat.Id].AddPlayer(newplayer))
+                                        int newplayer = GetUserId(u);
+                                        if (newplayer == 0)
                                         {
-                                            ReplyToMessage("Failed to add <b>" + newplayer.FirstName + "</b> to the players!", u);
+                                            ReplyToMessage("Couldn't find that user in my database!", u);
+                                            return;
                                         }
-                                        else ReplyToMessage($"Player <b>{newplayer.FirstName}</b> was successfully added to the game.", u);
+                                        string name = GetName(newplayer);
+
+                                        if (!games[msg.Chat.Id].AddPlayer(newplayer, name))
+                                        {
+                                            ReplyToMessage("Failed to add <b>" + name + "</b> to the players!", u);
+                                        }
+                                        else ReplyToMessage($"Player <b>{name}</b> was successfully added to the game.", u);
                                     }
                                     else
                                     {
@@ -855,29 +861,24 @@ namespace BotControlPanel.Bots
                                     {
                                         Game g = games[msg.Chat.Id];
 
-                                        User dead = msg.ReplyToMessage != null && g.players.ContainsKey(msg.ReplyToMessage.From.Id)
-                                                ? msg.ReplyToMessage.From
-                                                : (
-                                                    g.players.ContainsKey(msg.From.Id)
-                                                        ? msg.From
-                                                        : null
-                                                  );
-                                        if (dead == null || !g.players.ContainsKey(dead.Id) || g.players[dead.Id].role == Game.roles.Dead) return;
+                                        int dead = GetUserId(u);
+                                        if (dead == 0 || !g.players.ContainsKey(dead) || g.players[dead].role == Game.roles.Dead) return;
+                                        string name = GetName(dead);
 
                                         switch (g.gamestate)
                                         {
                                             case Game.state.Joining:
                                                 if (!g.RemovePlayer(dead))
                                                 {
-                                                    ReplyToMessage($"Failed to remove player <b>{dead.FirstName}</b> from the game.", u);
+                                                    ReplyToMessage($"Failed to remove player <b>{name}</b> from the game.", u);
                                                 }
-                                                else ReplyToMessage($"Player <b>{dead.FirstName}</b> was successfully removed from the game.", u);
+                                                else ReplyToMessage($"Player <b>{name}</b> was successfully removed from the game.", u);
                                                 break;
 
                                             case Game.state.Running:
-                                                g.players[dead.Id].role = Game.roles.Dead;
+                                                g.players[dead].role = Game.roles.Dead;
                                                 g.UpdatePlayerlist();
-                                                ReplyToMessage($"Player <b>{dead.FirstName}</b> was marked as dead.", u);
+                                                ReplyToMessage($"Player <b>{name}</b> was marked as dead.", u);
                                                 break;
                                         }
 
@@ -905,17 +906,12 @@ namespace BotControlPanel.Bots
                                     {
                                         Game g = games[msg.Chat.Id];
 
-                                        User lover = msg.ReplyToMessage != null && g.players.Keys.Contains(msg.ReplyToMessage.From.Id)
-                                                ? msg.ReplyToMessage.From
-                                                : (
-                                                    g.players.Keys.Contains(msg.From.Id)
-                                                        ? msg.From
-                                                        : null
-                                                  );
-                                        if (lover == null || !g.players.ContainsKey(lover.Id)) return;
+                                        int lover = GetUserId(u);
+                                        if (lover == 0 || !g.players.ContainsKey(lover)) return;
+                                        string name = GetName(lover);
 
-                                        g.players[lover.Id].love = !g.players[lover.Id].love;
-                                        ReplyToMessage($"The love status of <b>{lover.FirstName}</b> was updated.", u);
+                                        g.players[lover].love = !g.players[lover].love;
+                                        ReplyToMessage($"The love status of <b>{name}</b> was updated.", u);
                                         g.UpdatePlayerlist();
                                     }
                                     return;
@@ -1252,6 +1248,22 @@ namespace BotControlPanel.Bots
                                         ReplyToMessage("Finished!", u);
                                     }
                                     return;
+
+
+                                case "whois":
+                                    if (adminIds.Contains(msg.From.Id))
+                                    {
+                                        int id = GetUserId(u);
+                                        if (id == 0) ReplyToMessage("Couln't find that user.", u);
+                                        else
+                                        {
+                                            string name = GetName(id);
+                                            string username = users.Values.FirstOrDefault(x => x.id == id)?.username;
+                                            username = string.IsNullOrEmpty(username) ? "no username" : $"@{username}";
+                                            ReplyToMessage($"Name: {name}\nId: {id}\nUsername: {username}", u);
+                                        }
+                                    }
+                                    return;
                             }
 
                             if (msg.Chat.Type == ChatType.Private)
@@ -1347,6 +1359,38 @@ namespace BotControlPanel.Bots
             {
                 client.SendTextMessageAsync(allowedgroups[0], $"Error in Achievements Bot: {ex.InnerException}\n{ex.Message}\n{ex.StackTrace}").Wait();
             }
+        }
+
+        public int GetUserId(Update u)
+        {
+            if (u.Message.ReplyToMessage != null && u.Message.ReplyToMessage.From.Id != 245445220)
+            {
+                return u.Message.ReplyToMessage.From.Id;
+            }
+            if (u.Message.Text.Split(' ').Length > 1)
+            {
+                int id;
+                if (int.TryParse(u.Message.Text.Split(' ')[1], out id))
+                {
+                    if (users.Select(e => e.Value.id).Contains(id)) return id;
+                    else return 0;
+                }
+
+                if (u.Message.Text.Split(' ')[1].StartsWith("@"))
+                {
+                    var user = users.Values.FirstOrDefault(x => x.username.Equals(u.Message.Text.Split(' ')[1]));
+                    if (user != null) return user.id;
+                    else return 0;
+                }
+            }
+            return u.Message.From.Id;
+        }
+
+        public string GetName(int id)
+        {
+            var u = users.Values.FirstOrDefault(x => x.id == id);
+            if (u == null) return null;
+            return u.name;
         }
 
         private void AddUser(User u)
