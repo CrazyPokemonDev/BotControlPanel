@@ -1369,18 +1369,12 @@ namespace BotControlPanel.Bots
             }
             if (u.Message.Text.Split(' ').Length > 1)
             {
-                int id;
-                if (int.TryParse(u.Message.Text.Split(' ')[1], out id))
                 {
-                    if (users.Select(e => e.Value.id).Contains(id)) return id;
-                    else return 0;
-                }
+                    if (users.Any(x => x.Value.id.ToString().Equals(u.Message.Text.Split(' ')[1])))
+                        return int.Parse(u.Message.Text.Split(' ')[1]);
 
-                if (u.Message.Text.Split(' ')[1].StartsWith("@"))
-                {
-                    var user = users.Values.FirstOrDefault(x => x.username.Equals(u.Message.Text.Split(' ')[1]));
-                    if (user != null) return user.id;
-                    else return 0;
+                    if (users.Any(x => x.Value.username.Equals(u.Message.Text.Split(' ')[1])))
+                        return users.First(x => x.Value.username.Equals(u.Message.Text.Split(' ')[1])).Value.id;
                 }
             }
             return u.Message.From.Id;
