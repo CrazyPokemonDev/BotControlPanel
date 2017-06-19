@@ -12,8 +12,9 @@ namespace BotControlPanel.Bots.AchBotInlineKeyboards
     {
         public static IReplyMarkup Get(long chatid)
         {
-            InlineKeyboardButton b = new InlineKeyboardButton("Start", "start_" + chatid.ToString());
-            InlineKeyboardButton[] bs = { b };
+            InlineKeyboardButton start = new InlineKeyboardButton("Start", "start_" + chatid.ToString());
+            InlineKeyboardButton abort = new InlineKeyboardButton("Abort", "stop_" + chatid.ToString());
+            InlineKeyboardButton[] bs = { start, abort };
             IReplyMarkup Markup = new InlineKeyboardMarkup(bs);
             return Markup;
         }
