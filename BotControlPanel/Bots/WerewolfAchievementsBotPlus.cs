@@ -1373,8 +1373,8 @@ namespace BotControlPanel.Bots
                     if (users.Any(x => x.Value.id.ToString().Equals(u.Message.Text.Split(' ')[1])))
                         return int.Parse(u.Message.Text.Split(' ')[1]);
 
-                    if (users.Any(x => x.Value.username.Equals(u.Message.Text.Split(' ')[1])))
-                        return users.First(x => x.Value.username.Equals(u.Message.Text.Split(' ')[1])).Value.id;
+                    if (users.Any(x => x.Value.username == u.Message.Text.Split(' ')[1].Replace("@", "")))
+                        return users.First(x => x.Value.username == u.Message.Text.Split(' ')[1].Replace("@", "")).Value.id;
                 }
             }
             return u.Message.From.Id;
