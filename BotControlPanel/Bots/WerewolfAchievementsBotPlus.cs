@@ -1250,7 +1250,7 @@ namespace BotControlPanel.Bots
                                     return;
 
 
-                                case "whois":
+                                case "userinfo":
                                     if (adminIds.Contains(msg.From.Id))
                                     {
                                         int id = GetUserId(u);
@@ -1260,7 +1260,8 @@ namespace BotControlPanel.Bots
                                             string name = GetName(id);
                                             string username = users.Values.FirstOrDefault(x => x.id == id)?.username;
                                             username = string.IsNullOrEmpty(username) ? "no username" : $"@{username}";
-                                            ReplyToMessage($"Name: {name}\nId: {id}\nUsername: {username}", u);
+                                            string subscribing = users[id].Subscribing ? " ✅" : " ❌";
+                                            ReplyToMessage($"Name: {name}\nId: {id}\nUsername: {username}\nSubscribing: {subscribing}", u);
                                         }
                                     }
                                     return;
@@ -1369,22 +1370,22 @@ namespace BotControlPanel.Bots
             }
             if (u.Message.Text.Split(' ').Length > 1)
             {
-                {
-                    if (users.Any(x => x.Value.id.ToString().Equals(u.Message.Text.Split(' ')[1])))
-                        return int.Parse(u.Message.Text.Split(' ')[1]);
+                if (users.Any(x => x.Value.id.ToString().Equals(u.Message.Text.Split(' ')[1])))
+                    return int.Parse(u.Message.Text.Split(' ')[1]);
 
-                    if (users.Any(x => x.Value.username == u.Message.Text.Split(' ')[1].Replace("@", "")))
-                        return users.First(x => x.Value.username == u.Message.Text.Split(' ')[1].Replace("@", "")).Value.id;
-                }
+                if (users.Any(x => "@" + x.Value.username == u.Message.Text.Split(' ')[1]))
+                    return users.First(x => "@" + x.Value.username == u.Message.Text.Split(' ')[1]).Value.id;
             }
             return u.Message.From.Id;
         }
 
         public string GetName(int id)
         {
-            var u = users.Values.FirstOrDefault(x => x.id == id);
-            if (u == null) return null;
-            return u.name;
+            if (users.Values.Any(x => x.id == id))
+            {
+                return users[id].name;
+            }
+            return "unknown";
         }
 
         private void AddUser(User u)
