@@ -1250,7 +1250,7 @@ namespace BotControlPanel.Bots
                                     return;
 
 
-                                case "userinfo":
+                                case "/userinfo":
                                     if (adminIds.Contains(msg.From.Id))
                                     {
                                         int id = GetUserId(u);
