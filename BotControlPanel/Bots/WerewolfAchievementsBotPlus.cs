@@ -591,7 +591,7 @@ namespace BotControlPanel.Bots
 
         private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 }; // [0] is testing group, [1] is achv group
         private const string achvLink = "https://t.me/joinchat/AAAAAEBJi2uYsVBF2fVwBg";
-        private readonly List<int> adminIds = new List<int>() { 267376056, 295152997 }; // [0] is Florian, [1] is Ludwig
+        private readonly List<int> adminIds = new List<int>() { 267376056, 295152997, 268467132, 164647246 }; // [0] is Florian, [1] is Ludwig, [2] Prata, [3] Donavan
 
         public WerewolfAchievementsBotPlus(string token) : base(token)
         {
