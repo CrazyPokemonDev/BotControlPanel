@@ -692,7 +692,7 @@ namespace BotControlPanel.Bots
             }
         }
 
-        private Message ReplyToMessage(string text, Update u, IReplyMarkup replyMarkup = null)
+        private Message ReplyToMessage(string text, Update u, IReplyMarkup replyMarkup = null, bool disableWebPagePreview = true)
         {
             if (!string.IsNullOrWhiteSpace(text))
             {
@@ -703,7 +703,7 @@ namespace BotControlPanel.Bots
 
                     try
                     {
-                        var task = client.SendTextMessageAsync(chatid, text, replyToMessageId: messageid, parseMode: ParseMode.Html, replyMarkup: replyMarkup);
+                        var task = client.SendTextMessageAsync(chatid, text, replyToMessageId: messageid, parseMode: ParseMode.Html, replyMarkup: replyMarkup, disableWebPagePreview: disableWebPagePreview);
                         task.Wait();
                         var msg = task.Result;
                         return msg;
