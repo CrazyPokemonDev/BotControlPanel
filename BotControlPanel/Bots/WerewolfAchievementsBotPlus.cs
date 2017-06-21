@@ -1261,7 +1261,36 @@ namespace BotControlPanel.Bots
                                             string username = users.Values.FirstOrDefault(x => x.id == id)?.username;
                                             username = string.IsNullOrEmpty(username) ? "no username" : $"@{username}";
                                             string subscribing = users[id].Subscribing ? " ✅" : " ❌";
-                                            ReplyToMessage($"Name: {name}\nId: {id}\nUsername: {username}\nSubscribing: {subscribing}", u);
+
+                                            string status;
+                                            if (adminIds.Contains(id)) status = "Bot admin";
+                                            else
+                                            {
+                                                var memberT = client.GetChatMemberAsync(allowedgroups[1], id);
+                                                memberT.Wait();
+                                                var member = memberT.Result;
+
+                                                switch (member.Status.ToString().ToLower())
+                                                {
+                                                    case "administrator":
+                                                        status = "Group admin";
+                                                        break;
+
+                                                    case "creator": // That would mean Ludwig isn't bot admin, wtf
+                                                        status = "Group creator but not bot admin";
+                                                        break;
+
+                                                    case "member":
+                                                        status = "Group member";
+                                                        break;
+
+                                                    default:
+                                                        status = "Not in group";
+                                                        break;
+                                                }
+                                            }
+
+                                            ReplyToMessage($"Name: {name}\nId: {id}\nUsername: {username}\nSubscribing: {subscribing}\nStatus: {status}", u);
                                         }
                                     }
                                     return;
