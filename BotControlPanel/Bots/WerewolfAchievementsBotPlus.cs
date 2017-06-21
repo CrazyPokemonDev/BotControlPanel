@@ -21,13 +21,25 @@ namespace BotControlPanel.Bots
             public int id { get; }
             public string username { get; set; }
             public bool Subscribing { get; set; }
+            private int gamecount;
 
-            public BotUser(string name, int id, string username = null, bool Subscribing = false)
+            public BotUser(string name, int id, string username = null, bool Subscribing = false, int gamecount = 0)
             {
                 this.name = name;
                 this.id = id;
                 this.username = username;
                 this.Subscribing = Subscribing;
+                this.gamecount = gamecount;
+            }
+
+            public void IncreaseGamecount()
+            {
+                gamecount++;
+            }
+
+            public int GetGameCount()
+            {
+                return gamecount;
             }
         }
 
@@ -617,6 +629,11 @@ namespace BotControlPanel.Bots
                             games[id].UpdatePlayerlist();
                             client.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Game is now considered running.").Wait();
                             client.SendTextMessageAsync(id, $"<b>{e.CallbackQuery.From.FirstName}</b> has considered the game started!", parseMode: ParseMode.Html).Wait();
+
+                            foreach (int playerid in games[id].players.Select(x => x.Value.id))
+                            {
+                                users[playerid].IncreaseGamecount();
+                            }
                         }
                         else
                         {
@@ -1292,6 +1309,26 @@ namespace BotControlPanel.Bots
 
                                             ReplyToMessage($"Name: {name}\nId: {id}\nUsername: {username}\nSubscribing: {subscribing}\nStatus: {status}", u);
                                         }
+                                    }
+                                    return;
+
+                                case "/mostactive":
+                                    if (adminIds.Contains(msg.From.Id))
+                                    {
+                                        int number;
+                                        if (text.Split(' ').Count() == 1 || !int.TryParse(text.Split(' ')[1], out number)) number = 10;
+                                        List<BotUser> active = users.Values.OrderByDescending(x => x.GetGameCount()).ToList();
+                                        active.RemoveRange(10, users.Count - 10);
+
+                                        string activity = $"<b>{number} most active players:</b>\n\n";
+
+                                        foreach (var user in active)
+                                        {
+                                            string name = string.IsNullOrEmpty(user.username) ? $"<b>{user.name}</b>" : $"<a href=\"t.me/{user.username}\">{user.name}</a>";
+                                            int gamecount = user.GetGameCount();
+                                            activity += gamecount + " - " + name;
+                                        }
+                                        ReplyToMessage(activity, u);
                                     }
                                     return;
                             }
