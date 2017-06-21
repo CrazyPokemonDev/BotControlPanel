@@ -1316,7 +1316,10 @@ namespace BotControlPanel.Bots
                                     if (adminIds.Contains(msg.From.Id))
                                     {
                                         int number;
-                                        if (text.Split(' ').Count() == 1 || !int.TryParse(text.Split(' ')[1], out number)) number = 10;
+                                        if (text.Split(' ').Count() > 1 && int.TryParse(text.Split(' ')[1], out number))
+                                        { }
+                                        else number = 10;
+
                                         List<BotUser> active = users.Values.OrderByDescending(x => x.GetGameCount()).ToList();
                                         active.RemoveRange(10, users.Count - 10);
 
@@ -1326,7 +1329,7 @@ namespace BotControlPanel.Bots
                                         {
                                             string name = string.IsNullOrEmpty(user.username) ? $"<b>{user.name}</b>" : $"<a href=\"t.me/{user.username}\">{user.name}</a>";
                                             int gamecount = user.GetGameCount();
-                                            activity += gamecount + " - " + name;
+                                            activity += gamecount + " - " + name + "\n";
                                         }
                                         ReplyToMessage(activity, u);
                                     }
