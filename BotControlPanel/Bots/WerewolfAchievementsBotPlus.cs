@@ -1340,13 +1340,13 @@ namespace BotControlPanel.Bots
                                         while (activity.Length >= 2000)
                                         {
                                             activityL.Add(activity.Substring(0, 2000));
-                                            activity.Remove(0, 2000);
+                                            activity = activity.Remove(0, 2000);
                                         }
                                         if (!string.IsNullOrEmpty(activity)) activityL.Add(activity);
 
                                         foreach (var s in activityL)
                                         {
-                                            client.SendTextMessageAsync(msg.Chat.Id, s, parseMode: ParseMode.Html).Wait();
+                                            client.SendTextMessageAsync(msg.Chat.Id, s, parseMode: ParseMode.Html, disableWebPagePreview: true).Wait();
                                         }
                                         ReplyToMessage("Finished!", u);
                                     }
