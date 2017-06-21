@@ -1330,9 +1330,10 @@ namespace BotControlPanel.Bots
 
                                         foreach (var user in active)
                                         {
-                                            string name = string.IsNullOrEmpty(user.username) ? $"<b>{user.name}</b>" : $"<a href=\"t.me/{user.username}\">{user.name}</a>";
+                                            string name = user.name;
+                                            string username = string.IsNullOrEmpty(user.username) ? user.id.ToString() : user.username;
                                             int gamecount = user.GetGameCount();
-                                            activity += gamecount + " - " + name + "\n";
+                                            activity += gamecount + " - " + name + " - " + username + "\n";
                                         }
 
                                         List<string> activityL = new List<string>();
