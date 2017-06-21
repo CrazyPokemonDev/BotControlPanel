@@ -589,7 +589,7 @@ namespace BotControlPanel.Bots
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
         private const string usersPath = basePath + "users.dict";
-        private const string version = "3.6.0";
+        private const string version = "3.6.1";
         private readonly DateTime starttime = DateTime.UtcNow;
 
         private Dictionary<int, BotUser> users = new Dictionary<int, BotUser>();
