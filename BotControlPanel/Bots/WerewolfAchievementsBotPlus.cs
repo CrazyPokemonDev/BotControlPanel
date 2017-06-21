@@ -633,6 +633,7 @@ namespace BotControlPanel.Bots
                             foreach (int playerid in games[id].players.Select(x => x.Value.id))
                             {
                                 users[playerid].IncreaseGamecount();
+                                WriteUsers();
                             }
                         }
                         else
@@ -769,6 +770,7 @@ namespace BotControlPanel.Bots
                             {
                                 users[msg.From.Id].name = msg.From.FirstName;
                                 users[msg.From.Id].username = msg.From.Username;
+                                WriteUsers();
                             }
 
                             if (msg.Chat.Type != ChatType.Private) switch (text.Split(' ')[0].ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
@@ -1316,14 +1318,14 @@ namespace BotControlPanel.Bots
                                     if (adminIds.Contains(msg.From.Id))
                                     {
                                         int number;
-                                        if (text.Split(' ').Count() > 1 && int.TryParse(text.Split(' ')[1], out number))
+                                        if (text.Split(' ').Count() > 1 && int.TryParse(text.Split(' ')[1], out number) && number <= users.Count)
                                         { }
                                         else number = 10;
 
                                         List<BotUser> active = users.Values.OrderByDescending(x => x.GetGameCount()).ToList();
                                         active.RemoveRange(number, users.Count - number);
 
-                                        string activity = $"<b>{number} most active players:</b>\n\n";
+                                        string activity = $"<b>Top {number} active players:</b>\n\n";
 
                                         foreach (var user in active)
                                         {
@@ -1461,6 +1463,11 @@ namespace BotControlPanel.Bots
         {
             users.Add(u.Id, new BotUser(u.FirstName, u.Id, u.Username));
             if (!System.IO.Directory.Exists(basePath)) System.IO.Directory.CreateDirectory(basePath);
+            System.IO.File.WriteAllText(usersPath, JsonConvert.SerializeObject(users));
+        }
+
+        private void WriteUsers()
+        {
             System.IO.File.WriteAllText(usersPath, JsonConvert.SerializeObject(users));
         }
 
