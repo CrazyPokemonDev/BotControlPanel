@@ -1090,21 +1090,11 @@ namespace BotControlPanel.Bots
 
                             switch (text.Split(' ')[0].ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
                             {
-                                case "/send":
+                                case "/announce":
                                     if (adminIds.Contains(msg.From.Id))
                                     {
-                                        if (text.Split(' ').Count() >= 3)
-                                        {
-                                            long recipient;
-                                            if (long.TryParse(text.Split(' ')[1], out recipient))
-                                            {
-                                                if (recipient == 0) recipient = allowedgroups[0];
-                                                if (recipient == 1) recipient = allowedgroups[1];
-
-                                                client.SendTextMessageAsync(recipient, text.Remove(0, text.IndexOf(' ')).Remove(text.IndexOf(' ')), parseMode: ParseMode.Html).Wait();
-                                                ReplyToMessage("Successfully sent!", u);
-                                            }
-                                        }
+                                        client.SendTextMessageAsync(allowedgroups[1], text.Remove(0, text.IndexOf(' ')), parseMode: ParseMode.Html).Wait();
+                                        ReplyToMessage("Successfully announced!", u);
                                     }
                                     else ReplyToMessage("You are not a bot admin!", u);
                                     return;
