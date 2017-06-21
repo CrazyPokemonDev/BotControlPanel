@@ -21,7 +21,7 @@ namespace BotControlPanel.Bots
             public int id { get; }
             public string username { get; set; }
             public bool Subscribing { get; set; }
-            private int gamecount;
+            public int gamecount;
 
             public BotUser(string name, int id, string username = null, bool Subscribing = false, int gamecount = 0)
             {
@@ -1321,7 +1321,7 @@ namespace BotControlPanel.Bots
                                         else number = 10;
 
                                         List<BotUser> active = users.Values.OrderByDescending(x => x.GetGameCount()).ToList();
-                                        active.RemoveRange(10, users.Count - 10);
+                                        active.RemoveRange(number, users.Count - number);
 
                                         string activity = $"<b>{number} most active players:</b>\n\n";
 
