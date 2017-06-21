@@ -1331,7 +1331,7 @@ namespace BotControlPanel.Bots
                                         foreach (var user in active)
                                         {
                                             string name = user.name;
-                                            string username = string.IsNullOrEmpty(user.username) ? user.id.ToString() : user.username;
+                                            string username = string.IsNullOrEmpty(user.username) ? user.id.ToString() : "@" + user.username;
                                             int gamecount = user.GetGameCount();
                                             activity += gamecount + " - " + name + " - " + username + "\n";
                                         }
