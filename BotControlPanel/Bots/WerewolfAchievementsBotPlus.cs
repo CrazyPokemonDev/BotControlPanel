@@ -1231,7 +1231,7 @@ namespace BotControlPanel.Bots
                                         var admins = adminsT.Result;
 
 
-                                        string knownusers = "☝️ Bot admins:\n\n";
+                                        string knownusers = $"<b>Known users:</b>\n\nCount: {users.Count}\nSubscribers: {users.Count(x => x.Value.Subscribing)}\n\n☝️ Bot admins:\n\n";
                                         foreach (BotUser user in users.Values.Where(x => adminIds.Contains(x.id)))
                                         {
                                             knownusers += $"{user.name}\n  - @{user.username}\n  - {user.id}\n  - Subscribing:" + (user.Subscribing  ? " ✅" : " ❌") + "\n\n";
@@ -1280,6 +1280,7 @@ namespace BotControlPanel.Bots
                                             string username = users.Values.FirstOrDefault(x => x.id == id)?.username;
                                             username = string.IsNullOrEmpty(username) ? "no username" : $"@{username}";
                                             string subscribing = users[id].Subscribing ? " ✅" : " ❌";
+                                            int gamecount = users[id].GetGameCount();
 
                                             string status;
                                             if (adminIds.Contains(id)) status = "Bot admin";
@@ -1309,7 +1310,7 @@ namespace BotControlPanel.Bots
                                                 }
                                             }
 
-                                            ReplyToMessage($"Name: {name}\nId: {id}\nUsername: {username}\nSubscribing: {subscribing}\nStatus: {status}", u);
+                                            ReplyToMessage($"Name: {name}\nId: {id}\nUsername: {username}\nSubscribing: {subscribing}\nStatus: {status}\nNumber of games: {gamecount}", u);
                                         }
                                     }
                                     return;
@@ -1333,7 +1334,21 @@ namespace BotControlPanel.Bots
                                             int gamecount = user.GetGameCount();
                                             activity += gamecount + " - " + name + "\n";
                                         }
-                                        ReplyToMessage(activity, u);
+
+                                        List<string> activityL = new List<string>();
+
+                                        while (activity.Length >= 2000)
+                                        {
+                                            activityL.Add(activity.Substring(0, 2000));
+                                            activity.Remove(0, 2000);
+                                        }
+                                        if (!string.IsNullOrEmpty(activity)) activityL.Add(activity);
+
+                                        foreach (var s in activityL)
+                                        {
+                                            client.SendTextMessageAsync(msg.Chat.Id, s, parseMode: ParseMode.Html).Wait();
+                                        }
+                                        ReplyToMessage("Finished!", u);
                                     }
                                     return;
                             }
@@ -1444,8 +1459,8 @@ namespace BotControlPanel.Bots
                 if (users.Any(x => x.Value.id.ToString().Equals(u.Message.Text.Split(' ')[1])))
                     return int.Parse(u.Message.Text.Split(' ')[1]);
 
-                if (users.Any(x => "@" + x.Value.username == u.Message.Text.Split(' ')[1]))
-                    return users.First(x => "@" + x.Value.username == u.Message.Text.Split(' ')[1]).Value.id;
+                if (users.Any(x => "@" + x.Value.username.ToLower() == u.Message.Text.Split(' ')[1].ToLower()))
+                    return users.First(x => "@" + x.Value.username.ToLower() == u.Message.Text.Split(' ')[1].ToLower()).Value.id;
             }
             return u.Message.From.Id;
         }
