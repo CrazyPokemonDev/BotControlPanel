@@ -1459,7 +1459,7 @@ namespace BotControlPanel.Bots
                 if (users.Any(x => x.Value.id.ToString().Equals(u.Message.Text.Split(' ')[1])))
                     return int.Parse(u.Message.Text.Split(' ')[1]);
 
-                if (users.Any(x => "@" + x.Value.username.ToLower() == u.Message.Text.Split(' ')[1].ToLower()))
+                if (users.Any(x => "@" + x.Value.username?.ToLower() == u.Message.Text.Split(' ')[1].ToLower()))
                     return users.First(x => "@" + x.Value.username.ToLower() == u.Message.Text.Split(' ')[1].ToLower()).Value.id;
             }
             return u.Message.From.Id;
