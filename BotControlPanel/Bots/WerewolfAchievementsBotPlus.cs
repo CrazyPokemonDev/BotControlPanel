@@ -1352,6 +1352,10 @@ namespace BotControlPanel.Bots
                                         ReplyToMessage("Finished!", u);
                                     }
                                     return;
+
+                                case "/beta":
+                                    ReplyToMessage("<a href=\"https://t.me/joinchat/AAAAAEPxOCaulhVuFZ-dCg\">Join the bot testing group here!</a>", u);
+                                    return;
                             }
 
                             if (msg.Chat.Type == ChatType.Private)
