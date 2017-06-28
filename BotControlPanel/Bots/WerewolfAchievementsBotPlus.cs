@@ -21,13 +21,25 @@ namespace BotControlPanel.Bots
             public int id { get; }
             public string username { get; set; }
             public bool Subscribing { get; set; }
+            public int gamecount;
 
-            public BotUser(string name, int id, string username = null, bool Subscribing = false)
+            public BotUser(string name, int id, string username = null, bool Subscribing = false, int gamecount = 0)
             {
                 this.name = name;
                 this.id = id;
                 this.username = username;
                 this.Subscribing = Subscribing;
+                this.gamecount = gamecount;
+            }
+
+            public void IncreaseGamecount()
+            {
+                gamecount++;
+            }
+
+            public int GetGameCount()
+            {
+                return gamecount;
             }
         }
 
@@ -577,7 +589,7 @@ namespace BotControlPanel.Bots
         private const string basePath = "C:\\Olfi01\\BotControlPanel\\AchievementsBot\\";
         private const string aliasesPath = basePath + "aliases.dict";
         private const string usersPath = basePath + "users.dict";
-        private const string version = "3.5.0";
+        private const string version = "3.6.1";
         private readonly DateTime starttime = DateTime.UtcNow;
 
         private Dictionary<int, BotUser> users = new Dictionary<int, BotUser>();
@@ -591,7 +603,7 @@ namespace BotControlPanel.Bots
 
         private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 }; // [0] is testing group, [1] is achv group
         private const string achvLink = "https://t.me/joinchat/AAAAAEBJi2uYsVBF2fVwBg";
-        private readonly List<int> adminIds = new List<int>() { 267376056, 295152997 }; // [0] is Florian, [1] is Ludwig
+        private readonly List<int> adminIds = new List<int>() { 267376056, 295152997, 268467132, 164647246 }; // [0] is Florian, [1] is Ludwig, [2] Prata, [3] Donavan
 
         public WerewolfAchievementsBotPlus(string token) : base(token)
         {
@@ -617,6 +629,12 @@ namespace BotControlPanel.Bots
                             games[id].UpdatePlayerlist();
                             client.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Game is now considered running.").Wait();
                             client.SendTextMessageAsync(id, $"<b>{e.CallbackQuery.From.FirstName}</b> has considered the game started!", parseMode: ParseMode.Html).Wait();
+
+                            foreach (int playerid in games[id].players.Select(x => x.Value.id))
+                            {
+                                users[playerid].IncreaseGamecount();
+                                WriteUsers();
+                            }
                         }
                         else
                         {
@@ -675,7 +693,7 @@ namespace BotControlPanel.Bots
             }
         }
 
-        private Message ReplyToMessage(string text, Update u, IReplyMarkup replyMarkup = null)
+        private Message ReplyToMessage(string text, Update u, IReplyMarkup replyMarkup = null, bool disableWebPagePreview = true)
         {
             if (!string.IsNullOrWhiteSpace(text))
             {
@@ -686,7 +704,7 @@ namespace BotControlPanel.Bots
 
                     try
                     {
-                        var task = client.SendTextMessageAsync(chatid, text, replyToMessageId: messageid, parseMode: ParseMode.Html, replyMarkup: replyMarkup);
+                        var task = client.SendTextMessageAsync(chatid, text, replyToMessageId: messageid, parseMode: ParseMode.Html, replyMarkup: replyMarkup, disableWebPagePreview: disableWebPagePreview);
                         task.Wait();
                         var msg = task.Result;
                         return msg;
@@ -752,6 +770,7 @@ namespace BotControlPanel.Bots
                             {
                                 users[msg.From.Id].name = msg.From.FirstName;
                                 users[msg.From.Id].username = msg.From.Username;
+                                WriteUsers();
                             }
 
                             if (msg.Chat.Type != ChatType.Private) switch (text.Split(' ')[0].ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
@@ -1212,7 +1231,7 @@ namespace BotControlPanel.Bots
                                         var admins = adminsT.Result;
 
 
-                                        string knownusers = "☝️ Bot admins:\n\n";
+                                        string knownusers = $"<b>Known users:</b>\n\nCount: {users.Count}\nSubscribers: {users.Count(x => x.Value.Subscribing)}\n\n☝️ Bot admins:\n\n";
                                         foreach (BotUser user in users.Values.Where(x => adminIds.Contains(x.id)))
                                         {
                                             knownusers += $"{user.name}\n  - @{user.username}\n  - {user.id}\n  - Subscribing:" + (user.Subscribing  ? " ✅" : " ❌") + "\n\n";
@@ -1250,7 +1269,7 @@ namespace BotControlPanel.Bots
                                     return;
 
 
-                                case "whois":
+                                case "/userinfo":
                                     if (adminIds.Contains(msg.From.Id))
                                     {
                                         int id = GetUserId(u);
@@ -1260,9 +1279,82 @@ namespace BotControlPanel.Bots
                                             string name = GetName(id);
                                             string username = users.Values.FirstOrDefault(x => x.id == id)?.username;
                                             username = string.IsNullOrEmpty(username) ? "no username" : $"@{username}";
-                                            ReplyToMessage($"Name: {name}\nId: {id}\nUsername: {username}", u);
+                                            string subscribing = users[id].Subscribing ? " ✅" : " ❌";
+                                            int gamecount = users[id].GetGameCount();
+
+                                            string status;
+                                            if (adminIds.Contains(id)) status = "Bot admin";
+                                            else
+                                            {
+                                                var memberT = client.GetChatMemberAsync(allowedgroups[1], id);
+                                                memberT.Wait();
+                                                var member = memberT.Result;
+
+                                                switch (member.Status.ToString().ToLower())
+                                                {
+                                                    case "administrator":
+                                                        status = "Group admin";
+                                                        break;
+
+                                                    case "creator": // That would mean Ludwig isn't bot admin, wtf
+                                                        status = "Group creator but not bot admin";
+                                                        break;
+
+                                                    case "member":
+                                                        status = "Group member";
+                                                        break;
+
+                                                    default:
+                                                        status = "Not in group";
+                                                        break;
+                                                }
+                                            }
+
+                                            ReplyToMessage($"Name: {name}\nId: {id}\nUsername: {username}\nSubscribing: {subscribing}\nStatus: {status}\nNumber of games: {gamecount}", u);
                                         }
                                     }
+                                    return;
+
+                                case "/mostactive":
+                                    if (adminIds.Contains(msg.From.Id))
+                                    {
+                                        int number;
+                                        if (text.Split(' ').Count() > 1 && int.TryParse(text.Split(' ')[1], out number) && number <= users.Count)
+                                        { }
+                                        else number = 10;
+
+                                        List<BotUser> active = users.Values.OrderByDescending(x => x.GetGameCount()).ToList();
+                                        active.RemoveRange(number, users.Count - number);
+
+                                        string activity = $"<b>Top {number} active players:</b>\n\n";
+
+                                        foreach (var user in active)
+                                        {
+                                            string name = user.name;
+                                            string username = string.IsNullOrEmpty(user.username) ? user.id.ToString() : "@" + user.username;
+                                            int gamecount = user.GetGameCount();
+                                            activity += gamecount + " - " + name + " - " + username + "\n";
+                                        }
+
+                                        List<string> activityL = new List<string>();
+
+                                        while (activity.Length >= 2000)
+                                        {
+                                            activityL.Add(activity.Substring(0, 2000));
+                                            activity = activity.Remove(0, 2000);
+                                        }
+                                        if (!string.IsNullOrEmpty(activity)) activityL.Add(activity);
+
+                                        foreach (var s in activityL)
+                                        {
+                                            client.SendTextMessageAsync(msg.Chat.Id, s, parseMode: ParseMode.Html, disableWebPagePreview: true).Wait();
+                                        }
+                                        ReplyToMessage("Finished!", u);
+                                    }
+                                    return;
+
+                                case "/beta":
+                                    ReplyToMessage("<a href=\"https://t.me/joinchat/AAAAAEPxOCaulhVuFZ-dCg\">Join the bot testing group here!</a>", u);
                                     return;
                             }
 
@@ -1369,28 +1461,33 @@ namespace BotControlPanel.Bots
             }
             if (u.Message.Text.Split(' ').Length > 1)
             {
-                {
-                    if (users.Any(x => x.Value.id.ToString().Equals(u.Message.Text.Split(' ')[1])))
-                        return int.Parse(u.Message.Text.Split(' ')[1]);
+                if (users.Any(x => x.Value.id.ToString().Equals(u.Message.Text.Split(' ')[1])))
+                    return int.Parse(u.Message.Text.Split(' ')[1]);
 
-                    if (users.Any(x => x.Value.username == u.Message.Text.Split(' ')[1].Replace("@", "")))
-                        return users.First(x => x.Value.username == u.Message.Text.Split(' ')[1].Replace("@", "")).Value.id;
-                }
+                if (users.Any(x => "@" + x.Value.username?.ToLower() == u.Message.Text.Split(' ')[1].ToLower()))
+                    return users.First(x => "@" + x.Value.username?.ToLower() == u.Message.Text.Split(' ')[1].ToLower()).Value.id;
             }
             return u.Message.From.Id;
         }
 
         public string GetName(int id)
         {
-            var u = users.Values.FirstOrDefault(x => x.id == id);
-            if (u == null) return null;
-            return u.name;
+            if (users.Values.Any(x => x.id == id))
+            {
+                return users[id].name;
+            }
+            return "unknown";
         }
 
         private void AddUser(User u)
         {
             users.Add(u.Id, new BotUser(u.FirstName, u.Id, u.Username));
             if (!System.IO.Directory.Exists(basePath)) System.IO.Directory.CreateDirectory(basePath);
+            System.IO.File.WriteAllText(usersPath, JsonConvert.SerializeObject(users));
+        }
+
+        private void WriteUsers()
+        {
             System.IO.File.WriteAllText(usersPath, JsonConvert.SerializeObject(users));
         }
 
