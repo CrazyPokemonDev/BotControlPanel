@@ -600,6 +600,7 @@ namespace BotControlPanel.Bots
 
         List<long> justCalledStop = new List<long>();
         public bool maint = true;
+        public bool suppressErrors = false;
 
         private readonly List<long> allowedgroups = new List<long>() { -1001070844778, -1001078561643 }; // [0] is testing group, [1] is achv group
         private const string achvLink = "https://t.me/joinchat/AAAAAEBJi2uYsVBF2fVwBg";
@@ -689,7 +690,7 @@ namespace BotControlPanel.Bots
             }
             catch (Exception ex)
             {
-                client.SendTextMessageAsync(allowedgroups[0], $"Error in achievements callback: {ex.Message}\n{ex.StackTrace}").Wait();
+                if (!suppressErrors) client.SendTextMessageAsync(allowedgroups[0], $"Error in achievements callback: {ex.Message}\n{ex.StackTrace}").Wait();
             }
         }
 
@@ -711,7 +712,7 @@ namespace BotControlPanel.Bots
                     }
                     catch (Exception ex)
                     {
-                        client.SendTextMessageAsync(allowedgroups[0], $"Error in ReplyToMessage Method: {ex.Message}\n{ex.StackTrace}").Wait();
+                        if (!suppressErrors) client.SendTextMessageAsync(allowedgroups[0], $"Error in ReplyToMessage Method: {ex.Message}\n{ex.StackTrace}").Wait();
                         client.SendTextMessageAsync(u.Message.Chat.Id, "Tried to send something to this chat but failed! The devs were informed! Sorry!").Wait();
                         return null;
                     }
@@ -741,7 +742,7 @@ namespace BotControlPanel.Bots
             catch (Exception e)
             {
                 client.SendTextMessageAsync(chatid, "Tried to edit a message in this chat but failed! Sorry! The devs were informed.");
-                client.SendTextMessageAsync(allowedgroups[0], $"{e.StackTrace}\n{e.Message}\n{e.InnerException?.Message}");
+                if (!suppressErrors) client.SendTextMessageAsync(allowedgroups[0], $"{e.StackTrace}\n{e.Message}\n{e.InnerException?.Message}");
                 return null;
             }
         }
@@ -1090,6 +1091,15 @@ namespace BotControlPanel.Bots
 
                             switch (text.Split(' ')[0].ToLower().Replace("@werewolfbot", "").Replace('!', '/').Replace("@werewolfwolfachievementbot", ""))
                             {
+                                case "/supresserrors":
+                                    if (adminIds.Contains(msg.From.Id))
+                                    {
+                                        suppressErrors = !suppressErrors;
+                                        ReplyToMessage($"Error supporession: {suppressErrors}", u);
+                                    }
+                                    else ReplyToMessage("You are not a bot admin!", u);
+                                    return;
+
                                 case "/announce":
                                     if (adminIds.Contains(msg.From.Id))
                                     {
@@ -1449,7 +1459,7 @@ namespace BotControlPanel.Bots
             }
             catch (Exception ex)
             {
-                client.SendTextMessageAsync(allowedgroups[0], $"Error in Achievements Bot: {ex.InnerException}\n{ex.Message}\n{ex.StackTrace}").Wait();
+                if (!suppressErrors) client.SendTextMessageAsync(allowedgroups[0], $"Error in Achievements Bot: {ex.InnerException}\n{ex.Message}\n{ex.StackTrace}").Wait();
             }
         }
 
