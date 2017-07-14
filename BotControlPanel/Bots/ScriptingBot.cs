@@ -585,6 +585,7 @@ namespace BotControlPanel.Bots
             parameters.ReferencedAssemblies.Add("System.Runtime.dll");
             parameters.ReferencedAssemblies.Add("System.Threading.Tasks.dll");
             parameters.ReferencedAssemblies.Add("System.Collections.dll");
+            parameters.ReferencedAssemblies.Add("System.IO.dll");
         }
         #endregion
         #endregion
