@@ -221,12 +221,7 @@ namespace BotControlPanel.Bots
         {
             CSharpCodeProvider provider = new CSharpCodeProvider();
             CompilerParameters parameters = new CompilerParameters();
-            parameters.ReferencedAssemblies.Add(dllPath3);
-            parameters.ReferencedAssemblies.Add(dllPath2);
-            parameters.ReferencedAssemblies.Add("System.dll");
-            parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
-            parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
-            parameters.ReferencedAssemblies.Add("System.Core.dll");
+            AddReferencedAssemblys(parameters);
             parameters.GenerateInMemory = true;
             parameters.GenerateExecutable = true;
             CompilerResults results = provider.CompileAssemblyFromSource(parameters, GetScript());
@@ -258,12 +253,7 @@ namespace BotControlPanel.Bots
                 string newFile = oldFile.Replace("//newcommand", args + "\n//end\n//newcommand");
                 CSharpCodeProvider provider = new CSharpCodeProvider();
                 CompilerParameters parameters = new CompilerParameters();
-                parameters.ReferencedAssemblies.Add(dllPath3);
-                parameters.ReferencedAssemblies.Add(dllPath2);
-                parameters.ReferencedAssemblies.Add("System.dll");
-                parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
-                parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
-                parameters.ReferencedAssemblies.Add("System.Core.dll");
+                AddReferencedAssemblys(parameters);
                 parameters.GenerateInMemory = true;
                 parameters.GenerateExecutable = true;
                 CompilerResults results = provider.CompileAssemblyFromSource(parameters, newFile);
@@ -318,12 +308,7 @@ namespace BotControlPanel.Bots
             string newFile = oldFile.Replace("//addusing", code + "\n//addusing");
             CSharpCodeProvider provider = new CSharpCodeProvider();
             CompilerParameters parameters = new CompilerParameters();
-            parameters.ReferencedAssemblies.Add(dllPath3);
-            parameters.ReferencedAssemblies.Add(dllPath2);
-            parameters.ReferencedAssemblies.Add("System.dll");
-            parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
-            parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
-            parameters.ReferencedAssemblies.Add("System.Core.dll");
+            AddReferencedAssemblys(parameters);
             parameters.GenerateInMemory = true;
             parameters.GenerateExecutable = true;
             CompilerResults results = provider.CompileAssemblyFromSource(parameters, newFile);
@@ -360,12 +345,7 @@ namespace BotControlPanel.Bots
             newFile = AutoCodeCompletion(newFile);
             CSharpCodeProvider provider = new CSharpCodeProvider();
             CompilerParameters parameters = new CompilerParameters();
-            parameters.ReferencedAssemblies.Add(dllPath3);
-            parameters.ReferencedAssemblies.Add(dllPath2);
-            parameters.ReferencedAssemblies.Add("System.dll");
-            parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
-            parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
-            parameters.ReferencedAssemblies.Add("System.Core.dll");
+            AddReferencedAssemblys(parameters);
             parameters.GenerateInMemory = true;
             parameters.GenerateExecutable = true;
             CompilerResults results = provider.CompileAssemblyFromSource(parameters, newFile);
@@ -402,12 +382,7 @@ namespace BotControlPanel.Bots
             newFile = AutoCodeCompletion(newFile);
             CSharpCodeProvider provider = new CSharpCodeProvider();
             CompilerParameters parameters = new CompilerParameters();
-            parameters.ReferencedAssemblies.Add(dllPath3);
-            parameters.ReferencedAssemblies.Add(dllPath2);
-            parameters.ReferencedAssemblies.Add("System.dll");
-            parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
-            parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
-            parameters.ReferencedAssemblies.Add("System.Core.dll");
+            AddReferencedAssemblys(parameters);
             parameters.GenerateInMemory = true;
             parameters.GenerateExecutable = true;
             CompilerResults results = provider.CompileAssemblyFromSource(parameters, newFile);
@@ -596,6 +571,17 @@ namespace BotControlPanel.Bots
                 r += line + "\n";
             }
             return r;
+        }
+        #endregion
+        #region Add Referenced Assemblys
+        private static void AddReferencedAssemblys(CompilerParameters parameters)
+        {
+            parameters.ReferencedAssemblies.Add("Telegram.Bot.dll");
+            parameters.ReferencedAssemblies.Add("Newtonsoft.Json.dll");
+            parameters.ReferencedAssemblies.Add("System.dll");
+            parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
+            parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
+            parameters.ReferencedAssemblies.Add("System.Core.dll");
         }
         #endregion
         #endregion
