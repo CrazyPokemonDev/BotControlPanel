@@ -139,7 +139,7 @@ namespace BotControlPanel.Bots
                 }
                 catch (ArgumentOutOfRangeException)
                 {
-                    workaround = UpdateType.UnkownUpdate;
+                    workaround = u.Type;
                     client.GetUpdatesAsync(u.Id + 1).Wait();
                 }
                 if (workaround == UpdateType.MessageUpdate)
@@ -180,10 +180,10 @@ namespace BotControlPanel.Bots
 
                     #region System messages
                     #region New member
-                    if (u.Message.Type == MessageType.ServiceMessage && u.Message.NewChatMember != null)
+                    if (u.Message.Type == MessageType.ServiceMessage && u.Message.NewChatMembers != null)
                     {
                         #region Bot added to group
-                        if (u.Message.NewChatMember.Id == me.Id)
+                        if (u.Message.NewChatMembers[0].Id == me.Id)
                         {
                             HandleBotJoinedGroup(u.Message);
                         }
