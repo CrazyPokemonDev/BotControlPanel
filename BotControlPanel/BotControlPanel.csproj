@@ -83,6 +83,9 @@
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.0.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
+    <Reference Include="FlomBotFactory, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Olfi01.FlomBotFactory.1.0.0-beta01\lib\net452\FlomBotFactory.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Win32.Primitives, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Win32.Primitives.4.3.0\lib\net46\Microsoft.Win32.Primitives.dll</HintPath>
     </Reference>
@@ -200,13 +203,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Bots\AchBotInlineKeyboards\InlineKeyboardStop.cs" />
-    <Compile Include="Bots\AchBotInlineKeyboards\InlineKeyboardStart.cs" />
-    <Compile Include="Bots\AchBotInlineKeyboards\InlineKeyboardSubscribe.cs" />
-    <Compile Include="Bots\AchBotInlineKeyboards\InlineKeyboardTellRole.cs" />
-    <Compile Include="Bots\FlomBot.cs" />
     <Compile Include="Bots\ScriptingBot.cs" />
-    <Compile Include="Bots\WerewolfAchievementsBotPlus.cs" />
     <Compile Include="Bots\WWTBCustomKeyboards\CancelKeyboard.cs" />
     <Compile Include="Bots\WWTBCustomKeyboards\ClosedlistKeyboard.cs" />
     <Compile Include="Bots\WWTBCustomKeyboards\ChangelogKeyboard.cs" />
@@ -220,7 +217,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Panel\BotPanelPart.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
