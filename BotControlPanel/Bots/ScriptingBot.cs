@@ -52,7 +52,14 @@ namespace BotControlPanel.Bots
         public override bool StartBot()
         {
             bool b = base.StartBot();
-            RestartBot(Flom);
+            try
+            {
+                RestartBot(Flom);
+            }
+            catch
+            {
+                client.SendTextMessageAsync(Flom, "Failed to start bot");
+            }
             return b;
         }
         #endregion
@@ -61,8 +68,11 @@ namespace BotControlPanel.Bots
         public override bool StopBot()
         {
             bool b = base.StopBot();
-            botStopMethod?.Invoke(null, null);
-            client.SendTextMessageAsync(Flom, "Scripted bot was stopped.");
+            if (botStopMethod != null)
+            {
+                botStopMethod.Invoke(null, null);
+                client.SendTextMessageAsync(Flom, "Scripted bot was stopped.");
+            }
             return b;
         }
         #endregion
@@ -615,9 +625,6 @@ namespace BotControlPanel.Bots
             parameters.ReferencedAssemblies.Add("System.Collections.dll");
             parameters.ReferencedAssemblies.Add("System.IO.dll");
             parameters.ReferencedAssemblies.Add("System.Data.SQLite.dll");
-            parameters.ReferencedAssemblies.Add("System.Data.SQLite.Core.dll");
-            parameters.ReferencedAssemblies.Add("System.Data.SQLite.EF6.dll");
-            parameters.ReferencedAssemblies.Add("System.Data.SQLite.Linq.dll");
         }
         #endregion
         #endregion
