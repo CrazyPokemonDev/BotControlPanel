@@ -48,6 +48,25 @@ namespace BotControlPanel.Bots
         }
         #endregion
 
+        #region Start Bot
+        public override bool StartBot()
+        {
+            bool b = base.StartBot();
+            RestartBot(Flom);
+            return b;
+        }
+        #endregion
+
+        #region Stop Bot
+        public override bool StopBot()
+        {
+            bool b = base.StopBot();
+            botStopMethod?.Invoke(null, null);
+            client.SendTextMessageAsync(Flom, "Scripted bot was stopped.");
+            return b;
+        }
+        #endregion
+
         #region On Update
         protected override void Client_OnUpdate(object sender, UpdateEventArgs e)
         {
@@ -178,19 +197,7 @@ namespace BotControlPanel.Bots
                         #endregion
                         #region restart
                         case "/restart":
-                            if (botStopMethod != null) botStopMethod.Invoke(null, null);
-                            bool errored = false;
-                            CompileBot();
-                            try
-                            {
-                                botMainMethod.Invoke(null, new object[] { new String[] { scriptedBotToken } });
-                            }
-                            catch
-                            {
-                                client.SendTextMessageAsync(msg.Chat.Id, "Failed to start. Maybe the token is missing.");
-                                errored = true;
-                            }
-                            if (!errored) client.SendTextMessageAsync(msg.Chat.Id, "Bot (re)started.");
+                            RestartBot(msg.Chat.Id);
                             return;
                         #endregion
                         #region settoken
@@ -213,6 +220,27 @@ namespace BotControlPanel.Bots
                     + "\n" + ex.Message + "\n" + ex.StackTrace);
             }
         }
+        #endregion
+
+        #region Control Methods
+        #region Restart
+        private void RestartBot(long idToSendAnswer)
+        {
+            botStopMethod?.Invoke(null, null);
+            bool errored = false;
+            CompileBot();
+            try
+            {
+                botMainMethod.Invoke(null, new object[] { new String[] { scriptedBotToken } });
+            }
+            catch
+            {
+                client.SendTextMessageAsync(idToSendAnswer, "Failed to start. Maybe the token is missing.");
+                errored = true;
+            }
+            if (!errored) client.SendTextMessageAsync(idToSendAnswer, "Bot (re)started.");
+        }
+        #endregion
         #endregion
 
         #region Scripting stuff
@@ -586,6 +614,10 @@ namespace BotControlPanel.Bots
             parameters.ReferencedAssemblies.Add("System.Threading.Tasks.dll");
             parameters.ReferencedAssemblies.Add("System.Collections.dll");
             parameters.ReferencedAssemblies.Add("System.IO.dll");
+            parameters.ReferencedAssemblies.Add("System.Data.SQLite.dll");
+            parameters.ReferencedAssemblies.Add("System.Data.SQLite.Core.dll");
+            parameters.ReferencedAssemblies.Add("System.Data.SQLite.EF6.dll");
+            parameters.ReferencedAssemblies.Add("System.Data.SQLite.Linq.dll");
         }
         #endregion
         #endregion
