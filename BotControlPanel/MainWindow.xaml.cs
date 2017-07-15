@@ -30,7 +30,7 @@ namespace BotControlPanel
         private static readonly Brush inactiveBackground = (Brush)Application.Current.Resources["inactiveBackground"];
         private static readonly Brush erroredBackground = (Brush)Application.Current.Resources["erroredBackground"];
         private const string wwtbTokenPath = "C:\\Olfi01\\BotControlPanel\\.Tokens\\wwtb.token";
-        private const string achvTokenPath = "C:\\Olfi01\\BotControlPanel\\.Tokens\\achvbot.token";
+        //private const string achvTokenPath = "C:\\Olfi01\\BotControlPanel\\.Tokens\\achvbot.token";
         private const string tokenBasePath = "C:\\Olfi01\\BotControlPanel\\.Tokens\\";
         private const string erroredMessage = "Lege zuerst ein korrektes Token unter Einstellungen fest!\n" +
                     "Falls du das bereits getan hast, ist ein anderer Fehler aufgetreten.";
@@ -38,10 +38,10 @@ namespace BotControlPanel
         #endregion
         #region Variables
         private Wwtb wwtb;
-        private WerewolfAchievementsBotPlus achBot;
+        //private WerewolfAchievementsBotPlus achBot;
         private List<FlomBot> bots = new List<FlomBot>() { new ScriptingBot() };
         private string wwtbToken = "";
-        private string achToken = "";
+        //private string achToken = "";
         #endregion
         #region Constructor
         public MainWindow()
@@ -50,8 +50,8 @@ namespace BotControlPanel
             GetTokens();
             /*try {*/ wwtb = new Wwtb(wwtbToken); /*}
             catch { textBlockWWTB.Background = erroredBackground; }*/
-            try { achBot = new WerewolfAchievementsBotPlus(achToken); }
-            catch { textBlockAchv.Background = erroredBackground; }
+            /*try { achBot = new WerewolfAchievementsBotPlus(achToken); }
+            catch { textBlockAchv.Background = erroredBackground; }*/
             foreach (FlomBot b in bots)
             {
                 InitializeFlomBot(b);
@@ -70,10 +70,10 @@ namespace BotControlPanel
             }
             #endregion
             #region AchBot Token
-            if (File.Exists(achvTokenPath))
+            /*if (File.Exists(achvTokenPath))
             {
                 achToken = File.ReadAllText(achvTokenPath);
-            }
+            }*/
             #endregion
         }
         #endregion
@@ -94,7 +94,7 @@ namespace BotControlPanel
         }
         #endregion
         #region AchBot Token
-        private void SetAchvToken(string token)
+        /*private void SetAchvToken(string token)
         {
             if (!Directory.Exists(tokenBasePath))
             {
@@ -106,7 +106,7 @@ namespace BotControlPanel
             textBlockAchv.Background = inactiveBackground;
             try { achBot = new WerewolfAchievementsBotPlus(achToken); }
             catch { textBlockAchv.Background = erroredBackground; }
-        }
+        }*/
         #endregion
         #endregion
         #region Get Token By Name
@@ -274,7 +274,7 @@ namespace BotControlPanel
         #endregion
         #region AchBot
         #region Start AchBot
-        private void ButtonStartAchievements_Click(object sender, RoutedEventArgs e)
+        /*private void ButtonStartAchievements_Click(object sender, RoutedEventArgs e)
         {
             if (textBlockAchv.Background == erroredBackground)
             {
@@ -289,10 +289,10 @@ namespace BotControlPanel
             buttonStartAchievements.Content = "Stoppen";
             buttonStartAchievements.Click -= ButtonStartAchievements_Click;
             buttonStartAchievements.Click += ButtonStopAchievements_Click;
-        }
+        }*/
         #endregion
         #region Stop AchBot
-        private void ButtonStopAchievements_Click(object sender, RoutedEventArgs e)
+        /*private void ButtonStopAchievements_Click(object sender, RoutedEventArgs e)
         {
             if (achBot.IsRunning)
             {
@@ -302,10 +302,10 @@ namespace BotControlPanel
             buttonStartAchievements.Content = "Starten";
             buttonStartAchievements.Click -= ButtonStopAchievements_Click;
             buttonStartAchievements.Click += ButtonStartAchievements_Click;
-        }
+        }*/
         #endregion
         #region Achievement Settings
-        private void ButtonSettingsAchievements_Click(object sender, RoutedEventArgs e)
+        /*private void ButtonSettingsAchievements_Click(object sender, RoutedEventArgs e)
         {
             if (!achBot.IsRunning)
             {
@@ -317,7 +317,7 @@ namespace BotControlPanel
             {
                 MessageBox.Show("Don't edit the token while the bot is running!");
             }
-        }
+        }*/
         #endregion
         #endregion
         #region FlomBot
@@ -351,7 +351,7 @@ namespace BotControlPanel
             bool botRunning = false;
             try
             {
-                if (wwtb.IsRunning || achBot.IsRunning) botRunning = true;
+                if (wwtb.IsRunning /*|| achBot.IsRunning*/) botRunning = true;
             }
             catch { }
             foreach (FlomBot b in bots)
@@ -370,7 +370,7 @@ namespace BotControlPanel
                 else
                 {
                     wwtb.StopBot();
-                    achBot.StopBot();
+                    //achBot.StopBot();
                     foreach (FlomBot b in bots)
                     {
                         b.StopBot();
