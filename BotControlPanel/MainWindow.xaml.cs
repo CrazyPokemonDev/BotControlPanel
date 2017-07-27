@@ -7,6 +7,7 @@ using System.IO;
 using BotControlPanel.AlertWindows;
 using FlomBotFactory.Panel;
 using FlomBotFactory;
+using WhoAmIBotSpace;
 
 namespace BotControlPanel
 {
@@ -29,7 +30,7 @@ namespace BotControlPanel
         #region Variables
         private Wwtb wwtb;
         //private WerewolfAchievementsBotPlus achBot;
-        private List<FlomBot> bots = new List<FlomBot>() { new ScriptingBot() };
+        private List<FlomBot> bots = new List<FlomBot>() { new ScriptingBot(), new WhoAmIBot("") };
         private string wwtbToken = "";
         //private string achToken = "";
         #endregion

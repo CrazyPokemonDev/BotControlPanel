@@ -175,6 +175,9 @@
     <Reference Include="Telegram.Bot, Version=13.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Telegram.Bot.13.0.0-beta-01\lib\netstandard1.1\Telegram.Bot.dll</HintPath>
     </Reference>
+    <Reference Include="WhoAmIBot">
+      <HintPath>Bots\WhoAmIBot.dll</HintPath>
+    </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
