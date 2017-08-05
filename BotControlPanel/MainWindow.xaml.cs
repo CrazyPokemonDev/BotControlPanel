@@ -14,6 +14,7 @@ using BotControlPanel.Helpers;
 using System.Reflection;
 using System.Diagnostics;
 using System.ComponentModel;
+using Telegram.Bot;
 
 namespace BotControlPanel
 {
@@ -30,21 +31,29 @@ namespace BotControlPanel
         private const string wwtbTokenPath = basePath + ".Tokens\\wwtb.token";
         //private const string achvTokenPath = "C:\\Olfi01\\BotControlPanel\\.Tokens\\achvbot.token";
         private const string tokenBasePath = basePath + ".Tokens\\";
+        private const string myTokenPath = basePath + ".Tokens\\myToken.token";
         private static readonly string logFilePath = basePath + "Logs\\" + $"log{DateTime.Now.ToFileNameString()}.txt";
         private const string erroredMessage = "Lege zuerst ein korrektes Token unter Einstellungen fest!\n" +
                     "Falls du das bereits getan hast, ist ein anderer Fehler aufgetreten.";
         private const string tokenSuffix = ".token";
+        private const long TestGroup = -1001070844778;
         #endregion
         #region Variables
         private Wwtb wwtb;
         //private WerewolfAchievementsBotPlus achBot;
         private List<FlomBot> bots = new List<FlomBot>() { new ScriptingBot(), new WhoAmIBot("") };
         private string wwtbToken = "";
+        private string myToken = "";
         //private string achToken = "";
         private bool terminate = false;
         #endregion
         #region Constructor
         public MainWindow()
+        {
+            Construct();
+        }
+
+        private void Construct()
         {
             SetLogger();
             InitializeComponent();
@@ -59,6 +68,12 @@ namespace BotControlPanel
                 InitializeFlomBot(b);
             }
             Log("BCP started");
+        }
+
+        public MainWindow(string[] names)
+        {
+            Construct();
+            StartBots(names);
         }
         #endregion
 
@@ -92,19 +107,8 @@ namespace BotControlPanel
             if (e.IsTerminating)
             {
                 Log("Terminating");
-                Log("Restarting Panel");
-                string exePath = Assembly.GetExecutingAssembly().Location;
-                string code = $"@echo OFF\ntimeout 10\n\"{exePath}\"";
-                foreach (var b in bots.FindAll(x => x.IsRunning))
-                {
-                    code += $" {b.Name}";
-                }
-                if (!Directory.Exists(basePath)) Directory.CreateDirectory(basePath);
-                const string batPath = basePath + "temp.bat";
-                File.WriteAllText(batPath, code);
-                Process.Start(batPath);
-                terminate = true;
-                Close();
+                Log("Sending restart message");
+                new TelegramBotClient(myToken).SendTextMessageAsync(TestGroup, "BCP crashed. Please restart ASAP.");
             }
         }
 
@@ -124,6 +128,7 @@ namespace BotControlPanel
             {
                 wwtbToken = File.ReadAllText(wwtbTokenPath);
             }
+            if (File.Exists(myTokenPath)) myToken = File.ReadAllText(myTokenPath);
             #endregion
             #region AchBot Token
             /*if (File.Exists(achvTokenPath))
@@ -213,44 +218,7 @@ namespace BotControlPanel
             };
             Grid.SetRow(b2, grid.RowDefinitions.Count - 1);
             b.Panel = new BotPanelPart(tb, b1, b2);
-            #region FlomBot Start Button
-            b.Panel.StartButton.Click += (object sender, RoutedEventArgs e) =>
-            {
-                if (b.Panel.TextBlock.Background == erroredBackground)
-                {
-                    MessageBox.Show(erroredMessage);
-                    return;
-                }
-                else if (b.Panel.TextBlock.Background == inactiveBackground)
-                {
-                    bool started = b.IsRunning;
-                    if (!started)
-                    {
-                        started = b.StartBot();
-                    }
-                    if (started)
-                    {
-                        b.Panel.TextBlock.Background = activeBackground;
-                        b.Panel.StartButton.Content = "Stoppen";
-                        Log($"{b.Name} started");
-                    }
-                    else if(b.BotState == FlomBot.State.Errored)
-                    {
-                        b.Panel.TextBlock.Background = erroredBackground;
-                    }
-                }
-                else if (b.Panel.TextBlock.Background == activeBackground)
-                {
-                    if (b.IsRunning)
-                    {
-                        b.StopBot();
-                    }
-                    b.Panel.TextBlock.Background = inactiveBackground;
-                    b.Panel.StartButton.Content = "Starten";
-                    Log($"{b.Name} stopped");
-                }
-            };
-            #endregion
+            b.Panel.StartButton.Click += (object sender, RoutedEventArgs e) => Start(b);
             #region FlomBot Settings Button
             b.Panel.SettingsButton.Click += delegate (object sender, RoutedEventArgs e)
             {
@@ -273,6 +241,57 @@ namespace BotControlPanel
             if (b.BotState == FlomBot.State.Errored)
             {
                 b.Panel.TextBlock.Background = erroredBackground;
+            }
+        }
+        #endregion
+        #region Start Bots
+        public void StartBots(params string[] names)
+        {
+            foreach (var n in names)
+            {
+                if (wwtb != null && n == wwtb.Name)
+                {
+                    StartButtonWWTB_Click(this, new RoutedEventArgs());
+                }
+                if (bots.Exists(x => x.Name == n)) Start(bots.Find(x => x.Name == n));
+            }
+        }
+        #endregion
+        #region Start Flom Bot
+        private void Start(FlomBot b)
+        {
+            if (b.Panel.TextBlock.Background == erroredBackground)
+            {
+                MessageBox.Show(erroredMessage);
+                return;
+            }
+            else if (b.Panel.TextBlock.Background == inactiveBackground)
+            {
+                bool started = b.IsRunning;
+                if (!started)
+                {
+                    started = b.StartBot();
+                }
+                if (started)
+                {
+                    b.Panel.TextBlock.Background = activeBackground;
+                    b.Panel.StartButton.Content = "Stoppen";
+                    Log($"{b.Name} started");
+                }
+                else if (b.BotState == FlomBot.State.Errored)
+                {
+                    b.Panel.TextBlock.Background = erroredBackground;
+                }
+            }
+            else if (b.Panel.TextBlock.Background == activeBackground)
+            {
+                if (b.IsRunning)
+                {
+                    b.StopBot();
+                }
+                b.Panel.TextBlock.Background = inactiveBackground;
+                b.Panel.StartButton.Content = "Starten";
+                Log($"{b.Name} stopped");
             }
         }
         #endregion
