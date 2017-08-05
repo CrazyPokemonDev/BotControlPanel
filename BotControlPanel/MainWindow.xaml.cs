@@ -8,6 +8,12 @@ using BotControlPanel.AlertWindows;
 using FlomBotFactory.Panel;
 using FlomBotFactory;
 using WhoAmIBotSpace;
+using System.Security.Permissions;
+using System;
+using BotControlPanel.Helpers;
+using System.Reflection;
+using System.Diagnostics;
+using System.ComponentModel;
 
 namespace BotControlPanel
 {
@@ -20,9 +26,11 @@ namespace BotControlPanel
         private static readonly Brush activeBackground = (Brush)Application.Current.Resources["activeBackground"];
         private static readonly Brush inactiveBackground = (Brush)Application.Current.Resources["inactiveBackground"];
         private static readonly Brush erroredBackground = (Brush)Application.Current.Resources["erroredBackground"];
-        private const string wwtbTokenPath = "C:\\Olfi01\\BotControlPanel\\.Tokens\\wwtb.token";
+        private const string basePath = "C:\\Olfi01\\BotControlPanel\\";
+        private const string wwtbTokenPath = basePath + ".Tokens\\wwtb.token";
         //private const string achvTokenPath = "C:\\Olfi01\\BotControlPanel\\.Tokens\\achvbot.token";
-        private const string tokenBasePath = "C:\\Olfi01\\BotControlPanel\\.Tokens\\";
+        private const string tokenBasePath = basePath + ".Tokens\\";
+        private static readonly string logFilePath = basePath + "Logs\\" + $"log{DateTime.Now.ToFileNameString()}.txt";
         private const string erroredMessage = "Lege zuerst ein korrektes Token unter Einstellungen fest!\n" +
                     "Falls du das bereits getan hast, ist ein anderer Fehler aufgetreten.";
         private const string tokenSuffix = ".token";
@@ -33,13 +41,16 @@ namespace BotControlPanel
         private List<FlomBot> bots = new List<FlomBot>() { new ScriptingBot(), new WhoAmIBot("") };
         private string wwtbToken = "";
         //private string achToken = "";
+        private bool terminate = false;
         #endregion
         #region Constructor
         public MainWindow()
         {
+            SetLogger();
             InitializeComponent();
             GetTokens();
-            /*try {*/ wwtb = new Wwtb(wwtbToken); /*}
+            /*try {*/
+            wwtb = new Wwtb(wwtbToken); /*}
             catch { textBlockWWTB.Background = erroredBackground; }*/
             /*try { achBot = new WerewolfAchievementsBotPlus(achToken); }
             catch { textBlockAchv.Background = erroredBackground; }*/
@@ -47,6 +58,60 @@ namespace BotControlPanel
             {
                 InitializeFlomBot(b);
             }
+            Log("BCP started");
+        }
+        #endregion
+
+        #region Logging
+        [SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.ControlAppDomain)]
+        private void SetLogger()
+        {
+            AppDomain.CurrentDomain.UnhandledException += ExceptionLogger;
+        }
+
+        private void ExceptionLogger(object sender, UnhandledExceptionEventArgs e)
+        {
+            string d = Path.GetDirectoryName(logFilePath);
+            if (!Directory.Exists(d))
+            {
+                Directory.CreateDirectory(d);
+            }
+            if (!File.Exists(logFilePath))
+            {
+                File.Create(logFilePath);
+            }
+            Exception ex = (Exception)e.ExceptionObject;
+            string msg = "";
+            msg += $"{ex.Message} - {ex.StackTrace}";
+            while (ex.InnerException != null)
+            {
+                ex = ex.InnerException;
+                msg += $"{ex.Message} - {ex.StackTrace}";
+            }
+            Log(msg);
+            if (e.IsTerminating)
+            {
+                Log("Terminating");
+                Log("Restarting Panel");
+                string exePath = Assembly.GetExecutingAssembly().Location;
+                string code = $"@echo OFF\ntimeout 10\n\"{exePath}\"";
+                foreach (var b in bots.FindAll(x => x.IsRunning))
+                {
+                    code += $" {b.Name}";
+                }
+                if (!Directory.Exists(basePath)) Directory.CreateDirectory(basePath);
+                const string batPath = basePath + "temp.bat";
+                File.WriteAllText(batPath, code);
+                Process.Start(batPath);
+                terminate = true;
+                Close();
+            }
+        }
+
+        private static void Log(string msg)
+        {
+            msg = DateTime.Now.ToString() + ": " + msg;
+            File.AppendAllText(logFilePath, msg + Environment.NewLine);
         }
         #endregion
 
@@ -149,7 +214,7 @@ namespace BotControlPanel
             Grid.SetRow(b2, grid.RowDefinitions.Count - 1);
             b.Panel = new BotPanelPart(tb, b1, b2);
             #region FlomBot Start Button
-            b.Panel.StartButton.Click += delegate (object sender, RoutedEventArgs e)
+            b.Panel.StartButton.Click += (object sender, RoutedEventArgs e) =>
             {
                 if (b.Panel.TextBlock.Background == erroredBackground)
                 {
@@ -167,6 +232,7 @@ namespace BotControlPanel
                     {
                         b.Panel.TextBlock.Background = activeBackground;
                         b.Panel.StartButton.Content = "Stoppen";
+                        Log($"{b.Name} started");
                     }
                     else if(b.BotState == FlomBot.State.Errored)
                     {
@@ -181,6 +247,7 @@ namespace BotControlPanel
                     }
                     b.Panel.TextBlock.Background = inactiveBackground;
                     b.Panel.StartButton.Content = "Starten";
+                    Log($"{b.Name} stopped");
                 }
             };
             #endregion
@@ -192,6 +259,7 @@ namespace BotControlPanel
                     TokenDialog td = new TokenDialog(b.Token);
                     td.ShowDialog();
                     SetFlomBotToken(b, td.result);
+                    Log($"{b.Name} token set");
                 }
                 else
                 {
@@ -215,6 +283,7 @@ namespace BotControlPanel
         #region Start WWTB
         private void StartButtonWWTB_Click(object sender, RoutedEventArgs e)
         {
+            throw new Exception("test");
             if (textBlockWWTB.Background == erroredBackground)
             {
                 MessageBox.Show(erroredMessage);
@@ -231,6 +300,7 @@ namespace BotControlPanel
                 startButtonWWTB.Content = "Stoppen";
                 startButtonWWTB.Click -= StartButtonWWTB_Click;
                 startButtonWWTB.Click += StopButtonWWTB_Click;
+                Log("WWTB started");
             }
         }
         #endregion
@@ -245,6 +315,7 @@ namespace BotControlPanel
             startButtonWWTB.Content = "Starten";
             startButtonWWTB.Click -= StopButtonWWTB_Click;
             startButtonWWTB.Click += StartButtonWWTB_Click;
+            Log("WWTB stopped");
         }
         #endregion
         #region Settings WWTB
@@ -255,6 +326,7 @@ namespace BotControlPanel
                 TokenDialog td = new TokenDialog(wwtbToken);
                 td.ShowDialog();
                 SetWWTBToken(td.result);
+                Log("WWTB token set");
             }
             else
             {
@@ -337,7 +409,7 @@ namespace BotControlPanel
         #endregion
 
         #region Close Window
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, CancelEventArgs e)
         {
             bool botRunning = false;
             try
@@ -351,12 +423,25 @@ namespace BotControlPanel
             }
             if (botRunning)
             {
-                MessageBoxResult res = MessageBox.Show(
-                    "Bot(s) are still running. They will be stopped upon closing.",
-                    "Close?", MessageBoxButton.OKCancel);
-                if (res == MessageBoxResult.Cancel)
+                if (!terminate)
                 {
-                    e.Cancel = true;
+                    MessageBoxResult res = MessageBox.Show(
+                        "Bot(s) are still running. They will be stopped upon closing.",
+                        "Close?", MessageBoxButton.OKCancel);
+                    if (res == MessageBoxResult.Cancel)
+                    {
+                        e.Cancel = true;
+                    }
+                    else
+                    {
+                        wwtb.StopBot();
+                        //achBot.StopBot();
+                        foreach (FlomBot b in bots)
+                        {
+                            b.StopBot();
+                        }
+                        Log("Stopping");
+                    }
                 }
                 else
                 {

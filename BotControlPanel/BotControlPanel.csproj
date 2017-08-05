@@ -214,6 +214,7 @@
     <Compile Include="Bots\WWTBCustomKeyboards\UnderdevKeyboard.cs" />
     <Compile Include="Bots\WWTB.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="Helpers\Extensions.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
