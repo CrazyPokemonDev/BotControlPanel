@@ -302,7 +302,6 @@ namespace BotControlPanel
         #region Start WWTB
         private void StartButtonWWTB_Click(object sender, RoutedEventArgs e)
         {
-            throw new Exception("test");
             if (textBlockWWTB.Background == erroredBackground)
             {
                 MessageBox.Show(erroredMessage);
