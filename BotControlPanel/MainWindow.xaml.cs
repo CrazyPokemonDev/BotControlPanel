@@ -11,8 +11,6 @@ using WhoAmIBotSpace;
 using System.Security.Permissions;
 using System;
 using BotControlPanel.Helpers;
-using System.Reflection;
-using System.Diagnostics;
 using System.ComponentModel;
 using Telegram.Bot;
 
