@@ -69,12 +69,6 @@ namespace BotControlPanel
             }
             Log("BCP started");
         }
-
-        public MainWindow(string[] names)
-        {
-            Construct();
-            StartBots(names);
-        }
         #endregion
 
         #region Logging
@@ -242,6 +236,8 @@ namespace BotControlPanel
             {
                 b.Panel.TextBlock.Background = erroredBackground;
             }
+            b.BotStarted += (sender, e) => Started(e.Bot);
+            b.BotStopped += (sender, e) => Stopped(e.Bot);
         }
         #endregion
         #region Start Bots
@@ -255,6 +251,20 @@ namespace BotControlPanel
                 }
                 if (bots.Exists(x => x.Name == n)) Start(bots.Find(x => x.Name == n));
             }
+        }
+        #endregion
+        #region Started and stopped
+        private void Started(FlomBot bot)
+        {
+            bot.Panel.TextBlock.Background = activeBackground;
+            bot.Panel.StartButton.Content = "Stoppen";
+            Log($"{bot.Name} started");
+        }
+        private void Stopped(FlomBot bot)
+        {
+            bot.Panel.TextBlock.Background = inactiveBackground;
+            bot.Panel.StartButton.Content = "Starten";
+            Log($"{bot.Name} stopped");
         }
         #endregion
         #region Start Flom Bot
@@ -276,7 +286,6 @@ namespace BotControlPanel
                 {
                     b.Panel.TextBlock.Background = activeBackground;
                     b.Panel.StartButton.Content = "Stoppen";
-                    Log($"{b.Name} started");
                 }
                 else if (b.BotState == FlomBot.State.Errored)
                 {
@@ -291,7 +300,6 @@ namespace BotControlPanel
                 }
                 b.Panel.TextBlock.Background = inactiveBackground;
                 b.Panel.StartButton.Content = "Starten";
-                Log($"{b.Name} stopped");
             }
         }
         #endregion
