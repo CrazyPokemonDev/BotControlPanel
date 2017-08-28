@@ -1,2 +1,1 @@
-copy /Y "C:\Users\Florian\Documents\Visual Studio 2017\Projects\WhoAmIBot\WhoAmIBot\bin\Release\WhoAmIBot.dll" "WhoAmIBot.dll"
-PAUSE
+copy /Y "C:\Users\Florian\Documents\Visual Studio 2017\Projects\WhoAmIBot\WhoAmIBot\bin\Release\WhoAmIBot.dll" "C:\Users\Florian\Documents\Visual Studio 2015\Projects\BotControlPanel\BotControlPanel\Bots\WhoAmIBot.dll"

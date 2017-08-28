@@ -193,6 +193,11 @@ namespace BotControlPanel.Bots
                         #endregion
                         #region getscript
                         case "/getscript":
+                            if (msg.From.Id != Flom)
+                            {
+                                client.SendTextMessageAsync(msg.Chat.Id, "You are not Flom. That script contains secret code. Go away.");
+                                return;
+                            }
                             string script = GetScript();
                             List<string> list = new List<string>();
                             while (script.Length > 2000)
