@@ -14,11 +14,15 @@ namespace ScriptedBot
 
         private static TelegramBotClient client;
         private static bool running = true;
+        private static string Username;
         //adddefinition
 
         public static void Main(string[] args)
         {
             client = new TelegramBotClient(args[0]);
+            var t = client.GetMeAsync();
+            t.Wait();
+            Username = t.Result.Username;
             client.OnUpdate += Client_OnUpdate;
             client.StartReceiving();
             /*while (running)
