@@ -234,6 +234,7 @@ namespace BotControlPanel.Bots
                     AdminIds.Add(id);
                     System.IO.File.WriteAllLines(AdminIdsPath, AdminIds);
                     client.SendTextMessageAsync(msg.Chat.Id, "Added as administrator.");
+                    break;
                 default:
                     break;
             }
