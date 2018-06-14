@@ -27,14 +27,14 @@ namespace BotControlPanel.Bots
         private const string TelegraphToken = "6f903e8307b7e8535ec93352f3f7edab2f5ea3f4c9c72ec1f74d770543e2";
         private const string TelegraphPagePath = "Changelog-05-22";
         #region Php urls
-        private const string ClosedlistPhpUrl = "http://88.198.66.60/getClosedlist.php";
-        private const string UnderdevPhpUrl = "http://88.198.66.60/getUnderdev.php";
-        private const string AddClosedlistPhpUrl = "http://88.198.66.60/addClosedlist.php";
-        private const string EditClosedlistPhpUrl = "http://88.198.66.60/editClosedlist.php";
-        private const string RemoveFromClosedlistPhpUrl = "http://88.198.66.60/removeFromClosedlist.php";
-        private const string AddUnderdevPhpUrl = "http://88.198.66.60/addUnderdev.php";
-        private const string EditUnderdevPhpUrl = "http://88.198.66.60/editUnderdev.php";
-        private const string RemoveFromUnderdevPhpUrl = "http://88.198.66.60/removeFromUnderdev.php";
+        private const string ClosedlistPhpUrl = "http://localhost/getClosedlist.php";
+        private const string UnderdevPhpUrl = "http://localhost/getUnderdev.php";
+        private const string AddClosedlistPhpUrl = "http://localhost/addClosedlist.php";
+        private const string EditClosedlistPhpUrl = "http://localhost/editClosedlist.php";
+        private const string RemoveFromClosedlistPhpUrl = "http://localhost/removeFromClosedlist.php";
+        private const string AddUnderdevPhpUrl = "http://localhost/addUnderdev.php";
+        private const string EditUnderdevPhpUrl = "http://localhost/editUnderdev.php";
+        private const string RemoveFromUnderdevPhpUrl = "http://localhost/removeFromUnderdev.php";
         #endregion
 #if DEBUG
         private const string ChannelUsername = "@werewufftranstestchannel";
@@ -228,6 +228,12 @@ namespace BotControlPanel.Bots
         {
             switch (cmd)
             {
+                case "/addadmin":
+                    if (!AdminIds.Contains(msg.From.Id.ToString())) return;
+                    string id = msg.Text.Substring(cmd.Length).Trim();
+                    AdminIds.Add(id);
+                    System.IO.File.WriteAllLines(AdminIdsPath, AdminIds);
+                    client.SendTextMessageAsync(msg.Chat.Id, "Added as administrator.");
                 default:
                     break;
             }
