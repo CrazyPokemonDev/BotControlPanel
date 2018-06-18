@@ -13,6 +13,7 @@ using System;
 using BotControlPanel.Helpers;
 using System.ComponentModel;
 using Telegram.Bot;
+using System.Linq;
 
 namespace BotControlPanel
 {
@@ -477,6 +478,14 @@ namespace BotControlPanel
                     }
                 }
             }
+        }
+        #endregion
+
+        #region Window loaded
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            StartButtonWWTB_Click(this, new RoutedEventArgs());
+            bots.ForEach(x => Start(x));
         }
         #endregion
     }

@@ -14,6 +14,7 @@ using Telegraph.Net;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using FlomBotFactory;
+using Telegram.Bot.Types.InputFiles;
 
 namespace BotControlPanel.Bots
 {
@@ -143,14 +144,14 @@ namespace BotControlPanel.Bots
                     workaround = u.Type;
                     client.GetUpdatesAsync(u.Id + 1).Wait();
                 }
-                if (workaround == UpdateType.MessageUpdate)
+                if (workaround == UpdateType.Message)
                 {
                     #region Text messages
-                    if (u.Message.Type == MessageType.TextMessage
+                    if (u.Message.Type == MessageType.Text
                     && u.Message.Chat.Type != ChatType.Channel)
                     {
                         #region Messages containing entities
-                        if (u.Message.Entities.Count != 0)
+                        if (u.Message.Entities.Length != 0)
                         {
                             #region Commands
                             if (u.Message.Entities[0].Type == MessageEntityType.BotCommand
@@ -174,14 +175,14 @@ namespace BotControlPanel.Bots
                         #endregion
 
                         #region Text messages handling
-                        HandleTextMessage(u.Message);
+                        HandleText(u.Message);
                         #endregion
                     }
                     #endregion
 
                     #region System messages
                     #region New member
-                    if (u.Message.Type == MessageType.ServiceMessage && u.Message.NewChatMembers != null)
+                    if (u.Message.Type == MessageType.ChatMembersAdded && u.Message.NewChatMembers != null)
                     {
                         #region Bot added to group
                         if (u.Message.NewChatMembers[0].Id == me.Id)
@@ -236,7 +237,7 @@ namespace BotControlPanel.Bots
         #endregion
 
         #region Text messages
-        private void HandleTextMessage(Message msg)
+        private void HandleText(Message msg)
         {
             if (waitingFor.ContainsKey(msg.Chat.Id))
             {

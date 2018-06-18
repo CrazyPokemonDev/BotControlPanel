@@ -41,8 +41,8 @@ namespace ScriptedBot
         {
             try
             {
-                if (e.Update.Type == UpdateType.MessageUpdate &&
-                    e.Update.Message.Type == MessageType.TextMessage)
+                if (e.Update.Type == UpdateType.Message &&
+                    e.Update.Message.Type == MessageType.Text)
                 {
                     Message msg = e.Update.Message;
                     string text = e.Update.Message.Text;
