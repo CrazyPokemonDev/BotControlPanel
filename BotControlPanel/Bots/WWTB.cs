@@ -129,32 +129,22 @@ namespace BotControlPanel.Bots
         #region Update Handler
         protected override void Client_OnUpdate(object sender, Telegram.Bot.Args.UpdateEventArgs e)
         {
-            //if (!AdminIds.Contains(e.Update.Message.From.Id.ToString())) return;
+            if (!AdminIds.Contains(e.Update.Message.From.Id.ToString())) return;
             try
             {
                 Update u = e.Update;
                 #region Message Updates
-                UpdateType workaround;
-                try
-                {
-                    workaround = u.Type;
-                }
-                catch (ArgumentOutOfRangeException)
-                {
-                    workaround = u.Type;
-                    client.GetUpdatesAsync(u.Id + 1).Wait();
-                }
-                if (workaround == UpdateType.Message)
+                if (e.Update.Type == UpdateType.Message)
                 {
                     #region Text messages
                     if (u.Message.Type == MessageType.Text
                     && u.Message.Chat.Type != ChatType.Channel)
                     {
                         #region Messages containing entities
-                        if (u.Message.Entities.Length != 0)
+                        if (u.Message.Entities.Length > 0)
                         {
                             #region Commands
-                            if (u.Message.Entities[0].Type == MessageEntityType.BotCommand
+                            if (u.Message.Entities[0]?.Type == MessageEntityType.BotCommand
                                 && u.Message.Entities[0].Offset == 0)
                             {
                                 #region Commands only
