@@ -186,15 +186,15 @@ namespace BotControlPanel.Bots
                 }
                 #endregion
             }
-            catch (Exception ex)
-            {
 #if DEBUG
-                throw ex;
+            catch (IOException ex)
 #else
+            catch (Exception ex)
+#endif
+            {
                 client.SendTextMessageAsync(Flom, "An error has occurred: \n" + ex.ToString() + "\n"
                     + ex.Message + "\n" + ex.StackTrace);
                 return;
-#endif
             }
         }
         #endregion
