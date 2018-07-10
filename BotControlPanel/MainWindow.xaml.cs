@@ -7,13 +7,11 @@ using System.IO;
 using BotControlPanel.AlertWindows;
 using FlomBotFactory.Panel;
 using FlomBotFactory;
-using WhoAmIBotSpace;
 using System.Security.Permissions;
 using System;
 using BotControlPanel.Helpers;
 using System.ComponentModel;
-using Telegram.Bot;
-using System.Linq;
+using TelegramBotApi;
 
 namespace BotControlPanel
 {
@@ -101,7 +99,7 @@ namespace BotControlPanel
             {
                 Log("Terminating");
                 Log("Sending restart message");
-                new TelegramBotClient(myToken).SendTextMessageAsync(TestGroup, "BCP crashed. Please restart ASAP.");
+                new TelegramBot(myToken).SendTextMessageAsync(TestGroup, "BCP crashed. Please restart ASAP.");
             }
         }
 

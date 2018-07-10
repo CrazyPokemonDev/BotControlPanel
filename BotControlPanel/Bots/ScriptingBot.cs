@@ -2,18 +2,13 @@
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using Telegram.Bot.Args;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using FlomBotFactory;
+using TelegramBotApi.Types.Events;
+using TelegramBotApi.Enums;
+using TelegramBotApi.Types;
 
 namespace BotControlPanel.Bots
 {

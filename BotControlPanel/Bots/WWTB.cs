@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.ReplyMarkups;
-using Telegram.Bot.Types.Enums;
 using BotControlPanel.Bots.WWTBCustomKeyboards;
 using System.Net;
 using System.IO;
 using System.Windows;
-using System.Windows.Interop;
 using Telegraph.Net.Models;
 using Telegraph.Net;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using FlomBotFactory;
-using Telegram.Bot.Types.InputFiles;
+using TelegramBotApi.Types;
+using TelegramBotApi.Enums;
+using TelegramBotApi.Types.Markup;
+using TelegramBotApi.Types.Events;
 
 namespace BotControlPanel.Bots
 {
@@ -127,7 +126,7 @@ namespace BotControlPanel.Bots
 
         #region Handlers
         #region Update Handler
-        protected override void Client_OnUpdate(object sender, Telegram.Bot.Args.UpdateEventArgs e)
+        protected override void Client_OnUpdate(object sender, UpdateEventArgs e)
         {
             if (!AdminIds.Contains(e.Update.Message.From.Id.ToString())) return;
             try
@@ -172,7 +171,7 @@ namespace BotControlPanel.Bots
 
                     #region System messages
                     #region New member
-                    if (u.Message.Type == MessageType.ChatMembersAdded && u.Message.NewChatMembers != null)
+                    if (u.Message.Type == MessageType.NewChatMembers && u.Message.NewChatMembers != null)
                     {
                         #region Bot added to group
                         if (u.Message.NewChatMembers[0].Id == me.Id)
@@ -207,7 +206,7 @@ namespace BotControlPanel.Bots
             {
                 case "/start":
                 case "/start" + BotUsername:
-                    IReplyMarkup rm = StartKeyboard.Markup;
+                    ReplyMarkupBase rm = StartKeyboard.Markup;
                     client.SendTextMessageAsync(msg.Chat.Id, StartMessage, replyMarkup: rm);
                     break;
             }
