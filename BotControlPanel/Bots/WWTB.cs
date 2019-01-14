@@ -14,6 +14,7 @@ using TelegramBotApi.Types;
 using TelegramBotApi.Enums;
 using TelegramBotApi.Types.Markup;
 using TelegramBotApi.Types.Events;
+using TelegramBotApi;
 
 namespace BotControlPanel.Bots
 {
@@ -65,20 +66,18 @@ namespace BotControlPanel.Bots
 
         public Wwtb(string token) : base(token)
         {
-            Initialize();
+            Initialize().ConfigureAwait(false);
         }
 
         #region Control Methods
         #region Init
-        private void Initialize()
+        private async Task Initialize()
         {
             #region Initializing stuff
             if (!Directory.Exists(BasePath)) Directory.CreateDirectory(BasePath);
             try
             {
-                Task<User> ut = client.GetMeAsync();
-                ut.Wait();
-                me = ut.Result;
+                me = await client.GetMeAsync();
             }
             catch (Exception e)
             {

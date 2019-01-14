@@ -106,6 +106,7 @@ namespace BotControlPanel
         private static void Log(string msg)
         {
             msg = DateTime.Now.ToString() + ": " + msg;
+            Directory.CreateDirectory(Path.GetDirectoryName(logFilePath));
             File.AppendAllText(logFilePath, msg + Environment.NewLine);
         }
         #endregion
