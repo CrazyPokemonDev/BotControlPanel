@@ -56,6 +56,7 @@ namespace BotControlPanel.Bots
             {
                 client.SendMessageAsync(Flom, "Failed to start bot");
             }
+            client.ClearUpdates();
             return b;
         }
         #endregion
