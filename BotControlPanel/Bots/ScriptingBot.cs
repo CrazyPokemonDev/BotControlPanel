@@ -615,7 +615,7 @@ namespace BotControlPanel.Bots
         #region Add Referenced Assemblys
         private static void AddReferencedAssemblys(CompilerParameters parameters)
         {
-            parameters.ReferencedAssemblies.Add("Telegram.Bot.dll");
+            parameters.ReferencedAssemblies.Add("TelegramBotApi.dll");
             parameters.ReferencedAssemblies.Add("Newtonsoft.Json.dll");
             parameters.ReferencedAssemblies.Add("System.dll");
             parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
