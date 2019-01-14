@@ -54,7 +54,7 @@ namespace BotControlPanel.Bots
             }
             catch
             {
-                client.SendTextMessageAsync(Flom, "Failed to start bot");
+                client.SendMessageAsync(Flom, "Failed to start bot");
             }
             return b;
         }
@@ -67,7 +67,7 @@ namespace BotControlPanel.Bots
             if (botStopMethod != null)
             {
                 botStopMethod.Invoke(null, null);
-                client.SendTextMessageAsync(Flom, "Scripted bot was stopped.");
+                client.SendMessageAsync(Flom, "Scripted bot was stopped.");
             }
             return b;
         }
@@ -102,11 +102,11 @@ namespace BotControlPanel.Bots
                                 string error;
                                 if (NewCommand(code, out error))
                                 {
-                                    client.SendTextMessageAsync(msg.Chat.Id, "Command successfully added");
+                                    client.SendMessageAsync(msg.Chat.Id, "Command successfully added");
                                 }
                                 else
                                 {
-                                    client.SendTextMessageAsync(msg.Chat.Id, "Failed to add command.\n"
+                                    client.SendMessageAsync(msg.Chat.Id, "Failed to add command.\n"
                                         + error);
                                 }
                             }
@@ -116,7 +116,7 @@ namespace BotControlPanel.Bots
                         case "/delcommand":
                             if (!text.Contains(" ")) return;
                             DeleteCommand(text.Substring(text.IndexOf(' ') + 1));
-                            client.SendTextMessageAsync(msg.Chat.Id, "Command deleted.");
+                            client.SendMessageAsync(msg.Chat.Id, "Command deleted.");
                             return;
                         #endregion
                         #region addusing
@@ -130,12 +130,12 @@ namespace BotControlPanel.Bots
                                 string error;
                                 if (AddUsing(code, out error))
                                 {
-                                    client.SendTextMessageAsync(msg.Chat.Id,
+                                    client.SendMessageAsync(msg.Chat.Id,
                                         "Using-directive successfully added");
                                 }
                                 else
                                 {
-                                    client.SendTextMessageAsync(msg.Chat.Id,
+                                    client.SendMessageAsync(msg.Chat.Id,
                                         "Failed to add using-directive.\n"
                                         + error);
                                 }
@@ -153,12 +153,12 @@ namespace BotControlPanel.Bots
                                 string error;
                                 if (AddDefinition(code, out error))
                                 {
-                                    client.SendTextMessageAsync(msg.Chat.Id,
+                                    client.SendMessageAsync(msg.Chat.Id,
                                         "Definition successfully added");
                                 }
                                 else
                                 {
-                                    client.SendTextMessageAsync(msg.Chat.Id,
+                                    client.SendMessageAsync(msg.Chat.Id,
                                         "Failed to add definition.\n"
                                         + error);
                                 }
@@ -176,11 +176,11 @@ namespace BotControlPanel.Bots
                                 string error;
                                 if (AddMethod(code, out error))
                                 {
-                                    client.SendTextMessageAsync(msg.Chat.Id, "Method successfully added");
+                                    client.SendMessageAsync(msg.Chat.Id, "Method successfully added");
                                 }
                                 else
                                 {
-                                    client.SendTextMessageAsync(msg.Chat.Id, "Failed to add method.\n"
+                                    client.SendMessageAsync(msg.Chat.Id, "Failed to add method.\n"
                                         + error);
                                 }
                             }
@@ -190,7 +190,7 @@ namespace BotControlPanel.Bots
                         case "/getscript":
                             if (msg.From.Id != Flom)
                             {
-                                client.SendTextMessageAsync(msg.Chat.Id, "You are not Flom. That script contains secret code. Go away.");
+                                client.SendMessageAsync(msg.Chat.Id, "You are not Flom. That script contains secret code. Go away.");
                                 return;
                             }
                             string script = GetScript();
@@ -202,7 +202,7 @@ namespace BotControlPanel.Bots
                             }
                             list.Add(script);
                             foreach (string s in list)
-                                client.SendTextMessageAsync(msg.Chat.Id, "`" + s + "`",
+                                client.SendMessageAsync(msg.Chat.Id, "`" + s + "`",
                                     parseMode: ParseMode.Markdown).Wait();
                             return;
                         #endregion
@@ -217,7 +217,7 @@ namespace BotControlPanel.Bots
                             if (msg.From.Id == Flom)
                             {
                                 SetScriptedBotToken(text.Substring(text.IndexOf(' ') + 1));
-                                client.SendTextMessageAsync(msg.Chat.Id, "Token set.");
+                                client.SendMessageAsync(msg.Chat.Id, "Token set.");
                             }
                             return;
                         #endregion
@@ -227,7 +227,7 @@ namespace BotControlPanel.Bots
             }
             catch (Exception ex)
             {
-                client.SendTextMessageAsync(Flom, "An error has ocurred in ScriptingBot: " + ex.InnerException
+                client.SendMessageAsync(Flom, "An error has ocurred in ScriptingBot: " + ex.InnerException
                     + "\n" + ex.Message + "\n" + ex.StackTrace);
             }
         }
@@ -246,10 +246,10 @@ namespace BotControlPanel.Bots
             }
             catch
             {
-                client.SendTextMessageAsync(idToSendAnswer, "Failed to start. Maybe the token is missing.");
+                client.SendMessageAsync(idToSendAnswer, "Failed to start. Maybe the token is missing.");
                 errored = true;
             }
-            if (!errored) client.SendTextMessageAsync(idToSendAnswer, "Bot (re)started.");
+            if (!errored) client.SendMessageAsync(idToSendAnswer, "Bot (re)started.");
         }
         #endregion
         #endregion
@@ -507,7 +507,7 @@ namespace BotControlPanel.Bots
                                     switch (nowword.ToLower())
                                     {
                                         case "message":
-                                            baseAction = "client.SendTextMessageAsync({0}, \"{obj}\", parseMode: {1});";
+                                            baseAction = "client.SendMessageAsync({0}, \"{obj}\", parseMode: {1});";
                                             baseName = "message";
                                             defaultArgs.Add("{0}", "msg.Chat.Id");
                                             defaultArgs.Add("{1}", "ParseMode.Default");
@@ -517,7 +517,7 @@ namespace BotControlPanel.Bots
                                 #endregion
                                 #region Keyword Reply
                                 case "reply":
-                                    baseAction = "client.SendTextMessageAsync({0}, \"{obj}\", parseMode: {1}, " 
+                                    baseAction = "client.SendMessageAsync({0}, \"{obj}\", parseMode: {1}, " 
                                         + "replyToMessageId: msg.MessageId);";
                                     baseName = "message";
                                     defaultArgs.Add("{0}", "msg.Chat.Id");

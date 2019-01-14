@@ -99,7 +99,7 @@ namespace BotControlPanel
             {
                 Log("Terminating");
                 Log("Sending restart message");
-                new TelegramBot(myToken).SendTextMessageAsync(TestGroup, "BCP crashed. Please restart ASAP.");
+                new TelegramBot(myToken).SendMessageAsync(TestGroup, "BCP crashed. Please restart ASAP.");
             }
         }
 

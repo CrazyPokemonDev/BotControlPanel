@@ -59,7 +59,7 @@ namespace ScriptedBot
                                 running = false;
                                 client.StopReceiving();
                                 client.GetUpdatesAsync(e.Update.Id + 1);
-                                client.SendTextMessageAsync(msg.Chat.Id, "*dies*");
+                                client.SendMessageAsync(msg.Chat.Id, "*dies*");
                             }
                             break;
                             //newcommand
@@ -68,7 +68,7 @@ namespace ScriptedBot
             }
             catch (Exception ex)
             {
-                client.SendTextMessageAsync(flomsId, "Error has ocurred in scriptedBot: "
+                client.SendMessageAsync(flomsId, "Error has ocurred in scriptedBot: "
                     + ex.InnerException + "\n" + ex.Message + "\n" + ex.StackTrace);
             }
         }

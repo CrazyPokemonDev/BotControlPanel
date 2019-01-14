@@ -191,7 +191,7 @@ namespace BotControlPanel.Bots
             catch (Exception ex)
 #endif
             {
-                client.SendTextMessageAsync(Flom, "An error has occurred: \n" + ex.ToString() + "\n"
+                client.SendMessageAsync(Flom, "An error has occurred: \n" + ex.ToString() + "\n"
                     + ex.Message + "\n" + ex.StackTrace);
                 return;
             }
@@ -207,7 +207,7 @@ namespace BotControlPanel.Bots
                 case "/start":
                 case "/start" + BotUsername:
                     ReplyMarkupBase rm = StartKeyboard.Markup;
-                    client.SendTextMessageAsync(msg.Chat.Id, StartMessage, replyMarkup: rm);
+                    client.SendMessageAsync(msg.Chat.Id, StartMessage, replyMarkup: rm);
                     break;
             }
         }
@@ -223,7 +223,7 @@ namespace BotControlPanel.Bots
                     string id = msg.Text.Substring(cmd.Length).Trim();
                     AdminIds.Add(id);
                     System.IO.File.WriteAllLines(AdminIdsPath, AdminIds);
-                    client.SendTextMessageAsync(msg.Chat.Id, "Added as administrator.");
+                    client.SendMessageAsync(msg.Chat.Id, "Added as administrator.");
                     break;
                 default:
                     break;
@@ -247,18 +247,18 @@ namespace BotControlPanel.Bots
                         case ClosedlistKeyboard.ClosedlistEditButtonString:
                         case ClosedlistKeyboard.ClosedlistEditButtonString + "_second":
                         case ClosedlistKeyboard.ClosedlistRemoveButtonString:
-                            client.SendTextMessageAsync(msg.Chat.Id, GetCurrentClosedlist(),
+                            client.SendMessageAsync(msg.Chat.Id, GetCurrentClosedlist(),
                                 replyMarkup: ClosedlistKeyboard.Markup, parseMode: ParseMode.Html);
                             break;
                         case UnderdevKeyboard.UnderdevAddButtonString:
                         case UnderdevKeyboard.UnderdevEditButtonString:
                         case UnderdevKeyboard.UnderdevEditButtonString + "_second":
                         case UnderdevKeyboard.UnderdevRemoveButtonString:
-                            client.SendTextMessageAsync(msg.Chat.Id, GetCurrentUnderdev(),
+                            client.SendMessageAsync(msg.Chat.Id, GetCurrentUnderdev(),
                                 replyMarkup: UnderdevKeyboard.Markup, parseMode: ParseMode.Html);
                             break;
                         case ChangelogKeyboard.AddPostToChangelogString:
-                            client.SendTextMessageAsync(msg.Chat.Id, "You can edit the changelog here",
+                            client.SendMessageAsync(msg.Chat.Id, "You can edit the changelog here",
                                 replyMarkup: ChangelogKeyboard.Markup);
                             break;
                     }
@@ -274,13 +274,13 @@ namespace BotControlPanel.Bots
                         string error;
                         if (AddToClosedlist(msg.Text, out error))
                         {
-                            client.SendTextMessageAsync(msg.Chat.Id, "Language added.");
-                            client.SendTextMessageAsync(msg.Chat.Id, GetCurrentClosedlist(),
+                            client.SendMessageAsync(msg.Chat.Id, "Language added.");
+                            client.SendMessageAsync(msg.Chat.Id, GetCurrentClosedlist(),
                                 replyMarkup: ClosedlistKeyboard.Markup, parseMode: ParseMode.Html);
                             waitingFor.Remove(msg.Chat.Id);
                             RefreshMessages(msg);
                         }
-                        else client.SendTextMessageAsync(msg.Chat.Id,
+                        else client.SendMessageAsync(msg.Chat.Id,
                             error);
                         break;
                     case ClosedlistKeyboard.ClosedlistEditButtonString:
@@ -288,7 +288,7 @@ namespace BotControlPanel.Bots
                         if (dict.ContainsKey(msg.Text))
                         {
                             chosenElement.Add(msg.Chat.Id, msg.Text);
-                            client.SendTextMessageAsync(msg.Chat.Id,
+                            client.SendMessageAsync(msg.Chat.Id,
                                 "Please enter the new value in the following format:\n" +
                                 "Language name - Information", replyMarkup: CancelKeyboard.Markup);
                             waitingFor.Remove(msg.Chat.Id);
@@ -297,15 +297,15 @@ namespace BotControlPanel.Bots
                         }
                         else
                         {
-                            client.SendTextMessageAsync(msg.Chat.Id, "This language doesn't exist. Try again.");
+                            client.SendMessageAsync(msg.Chat.Id, "This language doesn't exist. Try again.");
                         }
                         break;
                     case ClosedlistKeyboard.ClosedlistEditButtonString + "_second":
                         string error2;
                         if (EditClosedlist(chosenElement[msg.Chat.Id], msg.Text, out error2))
                         {
-                            client.SendTextMessageAsync(msg.Chat.Id, "Language sucessfully edited.");
-                            client.SendTextMessageAsync(msg.Chat.Id, GetCurrentClosedlist(),
+                            client.SendMessageAsync(msg.Chat.Id, "Language sucessfully edited.");
+                            client.SendMessageAsync(msg.Chat.Id, GetCurrentClosedlist(),
                                 replyMarkup: ClosedlistKeyboard.Markup, parseMode: ParseMode.Html);
                             waitingFor.Remove(msg.Chat.Id);
                             chosenElement.Remove(msg.Chat.Id);
@@ -313,7 +313,7 @@ namespace BotControlPanel.Bots
                         }
                         else
                         {
-                            client.SendTextMessageAsync(msg.Chat.Id, error2);
+                            client.SendMessageAsync(msg.Chat.Id, error2);
                         }
                         break;
                     case ClosedlistKeyboard.ClosedlistRemoveButtonString:
@@ -322,20 +322,20 @@ namespace BotControlPanel.Bots
                             string error3;
                             if (RemoveFromClosedlist(msg.Text, out error3))
                             {
-                                client.SendTextMessageAsync(msg.Chat.Id, "Language sucessfully removed.");
-                                client.SendTextMessageAsync(msg.Chat.Id, GetCurrentClosedlist(),
+                                client.SendMessageAsync(msg.Chat.Id, "Language sucessfully removed.");
+                                client.SendMessageAsync(msg.Chat.Id, GetCurrentClosedlist(),
                                     replyMarkup: ClosedlistKeyboard.Markup, parseMode: ParseMode.Html);
                                 waitingFor.Remove(msg.Chat.Id);
                                 RefreshMessages(msg);
                             }
                             else
                             {
-                                client.SendTextMessageAsync(msg.Chat.Id, error3);
+                                client.SendMessageAsync(msg.Chat.Id, error3);
                             }
                         }
                         else
                         {
-                            client.SendTextMessageAsync(msg.Chat.Id, "That language does't exist. Try again.");
+                            client.SendMessageAsync(msg.Chat.Id, "That language does't exist. Try again.");
                         }
                         break;
                     #endregion
@@ -345,19 +345,19 @@ namespace BotControlPanel.Bots
                         string error4;
                         if (AddToUnderdev(msg.Text, out error4))
                         {
-                            client.SendTextMessageAsync(msg.Chat.Id, "Language added.");
-                            client.SendTextMessageAsync(msg.Chat.Id, GetCurrentUnderdev(),
+                            client.SendMessageAsync(msg.Chat.Id, "Language added.");
+                            client.SendMessageAsync(msg.Chat.Id, GetCurrentUnderdev(),
                                 replyMarkup: UnderdevKeyboard.Markup, parseMode: ParseMode.Html);
                             waitingFor.Remove(msg.Chat.Id);
                             RefreshMessages(msg);
                         }
-                        else client.SendTextMessageAsync(msg.Chat.Id,
+                        else client.SendMessageAsync(msg.Chat.Id,
                             error4);
                         break;
                     case UnderdevKeyboard.UnderdevEditButtonString:
                         if (GetCurrentUnderdevDict().ContainsKey(msg.Text))
                         {
-                            client.SendTextMessageAsync(msg.Chat.Id,
+                            client.SendMessageAsync(msg.Chat.Id,
                                 "Send me the new information in the following format:\n" +
                                 "Language name - Information", replyMarkup: CancelKeyboard.Markup);
                             waitingFor.Remove(msg.Chat.Id);
@@ -366,15 +366,15 @@ namespace BotControlPanel.Bots
                         }
                         else
                         {
-                            client.SendTextMessageAsync(msg.Chat.Id, "That language doesn't exist. Try again.");
+                            client.SendMessageAsync(msg.Chat.Id, "That language doesn't exist. Try again.");
                         }
                         break;
                     case UnderdevKeyboard.UnderdevEditButtonString + "_second":
                         string error5;
                         if (EditUnderdev(chosenElement[msg.Chat.Id], msg.Text, out error5))
                         {
-                            client.SendTextMessageAsync(msg.Chat.Id, "Language edited.");
-                            client.SendTextMessageAsync(msg.Chat.Id, GetCurrentUnderdev(),
+                            client.SendMessageAsync(msg.Chat.Id, "Language edited.");
+                            client.SendMessageAsync(msg.Chat.Id, GetCurrentUnderdev(),
                                 replyMarkup: UnderdevKeyboard.Markup, parseMode: ParseMode.Html);
                             waitingFor.Remove(msg.Chat.Id);
                             chosenElement.Remove(msg.Chat.Id);
@@ -382,7 +382,7 @@ namespace BotControlPanel.Bots
                         }
                         else
                         {
-                            client.SendTextMessageAsync(msg.Chat.Id, error5);
+                            client.SendMessageAsync(msg.Chat.Id, error5);
                         }
                         break;
                     case UnderdevKeyboard.UnderdevRemoveButtonString:
@@ -391,15 +391,15 @@ namespace BotControlPanel.Bots
                             string error6;
                             if (RemoveFromUnderdev(msg.Text, out error6))
                             {
-                                client.SendTextMessageAsync(msg.Chat.Id, "Laguage removed.");
-                                client.SendTextMessageAsync(msg.Chat.Id, GetCurrentUnderdev(),
+                                client.SendMessageAsync(msg.Chat.Id, "Laguage removed.");
+                                client.SendMessageAsync(msg.Chat.Id, GetCurrentUnderdev(),
                                 replyMarkup: UnderdevKeyboard.Markup, parseMode: ParseMode.Html);
                                 waitingFor.Remove(msg.Chat.Id);
                                 RefreshMessages(msg);
                             }
                             else
                             {
-                                client.SendTextMessageAsync(msg.Chat.Id, error6);
+                                client.SendMessageAsync(msg.Chat.Id, error6);
                             }
                         }
                         break;
@@ -450,7 +450,7 @@ namespace BotControlPanel.Bots
                         changelogPage.Content.Insert(0, GetLinkHeader());
                         ttClient.EditPageAsync(TelegraphPagePath, changelogPage.Title, changelogPage.Content.ToArray(),
                             changelogPage.AuthorName, changelogPage.AuthorUrl).Wait();
-                        client.SendTextMessageAsync(msg.Chat.Id, "Added.", replyMarkup: ChangelogKeyboard.Markup);
+                        client.SendMessageAsync(msg.Chat.Id, "Added.", replyMarkup: ChangelogKeyboard.Markup);
                         waitingFor.Remove(msg.Chat.Id);
                         break;
                         #endregion
@@ -462,21 +462,21 @@ namespace BotControlPanel.Bots
             {
                 #region Start keyboard
                 case StartKeyboard.ClosedlistButtonString:
-                    client.SendTextMessageAsync(msg.Chat.Id, GetCurrentClosedlist(),
+                    client.SendMessageAsync(msg.Chat.Id, GetCurrentClosedlist(),
                         replyMarkup: ClosedlistKeyboard.Markup, parseMode: ParseMode.Html);
                     break;
                 case StartKeyboard.UnderdevButtonString:
-                    client.SendTextMessageAsync(msg.Chat.Id, GetCurrentUnderdev(),
+                    client.SendMessageAsync(msg.Chat.Id, GetCurrentUnderdev(),
                         replyMarkup: UnderdevKeyboard.Markup, parseMode: ParseMode.Html);
                     break;
                 case StartKeyboard.RefreshChannelMessageButtonString:
                     RefreshMessages(msg);
                     break;
                 case StartKeyboard.BackToStartKeyboardButtonString:
-                    client.SendTextMessageAsync(msg.Chat.Id, "Main menu", replyMarkup: StartKeyboard.Markup);
+                    client.SendMessageAsync(msg.Chat.Id, "Main menu", replyMarkup: StartKeyboard.Markup);
                     break;
                 case StartKeyboard.EditChangelogString:
-                    client.SendTextMessageAsync(msg.Chat.Id,
+                    client.SendMessageAsync(msg.Chat.Id,
                         $"You can view the changelog at telegra.ph/{TelegraphPagePath}",
                         replyMarkup: ChangelogKeyboard.Markup);
                     break;
@@ -484,7 +484,7 @@ namespace BotControlPanel.Bots
 
                 #region Closedlist keyboard
                 case ClosedlistKeyboard.ClosedlistAddButtonString:
-                    client.SendTextMessageAsync(msg.Chat.Id,
+                    client.SendMessageAsync(msg.Chat.Id,
                         "Send me the language you want to add in the following format: \n" +
                         "Language name - Information",
                         replyMarkup: CancelKeyboard.Markup);
@@ -492,19 +492,19 @@ namespace BotControlPanel.Bots
                     break;
                 case ClosedlistKeyboard.ClosedlistEditButtonString:
                     ReplyKeyboardMarkup rkm = GetClosedlistChooselangMarkup();
-                    client.SendTextMessageAsync(msg.Chat.Id, "Choose a language to edit", replyMarkup: rkm);
+                    client.SendMessageAsync(msg.Chat.Id, "Choose a language to edit", replyMarkup: rkm);
                     waitingFor.Add(msg.Chat.Id, ClosedlistKeyboard.ClosedlistEditButtonString);
                     break;
                 case ClosedlistKeyboard.ClosedlistRemoveButtonString:
                     ReplyKeyboardMarkup rkm2 = GetClosedlistChooselangMarkup();
-                    client.SendTextMessageAsync(msg.Chat.Id, "Choose a language to remove", replyMarkup: rkm2);
+                    client.SendMessageAsync(msg.Chat.Id, "Choose a language to remove", replyMarkup: rkm2);
                     waitingFor.Add(msg.Chat.Id, ClosedlistKeyboard.ClosedlistRemoveButtonString);
                     break;
                 #endregion
 
                 #region Underdev keyboard
                 case UnderdevKeyboard.UnderdevAddButtonString:
-                    client.SendTextMessageAsync(msg.Chat.Id,
+                    client.SendMessageAsync(msg.Chat.Id,
                         "Send me the language you want to add in the following format: \n" +
                         "Language name - Information",
                         replyMarkup: CancelKeyboard.Markup);
@@ -512,19 +512,19 @@ namespace BotControlPanel.Bots
                     break;
                 case UnderdevKeyboard.UnderdevEditButtonString:
                     ReplyKeyboardMarkup rkm3 = GetUnderdevChooselangMarkup();
-                    client.SendTextMessageAsync(msg.Chat.Id, "Choose a language to edit", replyMarkup: rkm3);
+                    client.SendMessageAsync(msg.Chat.Id, "Choose a language to edit", replyMarkup: rkm3);
                     waitingFor.Add(msg.Chat.Id, UnderdevKeyboard.UnderdevEditButtonString);
                     break;
                 case UnderdevKeyboard.UnderdevRemoveButtonString:
                     ReplyKeyboardMarkup rkm4 = GetUnderdevChooselangMarkup();
-                    client.SendTextMessageAsync(msg.Chat.Id, "Choose a language to remove", replyMarkup: rkm4);
+                    client.SendMessageAsync(msg.Chat.Id, "Choose a language to remove", replyMarkup: rkm4);
                     waitingFor.Add(msg.Chat.Id, UnderdevKeyboard.UnderdevRemoveButtonString);
                     break;
                 #endregion
 
                 #region Changelog Keyboard
                 case ChangelogKeyboard.AddPostToChangelogString:
-                    client.SendTextMessageAsync(msg.Chat.Id, "Send me the new entry for the changelog.\n"
+                    client.SendMessageAsync(msg.Chat.Id, "Send me the new entry for the changelog.\n"
                                                              + "Date will be added automatically.",
                                                              replyMarkup: CancelKeyboard.Markup);
                     if (waitingFor.ContainsKey(msg.Chat.Id)) waitingFor.Remove(msg.Chat.Id);
@@ -539,7 +539,7 @@ namespace BotControlPanel.Bots
         #region Bot joined Group
         private void HandleBotJoinedGroup(Message msg)
         {
-            client.SendTextMessageAsync(msg.Chat.Id, "Please do not add me to any groups!").Wait();
+            client.SendMessageAsync(msg.Chat.Id, "Please do not add me to any groups!").Wait();
             client.LeaveChatAsync(msg.Chat.Id);
         }
         #endregion
@@ -553,7 +553,7 @@ namespace BotControlPanel.Bots
                         parseMode: ParseMode.Html);
             client.EditMessageTextAsync(ChannelUsername, MessageIdUnderdev, GetCurrentUnderdev(),
                 parseMode: ParseMode.Html);
-            client.SendTextMessageAsync(msg.Chat.Id, "Message refreshed");
+            client.SendMessageAsync(msg.Chat.Id, "Message refreshed");
         }
 
         private ReplyKeyboardMarkup GetClosedlistChooselangMarkup()
