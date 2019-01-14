@@ -227,8 +227,14 @@ namespace BotControlPanel.Bots
             }
             catch (Exception ex)
             {
-                client.SendMessageAsync(Flom, "An error has ocurred in ScriptingBot: " + ex.InnerException
-                    + "\n" + ex.Message + "\n" + ex.StackTrace);
+                string message = "An error has ocurred in ScriptingBot: " + ex.InnerException
+                    + "\n" + ex.Message + "\n" + ex.StackTrace;
+                while (message.Length > 2000)
+                {
+                    client.SendMessageAsync(Flom, message.Remove(2000));
+                    message = message.Substring(2000);
+                }
+                client.SendMessageAsync(Flom, message);
             }
         }
         #endregion
