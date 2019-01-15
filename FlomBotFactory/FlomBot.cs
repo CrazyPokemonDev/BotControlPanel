@@ -52,7 +52,9 @@ namespace FlomBotFactory
             if (BotState == State.Errored)
                 return false;
             if (!client.IsReceiving)
+            {
                 client.StartReceiving((UpdateType[])null);
+            }
             EventHandler<BotStartedEventArgs> botStarted = BotStarted;
             if (botStarted != null)
                 botStarted((object)this, new BotStartedEventArgs(this));

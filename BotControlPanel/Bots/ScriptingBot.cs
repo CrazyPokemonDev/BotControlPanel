@@ -9,6 +9,7 @@ using FlomBotFactory;
 using TelegramBotApi.Types.Events;
 using TelegramBotApi.Enums;
 using TelegramBotApi.Types;
+using System.Threading.Tasks;
 
 namespace BotControlPanel.Bots
 {
@@ -47,6 +48,7 @@ namespace BotControlPanel.Bots
         #region Start Bot
         public override bool StartBot()
         {
+            client.ClearUpdatesAsync().ConfigureAwait(false);
             bool b = base.StartBot();
             try
             {
@@ -56,7 +58,6 @@ namespace BotControlPanel.Bots
             {
                 client.SendMessageAsync(Flom, "Failed to start bot");
             }
-            client.ClearUpdates();
             return b;
         }
         #endregion
@@ -202,9 +203,13 @@ namespace BotControlPanel.Bots
                                 script = script.Substring(2000);
                             }
                             list.Add(script);
-                            foreach (string s in list)
-                                client.SendMessageAsync(msg.Chat.Id, "`" + s + "`",
-                                    parseMode: ParseMode.Markdown).Wait();
+                            Task.Run(async () =>
+                            {
+                                foreach (string s in list)
+                                {
+                                    await client.SendMessageAsync(msg.Chat.Id, "`" + s + "`", parseMode: ParseMode.Markdown).ConfigureAwait(false);
+                                }
+                            });
                             return;
                         #endregion
                         #region restart
@@ -249,7 +254,7 @@ namespace BotControlPanel.Bots
             CompileBot();
             try
             {
-                botMainMethod.Invoke(null, new object[] { new String[] { scriptedBotToken } });
+                Task.Run(() => botMainMethod.Invoke(null, new object[] { new String[] { scriptedBotToken } })).Wait();
             }
             catch
             {

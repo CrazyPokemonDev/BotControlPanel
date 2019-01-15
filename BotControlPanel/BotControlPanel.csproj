@@ -166,7 +166,7 @@
       <HintPath>..\packages\System.Xml.ReaderWriter.4.3.1\lib\net46\System.Xml.ReaderWriter.dll</HintPath>
     </Reference>
     <Reference Include="TelegramBotApi, Version=1.0.10.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Crazypokemondev.TelegramBotApi.1.0.14\lib\net461\TelegramBotApi.dll</HintPath>
+      <HintPath>..\packages\Crazypokemondev.TelegramBotApi.1.0.16\lib\net461\TelegramBotApi.dll</HintPath>
     </Reference>
     <Reference Include="WhoAmIBot, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
