@@ -6,9 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using FlomBotFactory;
-using TelegramBotApi.Types.Events;
-using TelegramBotApi.Enums;
-using TelegramBotApi.Types;
+using Telegram.Bot.Args;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types;
 using System.Threading.Tasks;
 
 namespace BotControlPanel.Bots
@@ -48,7 +48,6 @@ namespace BotControlPanel.Bots
         #region Start Bot
         public override bool StartBot()
         {
-            client.ClearUpdatesAsync().ConfigureAwait(false);
             bool b = base.StartBot();
             try
             {
@@ -56,7 +55,7 @@ namespace BotControlPanel.Bots
             }
             catch
             {
-                client.SendMessageAsync(Flom, "Failed to start bot");
+                client.SendTextMessageAsync(Flom, "Failed to start bot");
             }
             return b;
         }
@@ -69,7 +68,7 @@ namespace BotControlPanel.Bots
             if (botStopMethod != null)
             {
                 botStopMethod.Invoke(null, null);
-                client.SendMessageAsync(Flom, "Scripted bot was stopped.");
+                client.SendTextMessageAsync(Flom, "Scripted bot was stopped.");
             }
             return b;
         }
@@ -104,11 +103,11 @@ namespace BotControlPanel.Bots
                                 string error;
                                 if (NewCommand(code, out error))
                                 {
-                                    client.SendMessageAsync(msg.Chat.Id, "Command successfully added");
+                                    client.SendTextMessageAsync(msg.Chat.Id, "Command successfully added");
                                 }
                                 else
                                 {
-                                    client.SendMessageAsync(msg.Chat.Id, "Failed to add command.\n"
+                                    client.SendTextMessageAsync(msg.Chat.Id, "Failed to add command.\n"
                                         + error);
                                 }
                             }
@@ -118,7 +117,7 @@ namespace BotControlPanel.Bots
                         case "/delcommand":
                             if (!text.Contains(" ")) return;
                             DeleteCommand(text.Substring(text.IndexOf(' ') + 1));
-                            client.SendMessageAsync(msg.Chat.Id, "Command deleted.");
+                            client.SendTextMessageAsync(msg.Chat.Id, "Command deleted.");
                             return;
                         #endregion
                         #region addusing
@@ -132,12 +131,12 @@ namespace BotControlPanel.Bots
                                 string error;
                                 if (AddUsing(code, out error))
                                 {
-                                    client.SendMessageAsync(msg.Chat.Id,
+                                    client.SendTextMessageAsync(msg.Chat.Id,
                                         "Using-directive successfully added");
                                 }
                                 else
                                 {
-                                    client.SendMessageAsync(msg.Chat.Id,
+                                    client.SendTextMessageAsync(msg.Chat.Id,
                                         "Failed to add using-directive.\n"
                                         + error);
                                 }
@@ -155,12 +154,12 @@ namespace BotControlPanel.Bots
                                 string error;
                                 if (AddDefinition(code, out error))
                                 {
-                                    client.SendMessageAsync(msg.Chat.Id,
+                                    client.SendTextMessageAsync(msg.Chat.Id,
                                         "Definition successfully added");
                                 }
                                 else
                                 {
-                                    client.SendMessageAsync(msg.Chat.Id,
+                                    client.SendTextMessageAsync(msg.Chat.Id,
                                         "Failed to add definition.\n"
                                         + error);
                                 }
@@ -178,11 +177,11 @@ namespace BotControlPanel.Bots
                                 string error;
                                 if (AddMethod(code, out error))
                                 {
-                                    client.SendMessageAsync(msg.Chat.Id, "Method successfully added");
+                                    client.SendTextMessageAsync(msg.Chat.Id, "Method successfully added");
                                 }
                                 else
                                 {
-                                    client.SendMessageAsync(msg.Chat.Id, "Failed to add method.\n"
+                                    client.SendTextMessageAsync(msg.Chat.Id, "Failed to add method.\n"
                                         + error);
                                 }
                             }
@@ -192,7 +191,7 @@ namespace BotControlPanel.Bots
                         case "/getscript":
                             if (msg.From.Id != Flom)
                             {
-                                client.SendMessageAsync(msg.Chat.Id, "You are not Flom. That script contains secret code. Go away.");
+                                client.SendTextMessageAsync(msg.Chat.Id, "You are not Flom. That script contains secret code. Go away.");
                                 return;
                             }
                             string script = GetScript();
@@ -207,7 +206,7 @@ namespace BotControlPanel.Bots
                             {
                                 foreach (string s in list)
                                 {
-                                    await client.SendMessageAsync(msg.Chat.Id, "`" + s + "`", parseMode: ParseMode.Markdown).ConfigureAwait(false);
+                                    await client.SendTextMessageAsync(msg.Chat.Id, "`" + s + "`", parseMode: ParseMode.Markdown).ConfigureAwait(false);
                                 }
                             });
                             return;
@@ -223,7 +222,7 @@ namespace BotControlPanel.Bots
                             if (msg.From.Id == Flom)
                             {
                                 SetScriptedBotToken(text.Substring(text.IndexOf(' ') + 1));
-                                client.SendMessageAsync(msg.Chat.Id, "Token set.");
+                                client.SendTextMessageAsync(msg.Chat.Id, "Token set.");
                             }
                             return;
                         #endregion
@@ -237,10 +236,10 @@ namespace BotControlPanel.Bots
                     + "\n" + ex.Message + "\n" + ex.StackTrace;
                 while (message.Length > 2000)
                 {
-                    client.SendMessageAsync(Flom, message.Remove(2000));
+                    client.SendTextMessageAsync(Flom, message.Remove(2000));
                     message = message.Substring(2000);
                 }
-                client.SendMessageAsync(Flom, message);
+                client.SendTextMessageAsync(Flom, message);
             }
         }
         #endregion
@@ -258,10 +257,10 @@ namespace BotControlPanel.Bots
             }
             catch
             {
-                client.SendMessageAsync(idToSendAnswer, "Failed to start. Maybe the token is missing.");
+                client.SendTextMessageAsync(idToSendAnswer, "Failed to start. Maybe the token is missing.");
                 errored = true;
             }
-            if (!errored) client.SendMessageAsync(idToSendAnswer, "Bot (re)started.");
+            if (!errored) client.SendTextMessageAsync(idToSendAnswer, "Bot (re)started.");
         }
         #endregion
         #endregion
@@ -519,7 +518,7 @@ namespace BotControlPanel.Bots
                                     switch (nowword.ToLower())
                                     {
                                         case "message":
-                                            baseAction = "client.SendMessageAsync({0}, \"{obj}\", parseMode: {1});";
+                                            baseAction = "client.SendTextMessageAsync({0}, \"{obj}\", parseMode: {1});";
                                             baseName = "message";
                                             defaultArgs.Add("{0}", "msg.Chat.Id");
                                             defaultArgs.Add("{1}", "ParseMode.Default");
@@ -529,7 +528,7 @@ namespace BotControlPanel.Bots
                                 #endregion
                                 #region Keyword Reply
                                 case "reply":
-                                    baseAction = "client.SendMessageAsync({0}, \"{obj}\", parseMode: {1}, " 
+                                    baseAction = "client.SendTextMessageAsync({0}, \"{obj}\", parseMode: {1}, " 
                                         + "replyToMessageId: msg.MessageId);";
                                     baseName = "message";
                                     defaultArgs.Add("{0}", "msg.Chat.Id");
@@ -627,7 +626,7 @@ namespace BotControlPanel.Bots
         #region Add Referenced Assemblys
         private static void AddReferencedAssemblys(CompilerParameters parameters)
         {
-            parameters.ReferencedAssemblies.Add("TelegramBotApi.dll");
+            parameters.ReferencedAssemblies.Add("Telegram.Bot.dll");
             parameters.ReferencedAssemblies.Add("Newtonsoft.Json.dll");
             parameters.ReferencedAssemblies.Add("System.dll");
             parameters.ReferencedAssemblies.Add("System.Net.Http.dll");

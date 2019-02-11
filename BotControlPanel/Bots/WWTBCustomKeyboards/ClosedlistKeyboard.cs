@@ -1,4 +1,4 @@
-﻿using TelegramBotApi.Types.Markup;
+﻿using Telegram.Bot.Types.ReplyMarkups;
 
 namespace BotControlPanel.Bots.WWTBCustomKeyboards
 {

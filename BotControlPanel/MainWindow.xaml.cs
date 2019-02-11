@@ -11,7 +11,7 @@ using System.Security.Permissions;
 using System;
 using BotControlPanel.Helpers;
 using System.ComponentModel;
-using TelegramBotApi;
+using Telegram.Bot;
 
 namespace BotControlPanel
 {
@@ -99,7 +99,7 @@ namespace BotControlPanel
             {
                 Log("Terminating");
                 Log("Sending restart message");
-                new TelegramBot(myToken).SendMessageAsync(TestGroup, "BCP crashed. Please restart ASAP.");
+                new TelegramBotClient(myToken).SendTextMessageAsync(TestGroup, "BCP crashed. Please restart ASAP.");
             }
         }
 

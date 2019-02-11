@@ -2,9 +2,9 @@
 using FlomBotFactory.Panel;
 using System;
 using System.Windows;
-using TelegramBotApi;
-using TelegramBotApi.Enums;
-using TelegramBotApi.Types.Events;
+using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Args;
 
 namespace FlomBotFactory
 {
@@ -12,7 +12,7 @@ namespace FlomBotFactory
     {
         protected string token = "";
         public FlomBot.State BotState = State.Functionable;
-        protected TelegramBot client;
+        protected TelegramBotClient client;
         protected const long Flom = 267376056;
 
         public BotPanelPart Panel { get; set; }
@@ -29,7 +29,7 @@ namespace FlomBotFactory
                 try
                 {
                     if (client != null) client.OnUpdate -= Client_OnUpdate;
-                    client = new TelegramBot(token);
+                    client = new TelegramBotClient(token);
                     client.OnUpdate += Client_OnUpdate;
                     BotState = State.Functionable;
                 }
