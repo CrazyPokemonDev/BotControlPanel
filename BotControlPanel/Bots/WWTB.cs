@@ -139,7 +139,7 @@ namespace BotControlPanel.Bots
                     && u.Message.Chat.Type != ChatType.Channel)
                     {
                         #region Messages containing entities
-                        if (u.Message.Entities.Length > 0)
+                        if ((u.Message.Entities?.Length ?? 0) > 0)
                         {
                             #region Commands
                             if (u.Message.Entities[0]?.Type == MessageEntityType.BotCommand
@@ -406,11 +406,7 @@ namespace BotControlPanel.Bots
 
                     #region Changelog
                     case ChangelogKeyboard.AddPostToChangelogString:
-#if DEBUG
-                        DateTime now = new DateTime(2017, 5, 21);
-#else
                                 DateTime now = DateTime.Now;
-#endif
                         var t = tClient.GetPageAsync(TelegraphPagePath, true);
                         t.Wait();
                         changelogPage = t.Result;
