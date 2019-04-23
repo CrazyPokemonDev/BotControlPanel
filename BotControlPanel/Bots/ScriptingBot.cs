@@ -638,6 +638,7 @@ namespace BotControlPanel.Bots
             parameters.ReferencedAssemblies.Add("System.IO.dll");
             parameters.ReferencedAssemblies.Add("System.Data.SQLite.dll");
             parameters.ReferencedAssemblies.Add("System.Data.dll");
+            parameters.ReferencedAssemblies.Add("System.Web.dll");
         }
         #endregion
         #endregion
